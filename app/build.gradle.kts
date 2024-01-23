@@ -52,6 +52,10 @@ android {
 }
 
 dependencies {
+    implementation("com.google.dagger:hilt-android:2.50")
+    ksp("com.google.dagger:dagger-compiler:2.50")
+    ksp("com.google.dagger:hilt-compiler:2.50")
+
     implementation("androidx.room:room-runtime:2.6.1")
     ksp("androidx.room:room-compiler:2.6.1")
     implementation("androidx.room:room-ktx:2.6.1")
