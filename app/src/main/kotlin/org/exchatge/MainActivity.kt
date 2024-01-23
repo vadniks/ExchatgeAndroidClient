@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
@@ -36,7 +37,9 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun LogInRegisterPanel() {
     val paddingModifier = Modifier.padding(2.5f.dp)
+
     Column(
+        modifier = Modifier.fillMaxWidth(0.75f),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -58,7 +61,10 @@ fun LogInRegisterPanel() {
             modifier = paddingModifier,
             label = { Text(stringResource(R.string.password)) }
         )
-        Row {
+        Row(
+            Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
             Button(
                 onClick = {},
                 modifier = paddingModifier
@@ -75,7 +81,7 @@ fun LogInRegisterPanel() {
     }
 }
 
-@Preview(showBackground = true)
+@Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun Preview() {
     ExchatgeTheme(true) {
