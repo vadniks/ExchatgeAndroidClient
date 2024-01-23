@@ -30,41 +30,39 @@ private var username by mutableStateOf("")
 private var password by mutableStateOf("")
 
 @Composable
-fun LogInRegisterPage() {
+fun LogInRegisterPage() = Column(
+    modifier = Modifier.fillMaxSize(),
+    verticalArrangement = Arrangement.Center,
+    horizontalAlignment = Alignment.CenterHorizontally
+) {
     Column(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier.fillMaxWidth(0.75f),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Column(
-            modifier = Modifier.fillMaxWidth(0.75f),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
+        Text(
+            stringResource(R.string.appName),
+            fontSize = 20.sp,
+            fontWeight = FontWeight.Bold,
+            modifier = paddingModifier
+        )
+        TextField(username, R.string.username, false) { username = it }
+        TextField(password, R.string.password, true) { password = it }
+        Row(
+            Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Text(
-                stringResource(R.string.appName),
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
+            Button(
+                onClick = {},
                 modifier = paddingModifier
-            )
-            TextField(username, R.string.username, false) { username = it }
-            TextField(password, R.string.password, true) { password = it }
-            Row(
-                Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Button(
-                    onClick = {},
-                    modifier = paddingModifier
-                ) {
-                    Text(stringResource(R.string.logIn))
-                }
-                Button(
-                    onClick = {},
-                    modifier = paddingModifier
-                ) {
-                    Text(stringResource(R.string.register))
-                }
+                Text(stringResource(R.string.logIn))
+            }
+            Button(
+                onClick = {},
+                modifier = paddingModifier
+            ) {
+                Text(stringResource(R.string.register))
             }
         }
     }
@@ -76,15 +74,13 @@ private fun TextField(
     label: Int,
     password: Boolean,
     onValueChange: (String) -> Unit
-) {
-    return TextField(
-        value = value,
-        onValueChange = onValueChange,
-        modifier = paddingModifier,
-        label = { Text(stringResource(label)) },
-        singleLine = true,
-        visualTransformation =
-        if (!password) VisualTransformation.None
-        else PasswordVisualTransformation()
-    )
-}
+) = TextField(
+    value = value,
+    onValueChange = onValueChange,
+    modifier = paddingModifier,
+    label = { Text(stringResource(label)) },
+    singleLine = true,
+    visualTransformation =
+    if (!password) VisualTransformation.None
+    else PasswordVisualTransformation()
+)

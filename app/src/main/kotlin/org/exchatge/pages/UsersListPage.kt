@@ -9,12 +9,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 
 @Composable
-fun UsersListPage() {
-    Column(
-        modifier = Modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
+fun UsersListPage() = Column(
+    modifier = Modifier.fillMaxSize(),
+    verticalArrangement = Arrangement.Center,
+    horizontalAlignment = Alignment.CenterHorizontally
+) {
 
-    }
 }

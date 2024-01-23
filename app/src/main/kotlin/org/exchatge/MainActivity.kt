@@ -27,16 +27,14 @@ private const val CURRENT_PANEL = 0 // TODO: debug only
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
-fun Preview() {
-    ExchatgeTheme {
-        Surface(
-            modifier = Modifier.fillMaxSize(), //.border(1.0f.dp, color = Color.Black, RoundedCornerShape(1.0f.dp)),
-            color = MaterialTheme.colorScheme.background
-        ) {
-            when (CURRENT_PANEL) {
-                0 -> LogInRegisterPage()
-                1 -> UsersListPage()
-            }
+fun Preview() = ExchatgeTheme {
+    Surface(
+        modifier = Modifier.fillMaxSize(), //.border(1.0f.dp, color = Color.Black, RoundedCornerShape(1.0f.dp)),
+        color = MaterialTheme.colorScheme.background
+    ) {
+        when (CURRENT_PANEL) {
+            0 -> LogInRegisterPage()
+            1 -> UsersListPage()
         }
     }
 }
