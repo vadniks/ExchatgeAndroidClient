@@ -13,7 +13,6 @@ import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -25,6 +24,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.exchatge.R
 
+private val paddingModifier = Modifier.padding(2.5f.dp)
+
+private var username by mutableStateOf("")
+private var password by mutableStateOf("")
+
 @Composable
 fun LogInRegisterPage() {
     Column(
@@ -32,65 +36,55 @@ fun LogInRegisterPage() {
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        LogInRegisterPanel()
+        Column(
+            modifier = Modifier.fillMaxWidth(0.75f),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                stringResource(R.string.appName),
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = paddingModifier
+            )
+            TextField(username, R.string.username, false) { username = it }
+            TextField(password, R.string.password, true) { password = it }
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Button(
+                    onClick = {},
+                    modifier = paddingModifier
+                ) {
+                    Text(stringResource(R.string.logIn))
+                }
+                Button(
+                    onClick = {},
+                    modifier = paddingModifier
+                ) {
+                    Text(stringResource(R.string.register))
+                }
+            }
+        }
     }
 }
 
 @Composable
-private fun LogInRegisterPanel() {
-    val paddingModifier = Modifier.padding(2.5f.dp)
-
-    var username by rememberSaveable { mutableStateOf("") }
-    var password by rememberSaveable { mutableStateOf("") }
-
-    @Composable
-    fun textField(
-        value: String,
-        label: Int,
-        password: Boolean,
-        onValueChange: (String) -> Unit
-    ) {
-        return TextField(
-            value = value,
-            onValueChange = onValueChange,
-            modifier = paddingModifier,
-            label = { Text(stringResource(label)) },
-            singleLine = true,
-            visualTransformation =
-            if (!password) VisualTransformation.None
-            else PasswordVisualTransformation()
-        )
-    }
-
-    Column(
-        modifier = Modifier.fillMaxWidth(0.75f),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(
-            stringResource(R.string.appName),
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Bold,
-            modifier = paddingModifier
-        )
-        textField(username, R.string.username, false) { username = it }
-        textField(password, R.string.password, true) { password = it }
-        Row(
-            Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Button(
-                onClick = {},
-                modifier = paddingModifier
-            ) {
-                Text(stringResource(R.string.logIn))
-            }
-            Button(
-                onClick = {},
-                modifier = paddingModifier
-            ) {
-                Text(stringResource(R.string.register))
-            }
-        }
-    }
+private fun TextField(
+    value: String,
+    label: Int,
+    password: Boolean,
+    onValueChange: (String) -> Unit
+) {
+    return TextField(
+        value = value,
+        onValueChange = onValueChange,
+        modifier = paddingModifier,
+        label = { Text(stringResource(label)) },
+        singleLine = true,
+        visualTransformation =
+        if (!password) VisualTransformation.None
+        else PasswordVisualTransformation()
+    )
 }
