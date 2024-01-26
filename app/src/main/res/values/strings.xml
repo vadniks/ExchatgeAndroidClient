@@ -8,4 +8,10 @@
     <string name="autoLoggingIn">Auto logging in</string>
     <string name="logOut">Log out</string>
     <string name="administrate">Administrate</string>
+    <string name="onlineOrNot">Online or not</string>
+    <string name="online">Online</string>
+    <string name="offline">Offline</string>
+    <string name="startConversation">Start conversation</string>
+    <string name="continueConversation">Continue conversation</string>
+    <string name="deleteConversation">Delete conversation</string>
 </resources>
