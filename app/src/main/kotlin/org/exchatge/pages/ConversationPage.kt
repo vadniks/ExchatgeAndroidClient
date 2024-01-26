@@ -140,7 +140,7 @@ private fun Message(timestamp: Long, from: String?, text: String) = Box(
         )
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
-                text = SimpleDateFormat("hh:mm:ss MMM-DD-yyyy").format(timestamp),
+                text = SimpleDateFormat("HH:mm:ss MMM-dd-yyyy").format(timestamp),
                 fontSize = 12.sp,
                 fontStyle = FontStyle.Italic,
                 color = MaterialTheme.colorScheme.secondary,
