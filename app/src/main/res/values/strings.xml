@@ -13,4 +13,11 @@
     <string name="startConversation">Start conversation</string>
     <string name="continueConversation">Continue conversation</string>
     <string name="deleteConversation">Delete conversation</string>
+    <string name="sendConversationSetupRequestTo">Send conversation setup request to</string>
+    <string name="conversationSetupRequestReceivedFrom">Conversation setup request received from</string>
+    <string name="accept">Accept</string>
+    <string name="decline">Decline</string>
+    <string name="id">Id</string>
+    <string name="proceed">Proceed</string>
+    <string name="cancel">Cancel</string>
 </resources>

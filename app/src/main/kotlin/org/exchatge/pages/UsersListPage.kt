@@ -14,6 +14,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -90,6 +91,8 @@ fun UsersListPage() = Scaffold(
                     )
                 }
             }
+
+            ConversationActionDialog(create = true, opponentId = 1, opponentName = "User")
         }
     }
 }
@@ -131,3 +134,21 @@ private fun UserInfo(
         )
     }
 }
+
+@Composable
+private fun ConversationActionDialog(create: Boolean, opponentId: Int, opponentName: String) = AlertDialog(
+    onDismissRequest = {},
+    confirmButton = {
+        Text(stringResource(if (create) R.string.proceed else R.string.accept))
+    },
+    dismissButton = {
+        Text(stringResource(if (create) R.string.cancel else R.string.decline))
+    },
+    title = {
+        Text(stringResource(R.string.startConversation))
+    },
+    text = {
+        val prefix = stringResource(if (create) R.string.sendConversationSetupRequestTo else R.string.conversationSetupRequestReceivedFrom)
+        Text("$prefix $opponentName (${stringResource(R.string.id)} $opponentId)")
+    },
+)
