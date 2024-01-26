@@ -92,7 +92,7 @@ fun UsersListPage() = Scaffold(
                 }
             }
 
-            ConversationSetupDialog(reequestedByHost = false, opponentId = 1, opponentName = "User") // TODO: debug only
+            ConversationSetupDialog(requestedByHost = false, opponentId = 1, opponentName = "User") // TODO: debug only
         }
     }
 }
@@ -135,8 +135,9 @@ private fun UserInfo(
     }
 }
 
+@Suppress("SameParameterValue")
 @Composable
-private fun ConversationSetupDialog(reequestedByHost: Boolean, opponentId: Int, opponentName: String) = AlertDialog(
+private fun ConversationSetupDialog(requestedByHost: Boolean, opponentId: Int, opponentName: String) = AlertDialog(
     onDismissRequest = {},
     confirmButton = {
         Text(stringResource(R.string.proceed))
@@ -148,7 +149,7 @@ private fun ConversationSetupDialog(reequestedByHost: Boolean, opponentId: Int, 
         Text(stringResource(R.string.startConversation))
     },
     text = {
-        val prefix = stringResource(if (reequestedByHost) R.string.sendConversationSetupRequestTo else R.string.conversationSetupRequestReceivedFrom)
+        val prefix = stringResource(if (requestedByHost) R.string.sendConversationSetupRequestTo else R.string.conversationSetupRequestReceivedFrom)
         Text("$prefix $opponentName (${stringResource(R.string.id)} $opponentId)")
     },
 )
