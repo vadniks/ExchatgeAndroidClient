@@ -2,6 +2,7 @@
 package org.exchatge.pages
 
 import android.annotation.SuppressLint
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -72,14 +73,15 @@ private fun Message(timestamp: Long, from: String?, text: String) = Box(
     contentAlignment = if (from != null) Alignment.CenterStart else Alignment.CenterEnd,
     modifier = Modifier.fillMaxWidth().padding(5.dp)
 ) {
-    Column(
-        modifier = Modifier.fillMaxWidth(.5f)
-    ) {
+    Column(modifier = Modifier.fillMaxWidth(.5f)) {
         Text(
             text = text,
             textAlign = TextAlign.Justify
         )
-        Row(verticalAlignment = Alignment.CenterVertically) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
             Text(
                 text = SimpleDateFormat("hh:mm:ss MMM-DD-yyyy").format(timestamp),
                 fontSize = 12.sp,
