@@ -139,6 +139,7 @@ private fun UserInfo(
         Text(
             text = stringResource(if (online) R.string.online else R.string.offline),
             fontSize = 14.sp,
+            fontWeight = if (online) FontWeight.Bold else FontWeight.Normal,
             color = MaterialTheme.colorScheme.secondary
         )
     },
