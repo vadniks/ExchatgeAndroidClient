@@ -23,11 +23,11 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-private const val CURRENT_PANEL = 0 // TODO: debug only
+private const val CURRENT_PANEL = 1 // TODO: debug only
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
-fun Preview() = ExchatgeTheme {
+fun Preview() = ExchatgeTheme/*(darkTheme = true)*/ {
     Surface(
         modifier = Modifier.fillMaxSize(), //.border(1.0f.dp, color = Color.Black, RoundedCornerShape(1.0f.dp)),
         color = MaterialTheme.colorScheme.background
