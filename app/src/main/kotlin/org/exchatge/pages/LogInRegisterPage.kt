@@ -23,6 +23,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.exchatge.R
+import org.exchatge.currentPage
 
 private val paddingModifier = Modifier.padding(2.5f.dp)
 
@@ -53,7 +54,7 @@ fun LogInRegisterPage() = Column(
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Button(
-                onClick = {},
+                onClick = { currentPage = 1 }, // TODO: debug only
                 modifier = paddingModifier
             ) {
                 Text(stringResource(R.string.logIn))

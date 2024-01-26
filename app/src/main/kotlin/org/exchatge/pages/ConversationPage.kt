@@ -35,6 +35,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.exchatge.R
+import org.exchatge.currentPage
 import java.text.SimpleDateFormat
 
 private val opponentUsername = "User" // TODO: debug only
@@ -57,7 +58,7 @@ fun ConversationPage() = Scaffold(
             },
             colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
             navigationIcon = {
-                IconButton(onClick = {}) {
+                IconButton(onClick = { currentPage = 1 }) { // TODO: debug only
                     Icon(
                         imageVector = Icons.Filled.ArrowBack,
                         contentDescription = stringResource(R.string.back)

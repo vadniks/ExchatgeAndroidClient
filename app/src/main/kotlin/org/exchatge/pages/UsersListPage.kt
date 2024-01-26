@@ -28,6 +28,7 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import org.exchatge.R
+import org.exchatge.currentPage
 
 private val currentUser = "User" // TODO: debug only
 private val admin = true
@@ -50,7 +51,7 @@ fun UsersListPage() = Scaffold(
             },
             colors = topAppBarColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
             navigationIcon = {
-                IconButton(onClick = {}) {
+                IconButton(onClick = { currentPage = 0 }) { // TODO: debug only
                     Icon(
                         imageVector = Icons.Filled.ExitToApp,
                         contentDescription = stringResource(R.string.logOut)
@@ -79,7 +80,7 @@ fun UsersListPage() = Scaffold(
         }
     }
 
-    ConversationSetupDialog(requestedByHost = false, opponentId = 1, opponentName = "User") // TODO: debug only
+//    ConversationSetupDialog(requestedByHost = false, opponentId = 1, opponentName = "User") // TODO: debug only
 }
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -112,7 +113,9 @@ private fun UserInfo(
             color = MaterialTheme.colorScheme.secondary
         )
     },
-    modifier = Modifier.fillMaxWidth().combinedClickable(onClick = {}, onLongClick = {})
+    modifier = Modifier.fillMaxWidth().combinedClickable(onClick = {
+        currentPage = 2 // TODO: debug only
+    }, onLongClick = {})
 )
 
 @Suppress("SameParameterValue")

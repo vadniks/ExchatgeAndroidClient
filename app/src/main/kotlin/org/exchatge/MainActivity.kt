@@ -8,6 +8,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import org.exchatge.pages.ConversationPage
@@ -24,7 +28,7 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-private const val CURRENT_PAGE = 2 // TODO: debug only
+var currentPage by mutableIntStateOf(2) // TODO: debug only
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
@@ -33,7 +37,7 @@ fun Preview() = ExchatgeTheme/*(darkTheme = true)*/ {
         modifier = Modifier.fillMaxSize(), //.border(1.0f.dp, color = Color.Black, RoundedCornerShape(1.0f.dp)),
         color = MaterialTheme.colorScheme.background
     ) {
-        when (CURRENT_PAGE) {
+        when (currentPage) {
             0 -> LogInRegisterPage()
             1 -> UsersListPage()
             2 -> ConversationPage()
