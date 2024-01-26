@@ -11,7 +11,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Send
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -61,6 +63,14 @@ fun ConversationPage() = Scaffold(
                         contentDescription = stringResource(R.string.back)
                     )
                 }
+            },
+            actions = {
+                IconButton(onClick = {}) {
+                    Icon(
+                        imageVector = Icons.Filled.Add,
+                        contentDescription = stringResource(R.string.file)
+                    )
+                }
             }
         )
     }
@@ -76,13 +86,23 @@ fun ConversationPage() = Scaffold(
                 Message(System.currentTimeMillis(), if (it % 2 == 0) "User$it" else null, "Text$it")
             }
         }
-        TextField(
-            value = enteredText,
-            onValueChange = { enteredText = it },
-            modifier = Modifier.fillMaxSize().padding(5.dp),
-            label = { Text(stringResource(R.string.message)) },
-            singleLine = false
-        )
+        Row(modifier = Modifier.fillMaxSize().padding(5.dp)) {
+            TextField(
+                value = enteredText,
+                onValueChange = { enteredText = it },
+                label = { Text(stringResource(R.string.message)) },
+                singleLine = false,
+                modifier = Modifier.fillMaxSize(),
+                trailingIcon = {
+                    IconButton(onClick = {}) {
+                        Icon(
+                            imageVector = Icons.Filled.Send,
+                            contentDescription = stringResource(R.string.send)
+                        )
+                    }
+                }
+            )
+        }
     }
 }
 
