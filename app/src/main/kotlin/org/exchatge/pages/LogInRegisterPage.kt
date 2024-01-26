@@ -7,7 +7,9 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
@@ -28,6 +30,7 @@ private val paddingModifier = Modifier.padding(2.5f.dp)
 
 private var username by mutableStateOf("")
 private var password by mutableStateOf("")
+private var autoLoggingIn by mutableStateOf(false)
 
 @Composable
 fun LogInRegisterPage() = Column(
@@ -48,6 +51,14 @@ fun LogInRegisterPage() = Column(
         )
         TextField(username, R.string.username, false) { username = it }
         TextField(password, R.string.password, true) { password = it }
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(stringResource(R.string.autoLoggingIn))
+            Checkbox(
+                checked = autoLoggingIn,
+                onCheckedChange = { autoLoggingIn = it },
+                modifier = Modifier.alignByBaseline()
+            )
+        }
         Row(
             Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
@@ -77,10 +88,8 @@ private fun TextField(
 ) = TextField(
     value = value,
     onValueChange = onValueChange,
-    modifier = paddingModifier,
+    modifier = paddingModifier.fillMaxWidth(),
     label = { Text(stringResource(label)) },
     singleLine = true,
-    visualTransformation =
-    if (!password) VisualTransformation.None
-    else PasswordVisualTransformation()
+    visualTransformation = if (!password) VisualTransformation.None else PasswordVisualTransformation()
 )
