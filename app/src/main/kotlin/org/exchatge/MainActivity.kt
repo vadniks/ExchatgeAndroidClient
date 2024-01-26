@@ -28,7 +28,7 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-var currentPage by mutableIntStateOf(2) // TODO: debug only
+var currentPage by mutableIntStateOf(1) // TODO: debug only
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable

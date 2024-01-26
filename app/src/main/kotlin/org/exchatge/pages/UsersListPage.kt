@@ -3,7 +3,10 @@ package org.exchatge.pages
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -11,21 +14,29 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Send
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults.topAppBarColors
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.exchatge.R
 import org.exchatge.currentPage
@@ -81,6 +92,7 @@ fun UsersListPage() = Scaffold(
     }
 
 //    ConversationSetupDialog(requestedByHost = false, opponentId = 1, opponentName = "User") // TODO: debug only
+    AdminActionsBottomSheet()
 }
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -136,3 +148,48 @@ private fun ConversationSetupDialog(requestedByHost: Boolean, opponentId: Int, o
         Text("$prefix $opponentName (${stringResource(R.string.id)} $opponentId)")
     },
 )
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun AdminActionsBottomSheet() {
+    val state = rememberModalBottomSheetState()
+
+    ModalBottomSheet(
+        onDismissRequest = {},
+        sheetState = state
+    ) {
+        Column(
+            modifier = Modifier.fillMaxHeight(.4f).fillMaxWidth(),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Button(onClick = {}) {
+                Text(stringResource(R.string.shutdownServer))
+            }
+            Spacer(modifier = Modifier.padding(5.dp))
+            TextField(
+                value = "",
+                onValueChange = { _: String -> },
+                label = {
+                    Text(stringResource(R.string.broadcastMessage))
+                },
+                singleLine = true,
+                supportingText = {
+                    Text(
+                        text = stringResource(R.string.broadcastMessageHint),
+                        textAlign = TextAlign.Justify
+                    )
+                },
+                trailingIcon = {
+                    IconButton(onClick = {}) {
+                        Icon(
+                            imageVector = Icons.Filled.Send,
+                            contentDescription = stringResource(R.string.send)
+                        )
+                    }
+                },
+                modifier = Modifier.fillMaxWidth(.75f)
+            )
+        }
+    }
+}
