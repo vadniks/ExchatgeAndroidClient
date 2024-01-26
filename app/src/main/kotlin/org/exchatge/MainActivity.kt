@@ -10,6 +10,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import org.exchatge.pages.ConversationPage
 import org.exchatge.pages.LogInRegisterPage
 import org.exchatge.pages.UsersListPage
 import org.exchatge.ui.theme.ExchatgeTheme
@@ -23,7 +24,7 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-private const val CURRENT_PANEL = 1 // TODO: debug only
+private const val CURRENT_PAGE = 1 // TODO: debug only
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
@@ -32,9 +33,10 @@ fun Preview() = ExchatgeTheme/*(darkTheme = true)*/ {
         modifier = Modifier.fillMaxSize(), //.border(1.0f.dp, color = Color.Black, RoundedCornerShape(1.0f.dp)),
         color = MaterialTheme.colorScheme.background
     ) {
-        when (CURRENT_PANEL) {
+        when (CURRENT_PAGE) {
             0 -> LogInRegisterPage()
             1 -> UsersListPage()
+            2 -> ConversationPage()
         }
     }
 }
