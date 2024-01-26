@@ -24,7 +24,7 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-private const val CURRENT_PAGE = 1 // TODO: debug only
+private const val CURRENT_PAGE = 2 // TODO: debug only
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable

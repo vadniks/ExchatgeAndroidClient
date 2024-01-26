@@ -3,7 +3,6 @@ package org.exchatge.pages
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -90,36 +89,31 @@ private fun UserInfo(
     name: String,
     online: Boolean,
     conversationExists: Boolean
-) {
-    val fontSize = 16.sp
-
-    Box(modifier = Modifier.fillMaxWidth().combinedClickable(onClick = {}, onLongClick = {})) {
-        ListItem(
-            leadingContent = {
-                Text(
-                    text = id.toString(),
-                    fontSize = fontSize,
-                    fontStyle = FontStyle.Italic,
-                    color = MaterialTheme.colorScheme.secondary
-                )
-            },
-            headlineContent = {
-                Text(
-                    text = name,
-                    fontSize = fontSize,
-                    fontWeight = if (!conversationExists) FontWeight.Normal else FontWeight.Bold
-                )
-            },
-            supportingContent = {
-                Text(
-                    text = stringResource(if (online) R.string.online else R.string.offline),
-                    fontSize = 14.sp,
-                    color = MaterialTheme.colorScheme.secondary
-                )
-            }
+) = ListItem(
+    leadingContent = {
+        Text(
+            text = id.toString(),
+            fontSize = 16.sp,
+            fontStyle = FontStyle.Italic,
+            color = MaterialTheme.colorScheme.secondary
         )
-    }
-}
+    },
+    headlineContent = {
+        Text(
+            text = name,
+            fontSize = 16.sp,
+            fontWeight = if (!conversationExists) FontWeight.Normal else FontWeight.Bold
+        )
+    },
+    supportingContent = {
+        Text(
+            text = stringResource(if (online) R.string.online else R.string.offline),
+            fontSize = 14.sp,
+            color = MaterialTheme.colorScheme.secondary
+        )
+    },
+    modifier = Modifier.fillMaxWidth().combinedClickable(onClick = {}, onLongClick = {})
+)
 
 @Suppress("SameParameterValue")
 @Composable
