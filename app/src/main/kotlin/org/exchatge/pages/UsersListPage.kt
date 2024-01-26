@@ -3,7 +3,10 @@ package org.exchatge.pages
 
 import android.annotation.SuppressLint
 import android.content.res.Configuration
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -11,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
@@ -84,9 +88,7 @@ fun UsersListPage() = Scaffold(
     }
 ) { paddingValues ->
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(top = paddingValues.calculateTopPadding()),
+        modifier = Modifier.fillMaxSize().padding(top = paddingValues.calculateTopPadding()),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -108,6 +110,7 @@ fun UsersListPage() = Scaffold(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun UserInfo(
     id: Int,
@@ -117,45 +120,30 @@ private fun UserInfo(
 ) {
     val fontSize = 16.sp
 
-    ListItem(
-        leadingContent = {
-            Text(
-                text = id.toString(),
-                fontSize = fontSize,
-                fontStyle = FontStyle.Italic,
-                color = MaterialTheme.colorScheme.secondary
-            )
-        },
-        headlineContent = {
-            Text(
-                text = name,
-                fontSize = fontSize
-            )
-        },
-        supportingContent = {
-            Text(
-                text = stringResource(if (online) R.string.online else R.string.offline),
-                fontSize = 14.sp,
-                color = MaterialTheme.colorScheme.secondary
-            )
-        },
-        trailingContent = {
-            Row(horizontalArrangement = Arrangement.Center) {
-                @Composable
-                fun Button(icon: ImageVector, text: Int) = IconButton(onClick = {}) {
-                    Icon(
-                        imageVector = icon,
-                        contentDescription = stringResource(text)
-                    )
-                }
-
-                if (!conversationExists)
-                    Button(Icons.Filled.PlayArrow, R.string.startConversation)
-                else {
-                    Button(Icons.Filled.Delete, R.string.deleteConversation)
-                    Button(Icons.Filled.Edit, R.string.continueConversation)
-                }
+    Box(modifier = Modifier.fillMaxWidth().combinedClickable(onClick = {}, onLongClick = {})) {
+        ListItem(
+            leadingContent = {
+                Text(
+                    text = id.toString(),
+                    fontSize = fontSize,
+                    fontStyle = FontStyle.Italic,
+                    color = MaterialTheme.colorScheme.secondary
+                )
+            },
+            headlineContent = {
+                Text(
+                    text = name,
+                    fontSize = fontSize,
+                    fontWeight = if (!conversationExists) FontWeight.Normal else FontWeight.Bold
+                )
+            },
+            supportingContent = {
+                Text(
+                    text = stringResource(if (online) R.string.online else R.string.offline),
+                    fontSize = 14.sp,
+                    color = MaterialTheme.colorScheme.secondary
+                )
             }
-        }
-    )
+        )
+    }
 }
