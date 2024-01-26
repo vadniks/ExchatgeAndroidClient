@@ -29,7 +29,6 @@ private val paddingModifier = Modifier.padding(2.5f.dp)
 
 private var username by mutableStateOf("")
 private var password by mutableStateOf("")
-private var autoLoggingIn by mutableStateOf(false)
 
 @Composable
 fun LogInRegisterPage() = Column(
@@ -50,14 +49,6 @@ fun LogInRegisterPage() = Column(
         )
         TextField(username, R.string.username, false) { username = it }
         TextField(password, R.string.password, true) { password = it }
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(stringResource(R.string.autoLoggingIn))
-            Checkbox(
-                checked = autoLoggingIn,
-                onCheckedChange = { autoLoggingIn = it },
-                modifier = Modifier.alignByBaseline()
-            )
-        }
         Row(
             Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
