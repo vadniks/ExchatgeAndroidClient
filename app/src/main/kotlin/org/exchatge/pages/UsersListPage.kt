@@ -92,7 +92,7 @@ fun UsersListPage() = Scaffold(
                 }
             }
 
-            ConversationActionDialog(create = true, opponentId = 1, opponentName = "User")
+            ConversationSetupDialog(reequestedByHost = false, opponentId = 1, opponentName = "User") // TODO: debug only
         }
     }
 }
@@ -136,19 +136,19 @@ private fun UserInfo(
 }
 
 @Composable
-private fun ConversationActionDialog(create: Boolean, opponentId: Int, opponentName: String) = AlertDialog(
+private fun ConversationSetupDialog(reequestedByHost: Boolean, opponentId: Int, opponentName: String) = AlertDialog(
     onDismissRequest = {},
     confirmButton = {
-        Text(stringResource(if (create) R.string.proceed else R.string.accept))
+        Text(stringResource(R.string.proceed))
     },
     dismissButton = {
-        Text(stringResource(if (create) R.string.cancel else R.string.decline))
+        Text(stringResource(R.string.cancel))
     },
     title = {
         Text(stringResource(R.string.startConversation))
     },
     text = {
-        val prefix = stringResource(if (create) R.string.sendConversationSetupRequestTo else R.string.conversationSetupRequestReceivedFrom)
+        val prefix = stringResource(if (reequestedByHost) R.string.sendConversationSetupRequestTo else R.string.conversationSetupRequestReceivedFrom)
         Text("$prefix $opponentName (${stringResource(R.string.id)} $opponentId)")
     },
 )
