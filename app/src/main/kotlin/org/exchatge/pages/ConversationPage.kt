@@ -73,15 +73,15 @@ private fun Message(timestamp: Long, from: String?, text: String) = Box(
     contentAlignment = if (from != null) Alignment.CenterStart else Alignment.CenterEnd,
     modifier = Modifier.fillMaxWidth().padding(5.dp)
 ) {
-    Column(modifier = Modifier.fillMaxWidth(.5f)) {
+    Column(
+        modifier = Modifier.fillMaxWidth(.48f),
+        horizontalAlignment = if (from != null) Alignment.Start else Alignment.End
+    ) {
         Text(
             text = text,
             textAlign = TextAlign.Justify
         )
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
                 text = SimpleDateFormat("hh:mm:ss MMM-DD-yyyy").format(timestamp),
                 fontSize = 12.sp,
