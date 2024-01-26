@@ -143,8 +143,7 @@ private fun UserInfo(
                 fun Button(text: Int) = TextButton(onClick = {}) {
                     Text(
                         text = stringResource(text),
-                        fontSize = 12.sp,
-                        modifier = Modifier.fillMaxWidth(.5f)
+                        fontSize = 12.sp
                     )
                 }
 
@@ -156,8 +155,18 @@ private fun UserInfo(
                 }
             }
 
-            (LocalConfiguration.current.orientation == Configuration.ORIENTATION_PORTRAIT)
-                .also { if (it) Column { Content() } else Row { Content() } }
+            val modifier = Modifier.fillMaxWidth(.5f)
+            val portrait = LocalConfiguration.current.orientation == Configuration.ORIENTATION_PORTRAIT
+
+            if (portrait) Column(
+                modifier = modifier,
+                horizontalAlignment = Alignment.CenterHorizontally,
+                content = { Content() }
+            ) else Row(
+                modifier = modifier,
+                horizontalArrangement = Arrangement.Center,
+                content = { Content() }
+            )
         }
     )
 }
