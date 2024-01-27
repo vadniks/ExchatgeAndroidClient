@@ -47,6 +47,11 @@ class Activity : ComponentActivity() {
             org.exchatge.view.Preview()
         }
     }
+
+    override fun onDestroy() {
+        presenter.onActivityDestroy()
+        super.onDestroy()
+    }
 }
 
 var currentPage by mutableIntStateOf(1) // TODO: debug only

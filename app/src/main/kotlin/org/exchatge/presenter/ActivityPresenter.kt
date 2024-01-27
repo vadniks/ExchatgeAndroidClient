@@ -23,11 +23,15 @@ import org.exchatge.model.Kernel
 import org.exchatge.view.Activity
 
 class ActivityPresenter(private val kernel: Kernel) {
-    private var activity: Activity? = null
+    private var activityGetter: (() -> Activity)? = null
 
     init {
         assert(!initialized)
         initialized = true
+    }
+
+    fun onActivityDestroy() {
+
     }
 
     companion object {
@@ -36,6 +40,6 @@ class ActivityPresenter(private val kernel: Kernel) {
 
         @JvmStatic
         val Activity.activityPresenter get() = (applicationContext as App)
-            .kernel.presenter.also { it.activity = this }
+            .kernel.presenter.also { it.activityGetter = { this } }
     }
 }
