@@ -20,6 +20,7 @@ package org.exchatge.model
 
 import com.goterl.lazysodium.LazySodiumAndroid
 import com.goterl.lazysodium.SodiumAndroid
+import com.goterl.lazysodium.interfaces.SecretStream
 import java.nio.charset.StandardCharsets
 
 class Crypto {
@@ -30,7 +31,7 @@ class Crypto {
         initialized = true
     }
 
-
+    data class Coders(val decryptionState: SecretStream.State, val encryptionState: SecretStream.State)
 
     data class Keys(
         val serverPublicKey: ByteArray,
@@ -78,5 +79,8 @@ class Crypto {
         private var initialized = false
 
         const val KEY_SIZE = 32
+        const val HEADER_SIZE = 24
+        const val SIGNATURE_SIZE = 64
+
     }
 }
