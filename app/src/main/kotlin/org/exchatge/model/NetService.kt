@@ -54,7 +54,6 @@ class NetService : Service() {
     override fun onBind(intent: Intent?) = null as IBinder?
 
     override fun onDestroy() {
-        super.onDestroy()
         xRunning.set(false)
 
         runBlocking {
@@ -62,6 +61,7 @@ class NetService : Service() {
         }
 
         kernel.net.onDestroy()
+        super.onDestroy()
     }
 
     companion object {
