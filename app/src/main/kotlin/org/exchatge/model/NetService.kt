@@ -22,31 +22,34 @@ import android.app.Service
 import android.content.Intent
 import android.os.IBinder
 import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.newSingleThreadContext
 import kotlinx.coroutines.runBlocking
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.logging.Logger
 
 class NetService : Service() {
     private lateinit var listenJob: Job
     private val kernel get() = (application as App).kernel
 
-    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        return super.onStartCommand(intent, flags, startId)
-    }
-
-    @OptIn(DelicateCoroutinesApi::class)
     override fun onCreate() {
         super.onCreate()
         xRunning.set(true)
 
-        runBlocking {
-            listenJob = launch(newSingleThreadContext(NetService::class.simpleName!!)) {
-                kernel.net.listen()
-            }
+        Logger.getLogger("a").info("net service create 1 " + Thread.currentThread().name)
+        listenJob = GlobalScope.launch(Dispatchers.Default) {
+            Logger.getLogger("a").info("net service create job 1 " + Thread.currentThread().name)
+            kernel.net.listen()
+            Logger.getLogger("a").info("net service create job 2 " + Thread.currentThread().name)
+            listenJob.cancel()
+            stopSelf()
         }
+        Logger.getLogger("a").info("net service create 2 " + Thread.currentThread().name)
     }
+
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int) = START_STICKY
 
     override fun onBind(intent: Intent?) = null as IBinder?
 
@@ -54,9 +57,11 @@ class NetService : Service() {
         super.onDestroy()
         xRunning.set(false)
 
+        Logger.getLogger("a").info("net service destroy 1 " + Thread.currentThread().name)
         runBlocking {
             listenJob.join()
         }
+        Logger.getLogger("a").info("net service destroy 2 " + Thread.currentThread().name)
 
         kernel.net.onDestroy()
     }

@@ -19,17 +19,21 @@
 package org.exchatge.model
 
 import android.content.Intent
+import java.util.logging.Logger
 
 class Net(private val kernel: Kernel) {
 
     init {
+        Logger.getLogger("a").info("net init " + Thread.currentThread().name)
         if (!NetService.running)
-            kernel.context.startService(Intent())!!
+            kernel.context.startService(Intent(kernel.context, NetService::class.java))!!
     }
 
     fun listen() {
-        while (NetService.running) {
-
+        val start = System.currentTimeMillis()
+        while (NetService.running && System.currentTimeMillis() - start < 10000) {
+            Logger.getLogger("a").info("net listen " + Thread.currentThread().name)
+            Thread.sleep(1000)
         }
     }
 
