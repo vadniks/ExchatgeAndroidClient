@@ -16,7 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package org.exchatge.pages
+package org.exchatge.view.pages
 
 import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.Box
@@ -52,7 +52,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.exchatge.R
-import org.exchatge.currentPage
+import org.exchatge.view.currentPage
 import java.text.SimpleDateFormat
 
 private val opponentUsername = "User" // TODO: debug only
