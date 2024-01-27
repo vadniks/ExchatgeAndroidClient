@@ -30,7 +30,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 class NetService : Service() {
     private lateinit var listenJob: Job
-    private val kernel get() = (applicationContext as App).kernel
+    private val kernel get() = (application as App).kernel
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         return super.onStartCommand(intent, flags, startId)
