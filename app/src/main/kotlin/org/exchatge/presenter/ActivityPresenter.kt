@@ -23,7 +23,7 @@ import org.exchatge.model.Kernel
 import org.exchatge.view.Activity
 
 class ActivityPresenter(private val kernel: Kernel) {
-    private var activityGetter: (() -> Activity)? = null
+    private var activityGetter: (() -> Activity)? = null // not storing the activity directly to avoid memory leak as its storing is a memory leak
     val activityRunning get() = activityGetter != null
 
     init {

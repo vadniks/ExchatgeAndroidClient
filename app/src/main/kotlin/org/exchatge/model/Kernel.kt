@@ -22,7 +22,7 @@ import android.content.Context
 import org.exchatge.presenter.ActivityPresenter
 
 class Kernel(private val contextGetter: () -> Context) {
-    val context get() = contextGetter()
+    val context get() = contextGetter() // getters are used instead of the object itself as the storing context smwhr is a memory leak
     val net = Net(this)
     val crypto = Crypto() // TODO: init the crypto only if the user has logged in
     val presenter = ActivityPresenter(this)
