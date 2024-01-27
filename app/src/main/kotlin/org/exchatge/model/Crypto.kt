@@ -20,7 +20,63 @@ package org.exchatge.model
 
 import com.goterl.lazysodium.LazySodiumAndroid
 import com.goterl.lazysodium.SodiumAndroid
+import java.nio.charset.StandardCharsets
 
 class Crypto {
-    private val lazySodium = LazySodiumAndroid(SodiumAndroid())
+    private val lazySodium = LazySodiumAndroid(SodiumAndroid(), StandardCharsets.US_ASCII) // using ascii as he desktop client's ui cannot display anything other than ascii, but it can process non ascii though
+
+    init {
+        assert(!initialized)
+        initialized = true
+    }
+
+
+
+    data class Keys(
+        val serverPublicKey: ByteArray,
+        val clientPublicKey: ByteArray,
+        val clientSecretKey: ByteArray,
+        val clientKey: ByteArray,
+        val serverKey: ByteArray
+    ) {
+
+        init {
+            assert(serverPublicKey.size == KEY_SIZE)
+            assert(clientPublicKey.size == KEY_SIZE)
+            assert(clientSecretKey.size == KEY_SIZE)
+            assert(clientKey.size == KEY_SIZE)
+            assert(serverKey.size == KEY_SIZE)
+        }
+
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            if (javaClass != other?.javaClass) return false
+
+            other as Keys
+
+            if (!serverPublicKey.contentEquals(other.serverPublicKey)) return false
+            if (!clientPublicKey.contentEquals(other.clientPublicKey)) return false
+            if (!clientSecretKey.contentEquals(other.clientSecretKey)) return false
+            if (!clientKey.contentEquals(other.clientKey)) return false
+            if (!serverKey.contentEquals(other.serverKey)) return false
+
+            return true
+        }
+
+        override fun hashCode(): Int {
+            var result = serverPublicKey.contentHashCode()
+            result = 31 * result + clientPublicKey.contentHashCode()
+            result = 31 * result + clientSecretKey.contentHashCode()
+            result = 31 * result + clientKey.contentHashCode()
+            result = 31 * result + serverKey.contentHashCode()
+            return result
+        }
+    }
+
+    private companion object {
+        @JvmStatic
+        private var initialized = false
+
+        const val KEY_SIZE = 32
+    }
 }

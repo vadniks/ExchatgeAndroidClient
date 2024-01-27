@@ -23,6 +23,9 @@ import android.content.Intent
 class Net(private val kernel: Kernel) {
 
     init {
+        assert(!initialized)
+        initialized = true
+
         if (!NetService.running)
             kernel.context.startService(Intent(kernel.context, NetService::class.java))!! // TODO: start the service only if the user has logged in
     }
@@ -35,5 +38,10 @@ class Net(private val kernel: Kernel) {
 
     fun onDestroy() {
 
+    }
+
+    private companion object {
+        @JvmStatic
+        private var initialized = false
     }
 }

@@ -33,12 +33,10 @@ class NetService : Service() {
     private lateinit var listenJob: Job
     private val kernel get() = (application as App).kernel
 
-    init {
-        assert(!xRunning.get())
-    }
-
     @OptIn(DelicateCoroutinesApi::class)
     override fun onCreate() {
+        assert(!xRunning.get())
+
         super.onCreate()
         xRunning.set(true)
 

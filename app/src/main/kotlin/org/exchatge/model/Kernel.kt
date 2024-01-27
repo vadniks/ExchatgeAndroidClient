@@ -24,4 +24,14 @@ class Kernel(private val contextGetter: () -> Context) {
     val context get() = contextGetter()
     val net = Net(this)
     val crypto = Crypto() // TODO: init the crypto only if the user has logged in
+
+    init {
+        assert(!initialized)
+        initialized = true
+    }
+
+    private companion object {
+        @JvmStatic
+        private var initialized = false
+    }
 }
