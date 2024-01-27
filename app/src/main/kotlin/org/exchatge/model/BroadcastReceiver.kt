@@ -19,8 +19,9 @@
 package org.exchatge.model
 
 import android.content.Context
+import android.content.Intent
 
-class Kernel(private val contextGetter: () -> Context) {
-    val context get() = contextGetter()
-    val net = Net(this)
+class BroadcastReceiver : android.content.BroadcastReceiver() {
+    override fun onReceive(context: Context, intent: Intent) =
+        assert(intent.action == Intent.ACTION_BOOT_COMPLETED) // the fact of receiving smth will trigger initialization of Context which is the App which then will trigger initialization of Kernel and NetService will be started
 }
