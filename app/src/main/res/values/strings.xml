@@ -45,4 +45,8 @@
     <string name="broadcastMessage">Broadcast message</string>
     <string name="shutdownServer">Shutdown the server</string>
     <string name="broadcastMessageHint">All currently online users will receive this message, no additional encryption will be performed</string>
+    <string name="fileExchange">File exchange</string>
+    <string name="fileExchangeRequestedByUser">File exchange requested by user</string>
+    <string name="withSizeOf">with size of</string>
+    <string name="bytes">bytes</string>
 </resources>

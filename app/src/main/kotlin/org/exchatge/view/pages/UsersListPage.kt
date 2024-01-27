@@ -32,7 +32,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Send
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -56,6 +55,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.exchatge.R
+import org.exchatge.view.FileExchangeDialog
 import org.exchatge.view.currentPage
 
 private val currentUser = "User" // TODO: debug only
@@ -109,7 +109,8 @@ fun UsersListPage() = Scaffold(
     }
 
 //    ConversationSetupDialog(requestedByHost = false, opponentId = 1, opponentName = "User") // TODO: debug only
-    AdminActionsBottomSheet()
+//    AdminActionsBottomSheet()
+    FileExchangeDialog(opponentId = 1, opponentName = "User", fileName = "a.txt", fileSize = 123)
 }
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -146,25 +147,6 @@ private fun UserInfo(
     modifier = Modifier.fillMaxWidth().combinedClickable(onClick = {
         currentPage = 2 // TODO: debug only
     }, onLongClick = {})
-)
-
-@Suppress("SameParameterValue")
-@Composable
-private fun ConversationSetupDialog(requestedByHost: Boolean, opponentId: Int, opponentName: String) = AlertDialog(
-    onDismissRequest = {},
-    confirmButton = {
-        Text(stringResource(R.string.proceed))
-    },
-    dismissButton = {
-        Text(stringResource(R.string.cancel))
-    },
-    title = {
-        Text(stringResource(R.string.startConversation))
-    },
-    text = {
-        val prefix = stringResource(if (requestedByHost) R.string.sendConversationSetupRequestTo else R.string.conversationSetupRequestReceivedFrom)
-        Text("$prefix $opponentName (${stringResource(R.string.id)} $opponentId)")
-    },
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
