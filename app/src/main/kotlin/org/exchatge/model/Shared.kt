@@ -18,22 +18,7 @@
 
 package org.exchatge.model
 
-import android.content.Intent
+import android.os.Looper
 
-class Net(private val kernel: Kernel) {
-
-    init {
-        if (!NetService.running)
-            kernel.context.startService(Intent(kernel.context, NetService::class.java))!!
-    }
-
-    fun listen() {
-        while (NetService.running) {
-            Thread.sleep(500)
-        }
-    }
-
-    fun onDestroy() {
-
-    }
-}
+fun assert(condition: Boolean) { if (!condition) throw IllegalStateException() }
+fun assertNotMainThread() { Looper.getMainLooper().thread === Thread.currentThread() }
