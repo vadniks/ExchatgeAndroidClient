@@ -16,24 +16,26 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package org.exchatge.model
+package org.exchatge.presenter
 
-import android.content.Context
-import org.exchatge.presenter.ActivityPresenter
+import org.exchatge.model.App
+import org.exchatge.model.Kernel
+import org.exchatge.view.Activity
 
-class Kernel(private val contextGetter: () -> Context) {
-    val context get() = contextGetter()
-    val net = Net(this)
-    val crypto = Crypto() // TODO: init the crypto only if the user has logged in
-    val presenter = ActivityPresenter(this)
+class ActivityPresenter(private val kernel: Kernel) {
+    private var activity: Activity? = null
 
     init {
         assert(!initialized)
         initialized = true
     }
 
-    private companion object {
+    companion object {
         @JvmStatic
         private var initialized = false
+
+        @JvmStatic
+        val Activity.activityPresenter get() = (applicationContext as App)
+            .kernel.presenter.also { it.activity = this }
     }
 }

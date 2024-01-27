@@ -51,7 +51,7 @@
         </receiver>
 
         <activity
-            android:name=".view.MainActivity"
+            android:name=".view.Activity"
             android:exported="true"
             android:theme="@style/Theme.Exchatge">
 
