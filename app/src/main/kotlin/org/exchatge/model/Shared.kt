@@ -19,6 +19,8 @@
 package org.exchatge.model
 
 import android.os.Looper
+import android.util.Log
 
 fun assert(condition: Boolean) { if (!condition) throw IllegalStateException() }
-fun assertNotMainThread() { Looper.getMainLooper().thread === Thread.currentThread() }
+fun assertNotMainThread() = assert(Looper.getMainLooper().thread === Thread.currentThread())
+fun log(message: String) = Log.d(null, message)

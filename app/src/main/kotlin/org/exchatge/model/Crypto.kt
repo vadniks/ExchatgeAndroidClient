@@ -18,6 +18,9 @@
 
 package org.exchatge.model
 
-class Crypto {
+import com.goterl.lazysodium.LazySodiumAndroid
+import com.goterl.lazysodium.SodiumAndroid
 
+class Crypto {
+    private val lazySodium = LazySodiumAndroid(SodiumAndroid())
 }

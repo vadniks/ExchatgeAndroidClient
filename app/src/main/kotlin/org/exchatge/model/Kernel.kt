@@ -23,4 +23,5 @@ import android.content.Context
 class Kernel(private val contextGetter: () -> Context) {
     val context get() = contextGetter()
     val net = Net(this)
+    val crypto = Crypto() // TODO: init the crypto only if the user has logged in
 }
