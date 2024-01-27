@@ -110,7 +110,7 @@ fun UsersListPage() = Scaffold(
 
 //    ConversationSetupDialog(requestedByHost = false, opponentId = 1, opponentName = "User") // TODO: debug only
 //    AdminActionsBottomSheet()
-    FileExchangeDialog(opponentId = 1, opponentName = "User", fileName = "a.txt", fileSize = 123)
+//    FileExchangeDialog(opponentId = 1, opponentName = "User", fileName = "a.txt", fileSize = 123)
 }
 
 @OptIn(ExperimentalFoundationApi::class)
