@@ -24,6 +24,7 @@ import org.exchatge.view.Activity
 
 class ActivityPresenter(private val kernel: Kernel) {
     private var activityGetter: (() -> Activity)? = null
+    val activityRunning get() = activityGetter != null
 
     init {
         assert(!initialized)
@@ -31,7 +32,7 @@ class ActivityPresenter(private val kernel: Kernel) {
     }
 
     fun onActivityDestroy() {
-
+        activityGetter = null
     }
 
     companion object {
