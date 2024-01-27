@@ -34,14 +34,7 @@ class Crypto {
     fun exchangeKeys(serverPublicKey: ByteArray): Keys? {
         assert(serverPublicKey.size == KEY_SIZE)
 
-        val keys = Keys(
-            serverPublicKey.copyOf(),
-            ByteArray(KEY_SIZE),
-            ByteArray(KEY_SIZE),
-            ByteArray(KEY_SIZE),
-            ByteArray(KEY_SIZE)
-        )
-
+        val keys = Keys(serverPublicKey.copyOf())
         assert(lazySodium.cryptoKxKeypair(keys.clientPublicKey, keys.clientSecretKey))
 
         return if (lazySodium.cryptoKxClientSessionKeys(
@@ -57,7 +50,7 @@ class Crypto {
         assert(serverStreamHeader.size == HEADER_SIZE)
         assert(keys.valid)
 
-        val coders = Coders(SecretStream.State.ByReference(), SecretStream.State.ByReference())
+        val coders = Coders()
         if (!lazySodium.cryptoSecretStreamInitPull(coders.decryptionState, serverStreamHeader, keys.serverKey))
             return null
 
@@ -109,14 +102,67 @@ class Crypto {
         return Coders(decryptionState, encryptionState)
     }
 
-    data class Coders(val decryptionState: SecretStream.State, val encryptionState: SecretStream.State)
+    fun exportCoders(coders: Coders): ByteArray {
+        val bytes = ByteArray(CODERS_SIZE)
+
+        fun copyBytes(state: SecretStream.State, destinationOffset: Int) {
+            System.arraycopy(state.k, 0, bytes, destinationOffset + 0, SECRET_STREAM_K_SIZE)
+            System.arraycopy(state.nonce, 0, bytes, destinationOffset + SECRET_STREAM_K_SIZE, SECRET_STREAM_NONCE_SIZE)
+            System.arraycopy(state._pad, 0, bytes, destinationOffset + SECRET_STREAM_K_SIZE + SECRET_STREAM_NONCE_SIZE, SECRET_STREAM_PAD_SIZE)
+        }
+
+        copyBytes(coders.decryptionState, 0)
+        copyBytes(coders.encryptionState, CODERS_SIZE / 2)
+
+        return bytes
+    }
+
+    private val Keys.clientPublicKeyAsServer get() = serverPublicKey
+    private val Keys.serverPublicKeyAsServer get() = clientPublicKey
+    private val Keys.serverSecretKeyAsServer get() = clientSecretKey
+
+    fun generateKeyPairAsServer(keys: Keys) = assert(lazySodium.cryptoKxKeypair(keys.serverPublicKeyAsServer, keys.serverSecretKeyAsServer))
+
+    fun exchangeKeysAsServer(keys: Keys, clientPublicKey: ByteArray): Boolean {
+        System.arraycopy(clientPublicKey, 0, keys.clientPublicKeyAsServer, 0, KEY_SIZE)
+
+        return lazySodium.cryptoKxServerSessionKeys(
+            keys.serverKey,
+            keys.clientKey,
+            keys.serverPublicKeyAsServer,
+            keys.serverSecretKeyAsServer,
+            keys.clientPublicKeyAsServer
+        )
+    }
+
+    fun createEncoderAsServer(keys: Keys, coders: Coders): ByteArray? {
+        val serverStreamHeader = ByteArray(HEADER_SIZE)
+
+        return if (!lazySodium.cryptoSecretStreamInitPush(
+            coders.encryptionState,
+            serverStreamHeader,
+            keys.serverKey
+        )) null else serverStreamHeader
+    }
+
+    fun createDecoderAsServer(keys: Keys, coders: Coders, clientStreamHeader: ByteArray): Boolean {
+        assert(clientStreamHeader.size == HEADER_SIZE)
+        return lazySodium.cryptoSecretStreamInitPull(coders.decryptionState, clientStreamHeader, keys.clientKey)
+    }
+
+    fun encryptedSize(unencryptedSize: Int) = unencryptedSize + ADDITIONAL_BYTES_SIZE
+
+    data class Coders(
+        val decryptionState: SecretStream.State = SecretStream.State.ByReference(),
+        val encryptionState: SecretStream.State = SecretStream.State.ByReference()
+    )
 
     data class Keys(
-        val serverPublicKey: ByteArray,
-        val clientPublicKey: ByteArray,
-        val clientSecretKey: ByteArray,
-        val clientKey: ByteArray,
-        val serverKey: ByteArray
+        val serverPublicKey: ByteArray = ByteArray(KEY_SIZE),
+        val clientPublicKey: ByteArray = ByteArray(KEY_SIZE),
+        val clientSecretKey: ByteArray = ByteArray(KEY_SIZE),
+        val clientKey: ByteArray = ByteArray(KEY_SIZE),
+        val serverKey: ByteArray = ByteArray(KEY_SIZE)
     ) {
         val valid get() =
             serverPublicKey.size == KEY_SIZE &&
@@ -164,7 +210,7 @@ class Crypto {
         const val CODERS_SIZE = 104
         const val HASH_SIZE = 32
         const val PADDING_BLOCK_SIZE = 8
-
+        private const val ADDITIONAL_BYTES_SIZE = 17
         private const val SECRET_STREAM_K_SIZE = 32
         private const val SECRET_STREAM_NONCE_SIZE = 12
         private const val SECRET_STREAM_PAD_SIZE = 8
