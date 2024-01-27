@@ -31,6 +31,84 @@ class Crypto {
         initialized = true
     }
 
+    fun exchangeKeys(serverPublicKey: ByteArray): Keys? {
+        assert(serverPublicKey.size == KEY_SIZE)
+
+        val keys = Keys(
+            serverPublicKey.copyOf(),
+            ByteArray(KEY_SIZE),
+            ByteArray(KEY_SIZE),
+            ByteArray(KEY_SIZE),
+            ByteArray(KEY_SIZE)
+        )
+
+        assert(lazySodium.cryptoKxKeypair(keys.clientPublicKey, keys.clientSecretKey))
+
+        return if (lazySodium.cryptoKxClientSessionKeys(
+            keys.clientKey,
+            keys.serverKey,
+            keys.clientPublicKey,
+            keys.clientSecretKey,
+            keys.serverPublicKey
+        )) keys else null
+    }
+
+    fun initializeCoders(keys: Keys, serverStreamHeader: ByteArray): ByteArray? {
+        assert(serverStreamHeader.size == HEADER_SIZE)
+        assert(keys.valid)
+
+        val coders = Coders(SecretStream.State.ByReference(), SecretStream.State.ByReference())
+        if (!lazySodium.cryptoSecretStreamInitPull(coders.decryptionState, serverStreamHeader, keys.serverKey))
+            return null
+
+        val clientStreamHeader = ByteArray(KEY_SIZE)
+        if (!lazySodium.cryptoSecretStreamInitPush(coders.encryptionState, clientStreamHeader, keys.clientKey))
+            return null
+
+        return clientStreamHeader
+    }
+
+    fun checkServerSignedBytes(signature: ByteArray, unsigned: ByteArray, serverSignPublicKey: ByteArray): Boolean {
+        assert(signature.size == SIGNATURE_SIZE && unsigned.isNotEmpty() && serverSignPublicKey.size == KEY_SIZE)
+
+        val combined = ByteArray(SIGNATURE_SIZE + unsigned.size)
+        System.arraycopy(signature, 0, combined, 0, SIGNATURE_SIZE)
+        System.arraycopy(unsigned, 0, combined, SIGNATURE_SIZE, unsigned.size)
+
+        val generatedUnsigned = ByteArray(unsigned.size)
+        if (!lazySodium.cryptoSignOpen(generatedUnsigned, combined, combined.size.toLong(), serverSignPublicKey))
+            return false
+
+        assert(unsigned.contentEquals(generatedUnsigned))
+        return true
+    }
+
+    fun makeKey(password: ByteArray): ByteArray {
+        assert(password.isNotEmpty())
+
+        val hash = ByteArray(KEY_SIZE)
+        assert(lazySodium.cryptoGenericHash(hash, hash.size, password, password.size.toLong()))
+        return hash
+    }
+
+    fun recreateCoders(serializedCoders: ByteArray): Coders {
+        assert(serializedCoders.size == CODERS_SIZE)
+
+        fun copyBytes(state: SecretStream.State, sourceOffset: Int) {
+            System.arraycopy(serializedCoders, sourceOffset + 0, state.k, 0, SECRET_STREAM_K_SIZE)
+            System.arraycopy(serializedCoders, sourceOffset + SECRET_STREAM_K_SIZE, state.nonce, 0, SECRET_STREAM_NONCE_SIZE)
+            System.arraycopy(serializedCoders, sourceOffset + SECRET_STREAM_K_SIZE + SECRET_STREAM_NONCE_SIZE, state._pad, 0, SECRET_STREAM_PAD_SIZE)
+        }
+
+        val decryptionState = SecretStream.State.ByReference()
+        copyBytes(decryptionState, 0)
+
+        val encryptionState = SecretStream.State.ByReference()
+        copyBytes(encryptionState, CODERS_SIZE / 2)
+
+        return Coders(decryptionState, encryptionState)
+    }
+
     data class Coders(val decryptionState: SecretStream.State, val encryptionState: SecretStream.State)
 
     data class Keys(
@@ -40,13 +118,15 @@ class Crypto {
         val clientKey: ByteArray,
         val serverKey: ByteArray
     ) {
+        val valid get() =
+            serverPublicKey.size == KEY_SIZE &&
+            clientPublicKey.size == KEY_SIZE &&
+            clientSecretKey.size == KEY_SIZE &&
+            clientKey.size == KEY_SIZE &&
+            serverKey.size == KEY_SIZE
 
         init {
-            assert(serverPublicKey.size == KEY_SIZE)
-            assert(clientPublicKey.size == KEY_SIZE)
-            assert(clientSecretKey.size == KEY_SIZE)
-            assert(clientKey.size == KEY_SIZE)
-            assert(serverKey.size == KEY_SIZE)
+            assert(valid)
         }
 
         override fun equals(other: Any?): Boolean {
@@ -81,6 +161,12 @@ class Crypto {
         const val KEY_SIZE = 32
         const val HEADER_SIZE = 24
         const val SIGNATURE_SIZE = 64
+        const val CODERS_SIZE = 104
+        const val HASH_SIZE = 32
+        const val PADDING_BLOCK_SIZE = 8
 
+        private const val SECRET_STREAM_K_SIZE = 32
+        private const val SECRET_STREAM_NONCE_SIZE = 12
+        private const val SECRET_STREAM_PAD_SIZE = 8
     }
 }
