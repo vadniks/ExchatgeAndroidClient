@@ -18,14 +18,11 @@
 
 package org.exchatge.model
 
-import android.app.Application
+import android.content.Context
 
-class App : Application() {
-    private lateinit var xKernel: Kernel
-    val kernel get() = xKernel
+class Kernel(private val contextGetter: () -> Context) {
+    val context get() = contextGetter()
+    val net = Net(this)
 
-    override fun onCreate() {
-        super.onCreate()
-        xKernel = Kernel { this }
-    }
+
 }

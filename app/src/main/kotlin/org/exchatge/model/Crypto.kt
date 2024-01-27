@@ -18,14 +18,6 @@
 
 package org.exchatge.model
 
-import android.app.Application
+class Crypto {
 
-class App : Application() {
-    private lateinit var xKernel: Kernel
-    val kernel get() = xKernel
-
-    override fun onCreate() {
-        super.onCreate()
-        xKernel = Kernel { this }
-    }
 }

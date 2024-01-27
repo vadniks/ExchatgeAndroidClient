@@ -18,14 +18,22 @@
 
 package org.exchatge.model
 
-import android.app.Application
+import android.content.Intent
 
-class App : Application() {
-    private lateinit var xKernel: Kernel
-    val kernel get() = xKernel
+class Net(private val kernel: Kernel) {
 
-    override fun onCreate() {
-        super.onCreate()
-        xKernel = Kernel { this }
+    init {
+        if (!NetService.running)
+            kernel.context.startService(Intent())!!
+    }
+
+    fun listen() {
+        while (NetService.running) {
+
+        }
+    }
+
+    fun onDestroy() {
+
     }
 }
