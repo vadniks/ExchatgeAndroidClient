@@ -203,6 +203,44 @@ class Crypto {
 
     fun singleEncryptedSize(unencryptedSize: Int) = MAC_SIZE + unencryptedSize + NONCE_SIZE
 
+    fun encryptSingle(key: ByteArray, bytes: ByteArray): ByteArray? {
+        assert(key.size == KEY_SIZE && bytes.isNotEmpty())
+
+        val encryptedSize = singleEncryptedSize(bytes.size)
+        val encrypted = ByteArray(encryptedSize)
+
+        val nonceStart = encryptedSize - NONCE_SIZE
+        System.arraycopy(lazySodium.randomBytesBuf(NONCE_SIZE), 0, encrypted, nonceStart, NONCE_SIZE)
+
+        if (!lazySodium.cryptoSecretBoxEasy(
+            encrypted,
+            bytes,
+            bytes.size.toLong(),
+            encrypted.sliceArray(nonceStart..encryptedSize),
+            key
+        )) return null
+
+        return encrypted
+    }
+
+    fun decryptSingle(key: ByteArray, bytes: ByteArray): ByteArray? {
+        assert(key.size == KEY_SIZE && bytes.size > singleEncryptedSize(0))
+
+        val decryptedSize = bytes.size - MAC_SIZE - NONCE_SIZE
+        val decrypted = ByteArray(decryptedSize)
+        val encryptedAndTagSize = bytes.size - NONCE_SIZE
+
+        if (!lazySodium.cryptoSecretBoxOpenEasy(
+            decrypted,
+            bytes,
+            encryptedAndTagSize.toLong(),
+            bytes.sliceArray(encryptedAndTagSize..(bytes.size)),
+            key
+        )) return null
+
+        return decrypted
+    }
+
     data class Coders(
         val decryptionState: SecretStream.State = SecretStream.State.ByReference(),
         val encryptionState: SecretStream.State = SecretStream.State.ByReference()
