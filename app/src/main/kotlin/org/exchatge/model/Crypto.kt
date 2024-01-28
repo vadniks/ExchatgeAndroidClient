@@ -124,7 +124,10 @@ class Crypto {
     private val Keys.serverPublicKeyAsServer get() = clientPublicKey
     private val Keys.serverSecretKeyAsServer get() = clientSecretKey
 
-    fun generateKeyPairAsServer(keys: Keys) = assert(lazySodium.cryptoKxKeypair(keys.serverPublicKeyAsServer, keys.serverSecretKeyAsServer))
+    fun generateKeyPairAsServer(keys: Keys): ByteArray {
+        assert(lazySodium.cryptoKxKeypair(keys.serverPublicKeyAsServer, keys.serverSecretKeyAsServer))
+        return keys.serverPublicKeyAsServer
+    }
 
     fun exchangeKeysAsServer(keys: Keys, clientPublicKey: ByteArray): Boolean {
         System.arraycopy(clientPublicKey, 0, keys.clientPublicKeyAsServer, 0, KEY_SIZE)
