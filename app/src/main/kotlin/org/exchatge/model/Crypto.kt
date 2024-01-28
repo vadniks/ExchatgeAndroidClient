@@ -306,22 +306,17 @@ class Crypto {
 
         val maxSize = bytes.size + PADDING_BLOCK_SIZE
         val new = Memory(maxSize.toLong())
-        log("a")
         new.write(0, bytes, 0, bytes.size)
 
         val newSizeAddress = IntByReference()
-        newSizeAddress.pointer = Memory(8)
-        log("b " + newSizeAddress.pointer + " | " + maxSize + ' ' + new.size() + ' ' + bytes.size + ' ' + new)
+        // newSizeAddress.pointer = Memory(8) // the native function actually expects an 8 bytes sized buffer (long) and not 4 bytes (int) (can cause memory corruption due to overflow) // it works fine without it though
         assert(lazySodium.sodiumPad(newSizeAddress, new, bytes.size, PADDING_BLOCK_SIZE, maxSize))
-        log("c") // TODO: works now: don't new.getPointer() as it's does smth that it's documentation doesn't explain. Instead use Memory directly as it's subclassed from Pointer
 
         val newSize = newSizeAddress.value
-        log("d")
         assert(newSize > bytes.size && newSize <= maxSize)
 
         val adjusted = ByteArray(newSize)
         new.read(0, adjusted, 0, newSize)
-        log("e")
         return adjusted
     }
 
@@ -332,7 +327,7 @@ class Crypto {
         new.write(0, bytes, 0, bytes.size)
 
         val newSizeAddress = IntByReference()
-        if (!lazySodium.sodiumUnpad(newSizeAddress, new.getPointer(0), bytes.size, PADDING_BLOCK_SIZE))
+        if (!lazySodium.sodiumUnpad(newSizeAddress, new, bytes.size, PADDING_BLOCK_SIZE))
             return null
 
         val newSize = newSizeAddress.value

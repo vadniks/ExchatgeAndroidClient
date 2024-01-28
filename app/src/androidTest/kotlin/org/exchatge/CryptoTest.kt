@@ -132,7 +132,7 @@ class CryptoTest {
 
     @Test
     fun padding() {
-//        for (i in 0..1) {
+        for (i in 0..1) {
             val first = true
 
             val size = if (first) 10 else Crypto.PADDING_BLOCK_SIZE
@@ -141,12 +141,12 @@ class CryptoTest {
 
             val padded = crypto.addPadding(original)
             assertTrue(padded.size % Crypto.PADDING_BLOCK_SIZE == 0 && padded.size > size)
-//
-//            val unpadded = crypto.removePadding(padded)
-//            assertNotNull(unpadded)
-//            assertTrue(unpadded!!.size == size)
-//
-//            assertArrayEquals(original, unpadded)
-//        }
+
+            val unpadded = crypto.removePadding(padded)
+            assertNotNull(unpadded)
+            assertTrue(unpadded!!.size == size)
+
+            assertArrayEquals(original, unpadded)
+        }
     }
 }
