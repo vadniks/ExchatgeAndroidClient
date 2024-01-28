@@ -152,6 +152,57 @@ class Crypto {
 
     fun encryptedSize(unencryptedSize: Int) = unencryptedSize + ADDITIONAL_BYTES_SIZE
 
+    fun encrypt(coders: Coders, bytes: ByteArray): ByteArray? {
+        assert(bytes.isNotEmpty())
+
+        val encryptedSize = encryptedSize(bytes.size)
+        val generatedEncryptedSizeAddress = LongArray(1) // 'cause long arr[1] is the same as long* to the arr's first element
+        val encrypted = ByteArray(encryptedSize)
+
+        if (!lazySodium.cryptoSecretStreamPush(
+            coders.encryptionState,
+            encrypted,
+            generatedEncryptedSizeAddress, // long* a = (long[1]) {0}; *a = 1;
+            bytes,
+            bytes.size.toLong(),
+            TAG_INTERMEDIATE
+        )) return null
+
+        assert(generatedEncryptedSizeAddress[0] == encryptedSize.toLong())
+        return encrypted
+    }
+
+    fun decrypt(coders: Coders, bytes: ByteArray): ByteArray? {
+        assert(bytes.size > ADDITIONAL_BYTES_SIZE)
+
+        val decryptedSize = bytes.size - ADDITIONAL_BYTES_SIZE
+        val generatedDecryptedSizeAddress = LongArray(1)
+        val decrypted = ByteArray(decryptedSize)
+        val tagAddress = ByteArray(1)
+
+        if (!lazySodium.cryptoSecretStreamPull(
+            coders.decryptionState,
+            decrypted,
+            generatedDecryptedSizeAddress, // long* a = (long[1]) {0}; *a = 1;
+            tagAddress,
+            bytes,
+            bytes.size.toLong(),
+            null,
+            0
+        )) return null
+
+        if (tagAddress[0] != TAG_INTERMEDIATE) return null
+        assert(generatedDecryptedSizeAddress[0] == decryptedSize.toLong())
+        return decrypted
+    }
+
+    fun randomizeBuffer(buffer: ByteArray) {
+        assert(buffer.isNotEmpty())
+        System.arraycopy(lazySodium.randomBytesBuf(buffer.size), 0, buffer, 0, buffer.size)
+    }
+
+    fun singleEncryptedSize(unencryptedSize: Int) = MAC_SIZE + unencryptedSize + NONCE_SIZE
+
     data class Coders(
         val decryptionState: SecretStream.State = SecretStream.State.ByReference(),
         val encryptionState: SecretStream.State = SecretStream.State.ByReference()
@@ -214,5 +265,8 @@ class Crypto {
         private const val SECRET_STREAM_K_SIZE = 32
         private const val SECRET_STREAM_NONCE_SIZE = 12
         private const val SECRET_STREAM_PAD_SIZE = 8
+        private const val TAG_INTERMEDIATE: Byte = 0
+        private const val MAC_SIZE = 16
+        private const val NONCE_SIZE = 24
     }
 }
