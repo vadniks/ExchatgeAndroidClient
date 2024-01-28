@@ -24,3 +24,5 @@ import android.util.Log
 fun assert(condition: Boolean) { if (!condition) throw IllegalStateException() }
 fun assertNotMainThread() = assert(Looper.getMainLooper().thread !== Thread.currentThread())
 fun log(message: String) = Log.d(null, message)
+
+class Reference<T>(var referenced: T)
