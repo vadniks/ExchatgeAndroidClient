@@ -22,6 +22,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import org.exchatge.model.App
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 
@@ -36,5 +37,10 @@ class CryptoTest {
 
         val clientKeys = crypto.exchangeKeys(serverPublicKey)
         assertNotNull(clientKeys != null)
+
+        assertTrue(crypto.exchangeKeysAsServer(serverKeys, crypto.clientPublicKey(clientKeys!!)))
+
+        assertTrue(crypto.clientKey(serverKeys).contentEquals(crypto.clientKey(clientKeys)))
+        assertTrue(crypto.serverKey(serverKeys).contentEquals(crypto.serverKey(clientKeys)))
     }
 }

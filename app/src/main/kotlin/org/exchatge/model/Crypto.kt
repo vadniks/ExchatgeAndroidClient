@@ -18,6 +18,7 @@
 
 package org.exchatge.model
 
+import androidx.annotation.VisibleForTesting
 import com.goterl.lazysodium.LazySodiumAndroid
 import com.goterl.lazysodium.SodiumAndroid
 import com.goterl.lazysodium.interfaces.SecretStream
@@ -171,6 +172,8 @@ class Crypto {
     }
 
     fun encryptedSize(unencryptedSize: Int) = unencryptedSize + ADDITIONAL_BYTES_SIZE
+
+    fun clientPublicKey(keys: Keys) = (keys as KeysImpl).clientPublicKey
 
     fun encrypt(coders: Coders, bytes: ByteArray): ByteArray? {
         assert(bytes.isNotEmpty())
@@ -326,6 +329,12 @@ class Crypto {
         assert(newSize > 0 && newSize <= bytes.size)
         return new.getByteArray(0, bytes.size).sliceArray(0..newSize)
     }
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    fun clientKey(keys: Keys) = (keys as KeysImpl).clientKey
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    fun serverKey(keys: Keys) = (keys as KeysImpl).serverKey
 
     abstract class Coders
 
