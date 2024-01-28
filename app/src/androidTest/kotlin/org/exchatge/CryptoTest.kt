@@ -21,19 +21,17 @@ package org.exchatge
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import org.exchatge.model.App
-import org.exchatge.model.Crypto
 import org.junit.Assert.assertNotNull
 import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 class CryptoTest {
+    private val crypto = (InstrumentationRegistry.getInstrumentation().targetContext.applicationContext as App).kernel.crypto
 
     @Test
     fun keyExchange() {
-        val crypto = (InstrumentationRegistry.getInstrumentation().targetContext.applicationContext as App).kernel.crypto
-
-        val serverKeys = Crypto.Keys()
+        val serverKeys = crypto.makeKeys()
         val serverPublicKey = crypto.generateKeyPairAsServer(serverKeys)
 
         val clientKeys = crypto.exchangeKeys(serverPublicKey)

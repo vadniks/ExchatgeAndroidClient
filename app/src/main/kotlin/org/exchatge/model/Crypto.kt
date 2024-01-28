@@ -34,10 +34,12 @@ class Crypto {
         initialized = true
     }
 
+    fun makeKeys() = KeysImpl() as Keys
+
     fun exchangeKeys(serverPublicKey: ByteArray): Keys? {
         assert(serverPublicKey.size == KEY_SIZE)
 
-        val keys = Keys(serverPublicKey.copyOf())
+        val keys = KeysImpl(serverPublicKey.copyOf())
         assert(lazySodium.cryptoKxKeypair(keys.clientPublicKey, keys.clientSecretKey))
 
         return if (lazySodium.cryptoKxClientSessionKeys(
@@ -51,9 +53,11 @@ class Crypto {
 
     fun initializeCoders(keys: Keys, serverStreamHeader: ByteArray): ByteArray? {
         assert(serverStreamHeader.size == HEADER_SIZE)
+
+        keys as KeysImpl
         assert(keys.valid)
 
-        val coders = Coders()
+        val coders = CodersImpl()
         if (!lazySodium.cryptoSecretStreamInitPull(coders.decryptionState, serverStreamHeader, keys.serverKey))
             return null
 
@@ -102,10 +106,11 @@ class Crypto {
         val encryptionState = SecretStream.State.ByReference()
         copyBytes(encryptionState, CODERS_SIZE / 2)
 
-        return Coders(decryptionState, encryptionState)
+        return CodersImpl(decryptionState, encryptionState)
     }
 
     fun exportCoders(coders: Coders): ByteArray {
+        coders as CodersImpl
         val bytes = ByteArray(CODERS_SIZE)
 
         fun copyBytes(state: SecretStream.State, destinationOffset: Int) {
@@ -120,16 +125,18 @@ class Crypto {
         return bytes
     }
 
-    private val Keys.clientPublicKeyAsServer get() = serverPublicKey
-    private val Keys.serverPublicKeyAsServer get() = clientPublicKey
-    private val Keys.serverSecretKeyAsServer get() = clientSecretKey
+    private val KeysImpl.clientPublicKeyAsServer get() = serverPublicKey
+    private val KeysImpl.serverPublicKeyAsServer get() = clientPublicKey
+    private val KeysImpl.serverSecretKeyAsServer get() = clientSecretKey
 
     fun generateKeyPairAsServer(keys: Keys): ByteArray {
+        keys as KeysImpl
         assert(lazySodium.cryptoKxKeypair(keys.serverPublicKeyAsServer, keys.serverSecretKeyAsServer))
         return keys.serverPublicKeyAsServer
     }
 
     fun exchangeKeysAsServer(keys: Keys, clientPublicKey: ByteArray): Boolean {
+        keys as KeysImpl
         System.arraycopy(clientPublicKey, 0, keys.clientPublicKeyAsServer, 0, KEY_SIZE)
 
         return lazySodium.cryptoKxServerSessionKeys(
@@ -142,6 +149,9 @@ class Crypto {
     }
 
     fun createEncoderAsServer(keys: Keys, coders: Coders): ByteArray? {
+        keys as KeysImpl
+        coders as CodersImpl
+
         val serverStreamHeader = ByteArray(HEADER_SIZE)
 
         return if (!lazySodium.cryptoSecretStreamInitPush(
@@ -153,6 +163,10 @@ class Crypto {
 
     fun createDecoderAsServer(keys: Keys, coders: Coders, clientStreamHeader: ByteArray): Boolean {
         assert(clientStreamHeader.size == HEADER_SIZE)
+
+        keys as KeysImpl
+        coders as CodersImpl
+
         return lazySodium.cryptoSecretStreamInitPull(coders.decryptionState, clientStreamHeader, keys.clientKey)
     }
 
@@ -160,6 +174,7 @@ class Crypto {
 
     fun encrypt(coders: Coders, bytes: ByteArray): ByteArray? {
         assert(bytes.isNotEmpty())
+        coders as CodersImpl
 
         val encryptedSize = encryptedSize(bytes.size)
         val generatedEncryptedSizeAddress = LongArray(1) // 'cause long arr[1] is the same as long* to the arr's first element
@@ -180,6 +195,7 @@ class Crypto {
 
     fun decrypt(coders: Coders, bytes: ByteArray): ByteArray? {
         assert(bytes.size > ADDITIONAL_BYTES_SIZE)
+        coders as CodersImpl
 
         val decryptedSize = bytes.size - ADDITIONAL_BYTES_SIZE
         val generatedDecryptedSizeAddress = LongArray(1)
@@ -311,18 +327,22 @@ class Crypto {
         return new.getByteArray(0, bytes.size).sliceArray(0..newSize)
     }
 
-    data class Coders(
+    abstract class Coders
+
+    private data class CodersImpl(
         val decryptionState: SecretStream.State = SecretStream.State.ByReference(),
         val encryptionState: SecretStream.State = SecretStream.State.ByReference()
-    )
+    ) : Coders()
 
-    data class Keys(
+    abstract class Keys
+
+    private data class KeysImpl(
         val serverPublicKey: ByteArray = ByteArray(KEY_SIZE),
         val clientPublicKey: ByteArray = ByteArray(KEY_SIZE),
         val clientSecretKey: ByteArray = ByteArray(KEY_SIZE),
         val clientKey: ByteArray = ByteArray(KEY_SIZE),
         val serverKey: ByteArray = ByteArray(KEY_SIZE)
-    ) {
+    ) : Keys() {
         val valid get() =
             serverPublicKey.size == KEY_SIZE &&
             clientPublicKey.size == KEY_SIZE &&
@@ -338,7 +358,7 @@ class Crypto {
             if (this === other) return true
             if (javaClass != other?.javaClass) return false
 
-            other as Keys
+            other as KeysImpl
 
             if (!serverPublicKey.contentEquals(other.serverPublicKey)) return false
             if (!clientPublicKey.contentEquals(other.clientPublicKey)) return false
