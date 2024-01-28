@@ -20,11 +20,11 @@ package org.exchatge
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
-import junit.framework.Assert.assertNull
 import org.exchatge.model.App
 import org.exchatge.model.Crypto
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -97,6 +97,7 @@ class CryptoTest {
             password[i] = Random.nextInt('a'.code, 'z'.code).toByte()
 
         val key = crypto.makeKey(password)
+        assertTrue(key.size == Crypto.KEY_SIZE)
 
         val original = ByteArray(10)
         crypto.randomizeBuffer(original)
@@ -127,5 +128,25 @@ class CryptoTest {
 
         val hash = crypto.hashMultipart(state, null)
         assertNotNull(hash)
+    }
+
+    @Test
+    fun padding() {
+//        for (i in 0..1) {
+            val first = true
+
+            val size = if (first) 10 else Crypto.PADDING_BLOCK_SIZE
+            val original = ByteArray(size)
+            for (j in 0 until size) original[j] = 0x80.toByte()
+
+            val padded = crypto.addPadding(original)
+            assertTrue(padded.size % Crypto.PADDING_BLOCK_SIZE == 0 && padded.size > size)
+//
+//            val unpadded = crypto.removePadding(padded)
+//            assertNotNull(unpadded)
+//            assertTrue(unpadded!!.size == size)
+//
+//            assertArrayEquals(original, unpadded)
+//        }
     }
 }

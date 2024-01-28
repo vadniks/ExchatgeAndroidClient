@@ -306,22 +306,30 @@ class Crypto {
 
         val maxSize = bytes.size + PADDING_BLOCK_SIZE
         val new = Memory(maxSize.toLong())
-        System.arraycopy(bytes, 0, new, 0, bytes.size)
+        log("a")
+        new.write(0, bytes, 0, bytes.size)
 
         val newSizeAddress = IntByReference()
-        assert(lazySodium.sodiumPad(newSizeAddress, new.getPointer(0), bytes.size, PADDING_BLOCK_SIZE, maxSize))
+        newSizeAddress.pointer = Memory(8)
+        log("b " + newSizeAddress.pointer + " | " + maxSize + ' ' + new.size() + ' ' + bytes.size + ' ' + new)
+        assert(lazySodium.sodiumPad(newSizeAddress, new, bytes.size, PADDING_BLOCK_SIZE, maxSize))
+        log("c") // TODO: works now: don't new.getPointer() as it's does smth that it's documentation doesn't explain. Instead use Memory directly as it's subclassed from Pointer
 
         val newSize = newSizeAddress.value
-        assert(newSize > bytes.size)
+        log("d")
+        assert(newSize > bytes.size && newSize <= maxSize)
 
-        return new.getByteArray(0, maxSize).sliceArray(0 until newSize)
+        val adjusted = ByteArray(newSize)
+        new.read(0, adjusted, 0, newSize)
+        log("e")
+        return adjusted
     }
 
     fun removePadding(bytes: ByteArray): ByteArray? {
         assert(bytes.isNotEmpty() && bytes.size % PADDING_BLOCK_SIZE == 0)
 
         val new = Memory(bytes.size.toLong())
-        System.arraycopy(bytes, 0, new, 0, bytes.size)
+        new.write(0, bytes, 0, bytes.size)
 
         val newSizeAddress = IntByReference()
         if (!lazySodium.sodiumUnpad(newSizeAddress, new.getPointer(0), bytes.size, PADDING_BLOCK_SIZE))
@@ -329,7 +337,10 @@ class Crypto {
 
         val newSize = newSizeAddress.value
         assert(newSize > 0 && newSize <= bytes.size)
-        return new.getByteArray(0, bytes.size).sliceArray(0 until newSize)
+
+        val adjusted = ByteArray(newSize)
+        new.read(0, adjusted, 0, newSize)
+        return adjusted
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.NONE)
