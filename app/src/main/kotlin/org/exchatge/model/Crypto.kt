@@ -21,10 +21,11 @@ package org.exchatge.model
 import com.goterl.lazysodium.LazySodiumAndroid
 import com.goterl.lazysodium.SodiumAndroid
 import com.goterl.lazysodium.interfaces.SecretStream
+import com.goterl.lazysodium.utils.HexMessageEncoder
 import java.nio.charset.StandardCharsets
 
 class Crypto {
-    private val lazySodium = LazySodiumAndroid(SodiumAndroid(), StandardCharsets.US_ASCII) // using ascii as he desktop client's ui cannot display anything other than ascii, but it can process non ascii though
+    private val lazySodium = LazySodiumAndroid(SodiumAndroid(), StandardCharsets.US_ASCII, HexMessageEncoder()) // using ascii as he desktop client's ui cannot display anything other than ascii, but it can process non ascii though
 
     init {
         assert(!initialized)
@@ -216,7 +217,7 @@ class Crypto {
             encrypted,
             bytes,
             bytes.size.toLong(),
-            encrypted.sliceArray(nonceStart..encryptedSize),
+            encrypted.sliceArray(nonceStart..encryptedSize), // byte* a = ...; byte* b = a + 1; assert(a[1] == *b);
             key
         )) return null
 
@@ -239,6 +240,39 @@ class Crypto {
         )) return null
 
         return decrypted
+    }
+
+    fun hexEncode(bytes: ByteArray): String {
+        assert(bytes.isNotEmpty())
+        return lazySodium.encodeToString(bytes)
+    }
+
+    fun hexDecode(string: String): ByteArray? {
+        assert(string.isNotEmpty())
+        val bytes = lazySodium.decodeFromString(string)
+        return if (bytes.isEmpty()) null else bytes
+    }
+
+    @Suppress("NAME_SHADOWING")
+    fun hashMultipart(previous: ByteArray?, bytes: ByteArray?): ByteArray? {
+        when {
+            previous == null && bytes == null -> {
+                val previous = ByteArray(HASH_STATE_SIZE)
+                assert(lazySodium.cryptoGenericHashInit(previous, null, 0, HASH_SIZE))
+                return previous
+            }
+            previous != null && bytes != null -> {
+                assert(bytes.isNotEmpty())
+                assert(lazySodium.cryptoGenericHashUpdate(previous, bytes, bytes.size.toLong()))
+                return null
+            }
+            previous != null && bytes == null -> {
+                val hash = ByteArray(HASH_SIZE)
+                assert(lazySodium.cryptoGenericHashFinal(previous, hash, HASH_SIZE))
+                return hash
+            }
+            else -> throw IllegalStateException()
+        }
     }
 
     data class Coders(
@@ -306,5 +340,6 @@ class Crypto {
         private const val TAG_INTERMEDIATE: Byte = 0
         private const val MAC_SIZE = 16
         private const val NONCE_SIZE = 24
+        private const val HASH_STATE_SIZE = 384
     }
 }
