@@ -22,6 +22,8 @@ import com.goterl.lazysodium.LazySodiumAndroid
 import com.goterl.lazysodium.SodiumAndroid
 import com.goterl.lazysodium.interfaces.SecretStream
 import com.goterl.lazysodium.utils.HexMessageEncoder
+import com.sun.jna.Memory
+import com.sun.jna.ptr.IntByReference
 import java.nio.charset.StandardCharsets
 
 class Crypto {
@@ -273,6 +275,22 @@ class Crypto {
             }
             else -> throw IllegalStateException()
         }
+    }
+
+    fun addPadding(bytes: ByteArray): Pair<Int, ByteArray> {
+        assert(bytes.isNotEmpty())
+
+        val maxSize = bytes.size + PADDING_BLOCK_SIZE
+        val new = Memory(maxSize.toLong())
+        System.arraycopy(bytes, 0, new, 0, bytes.size)
+
+        val newSizeAddress = IntByReference()
+        assert(lazySodium.sodiumPad(newSizeAddress, new.getPointer(0), bytes.size, PADDING_BLOCK_SIZE, maxSize))
+
+        val newSize = newSizeAddress.value
+        assert(newSize > bytes.size)
+
+        return newSize to new.getByteArray(0, maxSize).sliceArray(0..newSize)
     }
 
     data class Coders(
