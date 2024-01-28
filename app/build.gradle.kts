@@ -2,7 +2,7 @@
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
-    id("com.google.devtools.ksp")
+    kotlin("kapt")
 }
 
 android {
@@ -55,12 +55,14 @@ android {
 }
 
 dependencies {
-    implementation("com.google.dagger:hilt-android:2.50")
-    ksp("com.google.dagger:dagger-compiler:2.50")
-    ksp("com.google.dagger:hilt-compiler:2.50")
+    implementation("com.google.devtools.ksp:symbol-processing-api:1.9.22-1.0.17")
 
     implementation("androidx.room:room-runtime:2.6.1")
-    ksp("androidx.room:room-compiler:2.6.1")
+    //noinspection KaptUsageInsteadOfKsp
+    kapt("androidx.room:room-compiler:2.6.1")
+//    ksp("androidx.room:room-compiler:2.6.1") // <- if ksp instead of kapt is used with room dependency then android instrumentation tests don't work at all
+    // build fails with this message: debugAndroidTest Kotlin StreamCorruptedException: unexpected EOF in middle of data block
+    // but if this ksp dependency is disabled the build succeeds
     implementation("androidx.room:room-ktx:2.6.1")
     implementation("androidx.room:room-rxjava3:2.6.1")
 
@@ -83,6 +85,8 @@ dependencies {
     implementation("androidx.compose.material3:material3")
 
     testImplementation("junit:junit:4.13.2")
+    androidTestImplementation("androidx.test.ext:junit:1.1.5")
+    androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
 
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
