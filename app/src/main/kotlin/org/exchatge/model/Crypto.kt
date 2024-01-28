@@ -330,11 +330,28 @@ class Crypto {
         return new.getByteArray(0, bytes.size).sliceArray(0..newSize)
     }
 
-    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    @VisibleForTesting(otherwise = VisibleForTesting.NONE)
     fun clientKey(keys: Keys) = (keys as KeysImpl).clientKey
 
-    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    @VisibleForTesting(otherwise = VisibleForTesting.NONE)
     fun serverKey(keys: Keys) = (keys as KeysImpl).serverKey
+
+    @VisibleForTesting(otherwise = VisibleForTesting.NONE)
+    fun makeSignKeys(): Pair<ByteArray, ByteArray> {
+        val pair = Pair(ByteArray(KEY_SIZE), ByteArray(SIGN_SECRET_KEY_SIZE))
+        assert(lazySodium.cryptoSignKeypair(pair.first, pair.second))
+        return pair
+    }
+
+    @VisibleForTesting(otherwise = VisibleForTesting.NONE)
+    fun sign(bytes: ByteArray, signSecretKey: ByteArray): ByteArray {
+        assert(bytes.isNotEmpty() && signSecretKey.size == SIGN_SECRET_KEY_SIZE)
+
+        val signed = ByteArray(SIGNATURE_SIZE + bytes.size)
+        assert(lazySodium.cryptoSign(signed, bytes, bytes.size.toLong(), signSecretKey))
+
+        return signed
+    }
 
     abstract class Coders
 
@@ -388,7 +405,7 @@ class Crypto {
         }
     }
 
-    private companion object {
+    companion object {
         @JvmStatic
         private var initialized = false
 
@@ -406,5 +423,8 @@ class Crypto {
         private const val MAC_SIZE = 16
         private const val NONCE_SIZE = 24
         private const val HASH_STATE_SIZE = 384
+
+        @VisibleForTesting(otherwise = VisibleForTesting.NONE)
+        const val SIGN_SECRET_KEY_SIZE = 64
     }
 }

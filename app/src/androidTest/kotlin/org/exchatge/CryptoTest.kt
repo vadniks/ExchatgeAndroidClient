@@ -21,6 +21,7 @@ package org.exchatge
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import org.exchatge.model.App
+import org.exchatge.model.Crypto
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -40,7 +41,22 @@ class CryptoTest {
 
         assertTrue(crypto.exchangeKeysAsServer(serverKeys, crypto.clientPublicKey(clientKeys!!)))
 
-        assertTrue(crypto.clientKey(serverKeys).contentEquals(crypto.clientKey(clientKeys)))
-        assertTrue(crypto.serverKey(serverKeys).contentEquals(crypto.serverKey(clientKeys)))
+        assertTrue(crypto.clientKey(serverKeys) contentEquals crypto.clientKey(clientKeys))
+        assertTrue(crypto.serverKey(serverKeys) contentEquals crypto.serverKey(clientKeys))
+    }
+
+    @Test
+    fun signature() {
+        val keys = crypto.makeSignKeys()
+
+        val message = ByteArray(10)
+        crypto.randomizeBuffer(message)
+
+        val signed = crypto.sign(message, keys.second)
+        assertTrue(crypto.checkServerSignedBytes(
+            signed.sliceArray(0 until Crypto.SIGNATURE_SIZE),
+            signed.sliceArray(Crypto.SIGNATURE_SIZE until signed.size),
+            keys.first
+        ))
     }
 }
