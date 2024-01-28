@@ -277,7 +277,7 @@ class Crypto {
         }
     }
 
-    fun addPadding(bytes: ByteArray): Pair<Int, ByteArray> {
+    fun addPadding(bytes: ByteArray): ByteArray {
         assert(bytes.isNotEmpty())
 
         val maxSize = bytes.size + PADDING_BLOCK_SIZE
@@ -290,7 +290,22 @@ class Crypto {
         val newSize = newSizeAddress.value
         assert(newSize > bytes.size)
 
-        return newSize to new.getByteArray(0, maxSize).sliceArray(0..newSize)
+        return new.getByteArray(0, maxSize).sliceArray(0..newSize)
+    }
+
+    fun removePadding(bytes: ByteArray): ByteArray? {
+        assert(bytes.isNotEmpty() && bytes.size % PADDING_BLOCK_SIZE == 0)
+
+        val new = Memory(bytes.size.toLong())
+        System.arraycopy(bytes, 0, new, 0, bytes.size)
+
+        val newSizeAddress = IntByReference()
+        if (!lazySodium.sodiumUnpad(newSizeAddress, new.getPointer(0), bytes.size, PADDING_BLOCK_SIZE))
+            return null
+
+        val newSize = newSizeAddress.value
+        assert(newSize > 0 && newSize <= bytes.size)
+        return new.getByteArray(0, bytes.size).sliceArray(0..newSize)
     }
 
     data class Coders(
