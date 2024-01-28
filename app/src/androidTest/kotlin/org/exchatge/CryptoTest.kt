@@ -23,6 +23,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import org.exchatge.model.App
 import org.exchatge.model.Crypto
 import org.junit.Assert.assertArrayEquals
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -80,8 +81,27 @@ class CryptoTest {
 
         val encrypted = crypto.encrypt(coders, original)
         assertNotNull(encrypted)
+        assertTrue(encrypted!!.size == crypto.encryptedSize(original.size))
 
-        val decrypted = crypto.decrypt(coders, encrypted!!)
+        val decrypted = crypto.decrypt(coders, encrypted)
+        assertNotNull(decrypted)
+
+        assertArrayEquals(original, decrypted)
+    }
+
+    @Test
+    fun singleEncryption() {
+        val key = ByteArray(Crypto.KEY_SIZE)
+        crypto.randomizeBuffer(key)
+
+        val original = ByteArray(10)
+        crypto.randomizeBuffer(original)
+
+        val encrypted = crypto.encryptSingle(key, original)
+        assertNotNull(encrypted)
+        assertTrue(encrypted!!.size == crypto.singleEncryptedSize(original.size))
+
+        val decrypted = crypto.decryptSingle(key, encrypted)
         assertNotNull(decrypted)
 
         assertArrayEquals(original, decrypted)
