@@ -29,6 +29,7 @@ class Kernel(private val contextGetter: () -> Context) {
 
     // TODO: add asyncActionsThread to netService
     // TODO: add database to netService or to new service
+    // TODO: add settings to ui to adjust options which will be stored as sharedPreferences
 
     init {
         assert(!initialized)
