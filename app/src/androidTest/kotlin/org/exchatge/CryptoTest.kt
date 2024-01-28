@@ -28,6 +28,7 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
+import kotlin.random.Random
 
 @RunWith(AndroidJUnit4::class)
 class CryptoTest {
@@ -91,8 +92,11 @@ class CryptoTest {
 
     @Test
     fun singleEncryption() {
-        val key = ByteArray(Crypto.KEY_SIZE)
-        crypto.randomizeBuffer(key)
+        val password = ByteArray(10)
+        for (i in password.indices)
+            password[i] = Random.nextInt('a'.code, 'z'.code).toByte()
+
+        val key = crypto.makeKey(password)
 
         val original = ByteArray(10)
         crypto.randomizeBuffer(original)
