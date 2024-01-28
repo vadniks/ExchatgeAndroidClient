@@ -20,10 +20,10 @@ package org.exchatge
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
+import junit.framework.Assert.assertNull
 import org.exchatge.model.App
 import org.exchatge.model.Crypto
 import org.junit.Assert.assertArrayEquals
-import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -105,5 +105,23 @@ class CryptoTest {
         assertNotNull(decrypted)
 
         assertArrayEquals(original, decrypted)
+    }
+
+    @Test
+    fun multipartHash() {
+        val size = 1 shl 10
+        val slice  = size / 8
+
+        val bytes = ByteArray(size)
+        crypto.randomizeBuffer(bytes)
+
+        val state = crypto.hashMultipart(null, null)
+        assertNotNull(state)
+
+        for (i in 0 until size step slice)
+            assertNull(crypto.hashMultipart(state, bytes.sliceArray(i until i + slice)))
+
+        val hash = crypto.hashMultipart(state, null)
+        assertNotNull(hash)
     }
 }
