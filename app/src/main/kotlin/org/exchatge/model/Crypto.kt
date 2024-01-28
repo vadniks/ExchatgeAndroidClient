@@ -241,7 +241,7 @@ class Crypto {
             encrypted,
             bytes,
             bytes.size.toLong(),
-            encrypted.sliceArray(nonceStart..encryptedSize), // byte* a = ...; byte* b = a + 1; assert(a[1] == *b);
+            encrypted.sliceArray(nonceStart until encryptedSize), // byte* a = ...; byte* b = a + 1; assert(a[1] == *b);
             key
         )) return null
 
@@ -259,7 +259,7 @@ class Crypto {
             decrypted,
             bytes,
             encryptedAndTagSize.toLong(),
-            bytes.sliceArray(encryptedAndTagSize..(bytes.size)),
+            bytes.sliceArray(encryptedAndTagSize until bytes.size),
             key
         )) return null
 
@@ -312,7 +312,7 @@ class Crypto {
         val newSize = newSizeAddress.value
         assert(newSize > bytes.size)
 
-        return new.getByteArray(0, maxSize).sliceArray(0..newSize)
+        return new.getByteArray(0, maxSize).sliceArray(0 until newSize)
     }
 
     fun removePadding(bytes: ByteArray): ByteArray? {
@@ -327,7 +327,7 @@ class Crypto {
 
         val newSize = newSizeAddress.value
         assert(newSize > 0 && newSize <= bytes.size)
-        return new.getByteArray(0, bytes.size).sliceArray(0..newSize)
+        return new.getByteArray(0, bytes.size).sliceArray(0 until newSize)
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.NONE)
