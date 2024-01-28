@@ -37,6 +37,8 @@ class Crypto {
 
     fun makeKeys() = KeysImpl() as Keys
 
+    fun makeCoders() = CodersImpl() as Coders
+
     fun exchangeKeys(serverPublicKey: ByteArray): Keys? {
         assert(serverPublicKey.size == KEY_SIZE)
 
@@ -212,7 +214,7 @@ class Crypto {
             tagAddress,
             bytes,
             bytes.size.toLong(),
-            null,
+            ByteArray(0),
             0
         )) return null
 

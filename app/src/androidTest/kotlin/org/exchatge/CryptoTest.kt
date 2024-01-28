@@ -22,6 +22,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import org.exchatge.model.App
 import org.exchatge.model.Crypto
+import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -58,5 +59,31 @@ class CryptoTest {
             signed.sliceArray(Crypto.SIGNATURE_SIZE until signed.size),
             keys.first
         ))
+    }
+
+    @Test
+    fun streamEncryption() {
+        val key = ByteArray(Crypto.KEY_SIZE)
+        crypto.randomizeBuffer(key)
+
+        val keys = crypto.makeKeys()
+        System.arraycopy(key, 0, crypto.clientKey(keys), 0, Crypto.KEY_SIZE)
+        System.arraycopy(key, 0, crypto.serverKey(keys), 0, Crypto.KEY_SIZE)
+
+        val coders = crypto.makeCoders()
+        val streamHeader = crypto.createEncoderAsServer(keys, coders)
+        assertNotNull(streamHeader)
+        assertTrue(crypto.createDecoderAsServer(keys, coders, streamHeader!!))
+
+        val original = ByteArray(10)
+        crypto.randomizeBuffer(original)
+
+        val encrypted = crypto.encrypt(coders, original)
+        assertNotNull(encrypted)
+
+        val decrypted = crypto.decrypt(coders, encrypted!!)
+        assertNotNull(decrypted)
+
+        assertArrayEquals(original, decrypted)
     }
 }
