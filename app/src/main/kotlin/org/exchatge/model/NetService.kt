@@ -38,6 +38,7 @@ class NetService : Service() {
         assert(!xRunning.get())
 
         super.onCreate()
+        kernel.net.onCreate()
         xRunning.set(true)
 
         listenJob = GlobalScope.launch(Dispatchers.Default) {

@@ -30,6 +30,10 @@ class Net(private val kernel: Kernel) {
             kernel.context.startService(Intent(kernel.context, NetService::class.java))!! // TODO: start the service only if the user has logged in
     }
 
+    fun onCreate() {
+
+    }
+
     fun listen() { // TODO: add an 'exit' button to UI which will close the activity as well as the service to completely shutdown the whole app
         while (NetService.running) {
             Thread.sleep(500)
