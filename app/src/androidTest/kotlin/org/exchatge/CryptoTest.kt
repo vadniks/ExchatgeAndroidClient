@@ -23,6 +23,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import org.exchatge.model.App
 import org.exchatge.model.Crypto
 import org.junit.Assert.assertArrayEquals
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -151,7 +152,13 @@ class CryptoTest {
     }
 
     @Test
-    fun codersExport() {}
+    fun codersExport() {
+        val original = crypto.makeCoders()
+        val serialized = crypto.exportCoders(original)
+        val deserialized = crypto.recreateCoders(serialized)
+
+        assertTrue(crypto.compareCoders(original, deserialized))
+    }
 
     @Test
     fun hexEncode() {}

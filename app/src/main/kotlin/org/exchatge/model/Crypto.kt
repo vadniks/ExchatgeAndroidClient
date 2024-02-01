@@ -361,6 +361,16 @@ class Crypto {
         return signed
     }
 
+    @VisibleForTesting(otherwise = VisibleForTesting.NONE)
+    fun compareCoders(a: Coders, b: Coders): Boolean {
+        a as CodersImpl
+        b as CodersImpl
+
+        return a.decryptionState.k contentEquals b.decryptionState.k
+            && a.decryptionState.nonce contentEquals b.decryptionState.nonce
+            && a.decryptionState._pad contentEquals b.decryptionState._pad
+    }
+
     abstract class Coders
 
     private data class CodersImpl(
