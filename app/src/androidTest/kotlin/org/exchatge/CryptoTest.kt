@@ -23,7 +23,6 @@ import androidx.test.platform.app.InstrumentationRegistry
 import org.exchatge.model.App
 import org.exchatge.model.Crypto
 import org.junit.Assert.assertArrayEquals
-import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -161,5 +160,16 @@ class CryptoTest {
     }
 
     @Test
-    fun hexEncode() {}
+    fun hexEncode() {
+        val original = ByteArray(10)
+        crypto.randomizeBuffer(original)
+
+        val encoded = crypto.hexEncode(original)
+        assertTrue(encoded.isNotEmpty())
+
+        val decoded = crypto.hexDecode(encoded)
+        assertNotNull(decoded)
+
+        assertTrue(original contentEquals decoded)
+    }
 }
