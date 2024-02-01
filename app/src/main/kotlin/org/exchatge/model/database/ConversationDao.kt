@@ -18,21 +18,9 @@
 
 package org.exchatge.model.database
 
-import android.content.Context
-import androidx.room.Room
-import androidx.room.RoomDatabase
+import androidx.room.Dao
 
-@androidx.room.Database(version = 1, entities = [Conversation::class, Message::class])
-abstract class Database : RoomDatabase() {
-    abstract val conversationDao: ConversationDao
-    abstract val messageDao: MessageDao
+@Dao
+interface ConversationDao {
 
-    companion object {
-
-        @JvmStatic
-        fun init(context: Context) = Room
-            .databaseBuilder(context, Database::class.java, Database::class.simpleName)
-            .setJournalMode(JournalMode.TRUNCATE)
-            .build()
-    }
 }

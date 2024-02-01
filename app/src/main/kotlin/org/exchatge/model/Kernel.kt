@@ -41,7 +41,7 @@ class Kernel(private val contextGetter: () -> Context) {
     }
 
     fun onAppDestroy() {
-
+        database.close()
     }
 
     private companion object {
