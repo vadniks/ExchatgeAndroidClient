@@ -16,12 +16,17 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package org.exchatge.model
+package org.exchatge.model.database
 
 import android.content.Context
-import android.content.Intent
+import androidx.room.Room
+import androidx.room.RoomDatabase
 
-class BroadcastReceiver : android.content.BroadcastReceiver() {
-    override fun onReceive(context: Context, intent: Intent) =
-        assert(intent.action == Intent.ACTION_BOOT_COMPLETED) // the fact of receiving smth will trigger initialization of Context which is the App which then will trigger initialization of Kernel and NetService will be started
+@androidx.room.Database(version = 1, entities = [Conversation::class, Message::class])
+abstract class Database : RoomDatabase() {
+
+    companion object {
+        @JvmStatic
+        fun init(context: Context) = Room.databaseBuilder(context, Database::class.java, Database::class.simpleName).build()
+    }
 }

@@ -16,36 +16,13 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package org.exchatge.model
+package org.exchatge.model.net
 
+import android.content.Context
 import android.content.Intent
+import org.exchatge.model.assert
 
-class Net(private val kernel: Kernel) {
-
-    init {
-        assert(!initialized)
-        initialized = true
-
-        if (!NetService.running)
-            kernel.context.startService(Intent(kernel.context, NetService::class.java))!! // TODO: start the service only if the user has logged in
-    }
-
-    fun onCreate() {
-
-    }
-
-    fun listen() { // TODO: add an 'exit' button to UI which will close the activity as well as the service to completely shutdown the whole app
-        while (NetService.running) {
-            Thread.sleep(500)
-        }
-    }
-
-    fun onDestroy() {
-
-    }
-
-    private companion object {
-        @JvmStatic
-        private var initialized = false
-    }
+class BroadcastReceiver : android.content.BroadcastReceiver() {
+    override fun onReceive(context: Context, intent: Intent) =
+        assert(intent.action == Intent.ACTION_BOOT_COMPLETED) // the fact of receiving smth will trigger initialization of Context which is the App which then will trigger initialization of Kernel and NetService will be started
 }

@@ -16,7 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package org.exchatge.model
+package org.exchatge.model.net
 
 import android.app.Service
 import android.content.Intent
@@ -27,6 +27,9 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import org.exchatge.model.App
+import org.exchatge.model.assertNotMainThread
+import org.exchatge.model.assert
 import java.util.concurrent.atomic.AtomicBoolean
 
 class NetService : Service() {

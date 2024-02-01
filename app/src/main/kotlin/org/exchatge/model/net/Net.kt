@@ -16,32 +16,35 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package org.exchatge.model
+package org.exchatge.model.net
 
-import android.content.Context
-import org.exchatge.model.database.Database
-import org.exchatge.model.net.Net
-import org.exchatge.presenter.ActivityPresenter
+import android.content.Intent
+import org.exchatge.model.Kernel
+import org.exchatge.model.assert
 
-class Kernel(private val contextGetter: () -> Context) {
-    val context get() = contextGetter() // getters are used instead of the object itself as the storing context smwhr is a memory leak
-    val crypto = Crypto()
-    val database = Database.init(context)
-    val net = Net(this)
-    val presenter = ActivityPresenter(this)
-
-    // TODO: add asyncActionsThread to netService
-    // TODO: add database to netService or to new service
-    // TODO: add settings to ui to adjust options which will be stored as sharedPreferences
-    // TODO: test if service goes down on activity startup/shutdown
+class Net(private val kernel: Kernel) {
+    val running get() = NetService.running
 
     init {
         assert(!initialized)
         initialized = true
+
+        if (!NetService.running)
+            kernel.context.startService(Intent(kernel.context, NetService::class.java))!! // TODO: start the service only if the user has logged in
     }
 
-    fun onAppDestroy() {
+    fun onCreate() {
 
+    }
+
+    fun listen() { // TODO: add an 'exit' button to UI which will close the activity as well as the service to completely shutdown the whole app
+        while (NetService.running) {
+            Thread.sleep(500)
+        }
+    }
+
+    fun onDestroy() {
+        kernel.onAppDestroy()
     }
 
     private companion object {
