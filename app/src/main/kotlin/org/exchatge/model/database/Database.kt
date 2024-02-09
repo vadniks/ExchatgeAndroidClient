@@ -41,7 +41,6 @@ abstract class Database : RoomDatabase() {
                 .databaseBuilder(context, Database::class.java, Database::class.simpleName)
                 .setJournalMode(JournalMode.TRUNCATE)
                 .build()
-                .also { it.query("pragma journal_mode = off", emptyArray()).close() }
         }
     }
 }
