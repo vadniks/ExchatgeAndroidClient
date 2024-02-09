@@ -21,6 +21,7 @@ package org.exchatge.model.database
 import android.content.Context
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import org.exchatge.model.assert
 
 @androidx.room.Database(version = 1, entities = [Conversation::class, Message::class])
 abstract class Database : RoomDatabase() {
@@ -28,11 +29,19 @@ abstract class Database : RoomDatabase() {
     abstract val messageDao: MessageDao
 
     companion object {
+        @JvmStatic
+        private var initialized = false
 
         @JvmStatic
-        fun init(context: Context) = Room
-            .databaseBuilder(context, Database::class.java, Database::class.simpleName)
-            .setJournalMode(JournalMode.TRUNCATE)
-            .build()
+        fun init(context: Context): Database {
+            assert(!initialized)
+            initialized = true
+
+            return Room
+                .databaseBuilder(context, Database::class.java, Database::class.simpleName)
+                .setJournalMode(JournalMode.TRUNCATE)
+                .build()
+                .also { it.query("pragma journal_mode = off", emptyArray()).close() }
+        }
     }
 }
