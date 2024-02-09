@@ -30,6 +30,7 @@ import kotlinx.coroutines.runBlocking
 import org.exchatge.model.App
 import org.exchatge.model.assertNotMainThread
 import org.exchatge.model.assert
+import org.exchatge.model.log
 import java.util.concurrent.atomic.AtomicBoolean
 
 class NetService : Service() {
@@ -39,8 +40,10 @@ class NetService : Service() {
     @OptIn(DelicateCoroutinesApi::class)
     override fun onCreate() {
         assert(!xRunning.get())
-
         super.onCreate()
+
+        log("ns oc")
+
         kernel.net.onCreate()
         xRunning.set(true)
 
@@ -53,11 +56,18 @@ class NetService : Service() {
         }
     }
 
-    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int) = START_STICKY
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int) = START_STICKY.also { log("ns osc") } // open db here
 
     override fun onBind(intent: Intent?) = null as IBinder?
 
+    override fun onTaskRemoved(rootIntent: Intent?) {
+        log("ns otr")
+        // make this service be an intent service to restart the service itself via sending broadcast or close db here
+        super.onTaskRemoved(rootIntent)
+    }
+
     override fun onDestroy() {
+        log("ns od")
         xRunning.set(false)
 
         runBlocking {

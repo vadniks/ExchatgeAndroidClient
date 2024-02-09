@@ -29,6 +29,8 @@ class ActivityPresenter(private val kernel: Kernel) {
     init {
         assert(!initialized)
         initialized = true
+
+        kernel.onActivityCreate()
     }
 
     fun onActivityDestroy() {

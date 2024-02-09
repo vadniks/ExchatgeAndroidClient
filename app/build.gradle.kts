@@ -55,8 +55,6 @@ android {
 }
 
 dependencies {
-    implementation("com.google.devtools.ksp:symbol-processing-api:1.9.22-1.0.17")
-
     implementation("androidx.room:room-runtime:2.6.1")
     //noinspection KaptUsageInsteadOfKsp
     kapt("androidx.room:room-compiler:2.6.1")

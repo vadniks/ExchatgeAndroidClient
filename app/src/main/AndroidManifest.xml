@@ -39,6 +39,7 @@
 
         <service
             android:name=".model.net.NetService"
+            android:process=":service"
             android:exported="false"/>
 
         <receiver
@@ -47,17 +48,19 @@
 
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED"/>
+                <action android:name="org.exchatge.RESTART_SERVICE"/>
             </intent-filter>
         </receiver>
 
         <activity
             android:name=".view.Activity"
             android:exported="true"
+            android:launchMode="singleInstance"
             android:theme="@style/Theme.Exchatge">
 
             <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
     </application>

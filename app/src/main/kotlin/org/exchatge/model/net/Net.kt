@@ -19,8 +19,10 @@
 package org.exchatge.model.net
 
 import android.content.Intent
+import kotlinx.coroutines.delay
 import org.exchatge.model.Kernel
 import org.exchatge.model.assert
+import org.exchatge.model.log
 
 class Net(private val kernel: Kernel) {
     val running get() = NetService.running
@@ -28,7 +30,9 @@ class Net(private val kernel: Kernel) {
     init {
         assert(!initialized)
         initialized = true
+    }
 
+    fun startService() {
         if (!NetService.running)
             kernel.context.startService(Intent(kernel.context, NetService::class.java))!! // TODO: start the service only if the user has logged in
     }
@@ -37,9 +41,10 @@ class Net(private val kernel: Kernel) {
 
     }
 
-    fun listen() { // TODO: add an 'exit' button to UI which will close the activity as well as the service to completely shutdown the whole app
+    suspend fun listen() { // TODO: add an 'exit' button to UI which will close the activity as well as the service to completely shutdown the whole app
         while (NetService.running) {
-            Thread.sleep(500)
+            log("n l")
+            delay(500)
         }
     }
 
