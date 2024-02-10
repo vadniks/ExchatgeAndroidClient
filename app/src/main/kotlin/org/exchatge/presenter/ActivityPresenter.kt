@@ -29,7 +29,10 @@ class ActivityPresenter(private val kernel: Kernel) {
     init {
         assert(!initialized)
         initialized = true
+    }
 
+    fun onActivityCreate(activity: Activity) {
+        activityGetter = { activity }
         kernel.onActivityCreate()
     }
 
@@ -43,6 +46,6 @@ class ActivityPresenter(private val kernel: Kernel) {
         private var initialized = false
 
         @JvmStatic
-        val Activity.activityPresenter get() = kernel.presenter.also { it.activityGetter = { this } }
+        val Activity.activityPresenter get() = kernel.presenter.also { it.onActivityCreate(this) }
     }
 }
