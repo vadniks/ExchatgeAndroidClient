@@ -102,6 +102,7 @@ data class NetMessage(
     }
 
     companion object {
+
         fun unpack(bytes: ByteArray): NetMessage {
             assert(bytes.size in MESSAGE_HEAD_SIZE..MAX_MESSAGE_SIZE)
 

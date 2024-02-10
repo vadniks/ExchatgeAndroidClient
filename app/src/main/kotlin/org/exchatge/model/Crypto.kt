@@ -28,7 +28,7 @@ import com.sun.jna.ptr.IntByReference
 import java.nio.charset.StandardCharsets
 
 class Crypto {
-    private val lazySodium = LazySodiumAndroid(SodiumAndroid(), StandardCharsets.US_ASCII, HexMessageEncoder()) // using ascii as he desktop client's ui cannot display anything other than ascii, but it can process non ascii though
+    private val lazySodium = LazySodiumAndroid(SodiumAndroid(), StandardCharsets.UTF_8, HexMessageEncoder())
 
     init {
         assert(!initialized)
