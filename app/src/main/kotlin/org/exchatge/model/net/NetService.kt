@@ -27,53 +27,41 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import org.exchatge.model.assertNotMainThread
 import org.exchatge.model.assert
 import org.exchatge.model.kernel
-import org.exchatge.model.log
 import java.util.concurrent.atomic.AtomicBoolean
 
 class NetService : Service() {
     private lateinit var listenJob: Job
+    private val net get() = kernel.net
 
     @OptIn(DelicateCoroutinesApi::class)
     override fun onCreate() {
         assert(!xRunning.get())
         super.onCreate()
 
-        log("ns oc")
-
-        kernel.net.onCreate()
+        net.onCreate()
         xRunning.set(true)
 
         listenJob = GlobalScope.launch(Dispatchers.Default) {
-            assertNotMainThread()
-
-            kernel.net.listen()
+            net.listen()
             listenJob.cancel()
-            stopSelf() // *
+            stopSelf()
         }
     }
 
-    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int) = START_STICKY.also { log("ns osc") } // TODO: open db here
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int) = START_STICKY
 
     override fun onBind(intent: Intent?) = null as IBinder?
 
-    override fun onTaskRemoved(rootIntent: Intent?) {
-        log("ns otr")
-        // TODO: close db here
-        super.onTaskRemoved(rootIntent)
-    }
-
     override fun onDestroy() {
-        log("ns od")
         xRunning.set(false)
 
         runBlocking {
             listenJob.join()
         }
 
-        kernel.net.onDestroy()
+        net.onDestroy()
         super.onDestroy()
     }
 

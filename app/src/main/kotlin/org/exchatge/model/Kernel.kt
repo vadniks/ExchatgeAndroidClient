@@ -36,13 +36,16 @@ class Kernel(private val contextGetter: () -> Context) {
     // TODO: test if service goes down on activity startup/shutdown
 
     init {
-        println("k i")
         assert(!initialized)
         initialized = true
     }
 
     fun onActivityCreate() {
         net.startService()
+    }
+
+    fun onActivityDestroy() {
+        database.close()
     }
 
     fun onAppDestroy() {

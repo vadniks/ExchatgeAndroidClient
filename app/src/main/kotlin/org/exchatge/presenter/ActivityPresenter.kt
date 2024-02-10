@@ -35,6 +35,7 @@ class ActivityPresenter(private val kernel: Kernel) {
 
     fun onActivityDestroy() {
         activityGetter = null
+        kernel.onActivityDestroy()
     }
 
     companion object {

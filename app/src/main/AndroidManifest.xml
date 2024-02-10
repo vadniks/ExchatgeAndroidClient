@@ -39,7 +39,6 @@
 
         <service
             android:name=".model.net.NetService"
-            android:process=":service"
             android:exported="false"/>
 
         <receiver

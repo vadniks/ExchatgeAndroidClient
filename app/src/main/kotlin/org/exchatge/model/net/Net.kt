@@ -22,6 +22,7 @@ import android.content.Intent
 import kotlinx.coroutines.delay
 import org.exchatge.model.Kernel
 import org.exchatge.model.assert
+import org.exchatge.model.assertNotMainThread
 import org.exchatge.model.log
 
 class Net(private val kernel: Kernel) {
@@ -38,20 +39,20 @@ class Net(private val kernel: Kernel) {
     }
 
     fun onCreate() {
-
+        log("n oc")
     }
 
     suspend fun listen() { // TODO: add an 'exit' button to UI which will close the activity as well as the service to completely shutdown the whole app
-        var a = 0
-        // TODO: check if db is opened
         while (NetService.running) {
-            log("n l $a")
-            a += 1
+            // TODO: check if db is opened
+            assertNotMainThread()
+            log("n l")
             delay(500)
         }
     }
 
     fun onDestroy() {
+        log("n od")
         kernel.onAppDestroy()
     }
 
