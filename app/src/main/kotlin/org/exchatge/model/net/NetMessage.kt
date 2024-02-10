@@ -84,8 +84,41 @@ data class NetMessage(
         return result
     }
 
-//    fun pack(): ByteArray {
-//        val bytes = ByteArray(MESSAGE_HEAD_SIZE + size)
-//
-//    }
+    fun pack(): ByteArray {
+        val bytes = ByteArray(MESSAGE_HEAD_SIZE + size)
+
+        System.arraycopy(flag.bytes, 0, bytes, 0, 4)
+        System.arraycopy(timestamp.bytes, 0, bytes, 4, 8)
+        System.arraycopy(size.bytes, 0, bytes, 4 + 8, 4)
+        System.arraycopy(index.bytes, 0, bytes, 4 * 2 + 8, 4)
+        System.arraycopy(count.bytes, 0, bytes, 4 * 3 + 8, 4)
+        System.arraycopy(from.bytes, 0, bytes, 4 * 4 + 8, 4)
+        System.arraycopy(to.bytes, 0, bytes, 4 * 5 + 8, 4)
+        System.arraycopy(token, 0, bytes, 4 * 6 + 8, TOKEN_SIZE)
+
+        if (body != null && body.isNotEmpty()) System.arraycopy(body, 0, bytes, MESSAGE_HEAD_SIZE, size)
+
+        return bytes
+    }
+
+    companion object {
+        fun unpack(bytes: ByteArray): NetMessage {
+            assert(bytes.size in MESSAGE_HEAD_SIZE..MAX_MESSAGE_SIZE)
+
+            val size = bytes.sliceArray((4 + 8) until (4 * 2 + 8)).int
+            assert(size == 0 || size in 1..MAX_MESSAGE_BODY_SIZE)
+
+            return NetMessage(
+                bytes.sliceArray(0 until 4).int,
+                bytes.sliceArray(4 until (4 + 8)).long,
+                // size
+                bytes.sliceArray((4 * 2 + 8) until (4 * 3 + 8)).int,
+                bytes.sliceArray((4 * 3 + 8) until (4 * 4 + 8)).int,
+                bytes.sliceArray((4 * 4 + 8) until (4 * 5 + 8)).int,
+                bytes.sliceArray((4 * 5 + 8) until (4 * 6 + 8)).int,
+                bytes.sliceArray((4 * 6 + 8) until (4 * 6 + 8 + TOKEN_SIZE)),
+                if (size == 0) null else ByteArray(size).also { System.arraycopy(bytes, MESSAGE_HEAD_SIZE, it, 0, size) }
+            )
+        }
+    }
 }
