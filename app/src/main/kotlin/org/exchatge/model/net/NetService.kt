@@ -62,7 +62,7 @@ class NetService : Service() {
 
     override fun onTaskRemoved(rootIntent: Intent?) {
         log("ns otr")
-        // make this service be an intent service to restart the service itself via sending broadcast or close db here
+        // close db here
         super.onTaskRemoved(rootIntent)
     }
 
@@ -76,6 +76,8 @@ class NetService : Service() {
 
         kernel.net.onDestroy()
         super.onDestroy()
+
+        startService(Intent(this, this.javaClass))
     }
 
     companion object {
