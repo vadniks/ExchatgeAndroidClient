@@ -51,4 +51,17 @@ data class UserInfo(
         result = 31 * result + name.contentHashCode()
         return result
     }
+
+    companion object {
+
+        fun unpack(bytes: ByteArray): UserInfo {
+            assert(bytes.size == USER_INFO_SIZE)
+
+            return UserInfo(
+                bytes.sliceArray(0 until 4).int,
+                bytes[4].boolean,
+                bytes.sliceArray(5 until (5 + USERNAME_SIZE))
+            )
+        }
+    }
 }
