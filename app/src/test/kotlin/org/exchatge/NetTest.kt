@@ -48,17 +48,27 @@ class NetTest {
 
     @Test
     fun intBytes() {
-        val n = 0x01234567
-        val bytes = n.bytes
+        var n = 0x01234567
+        var bytes = n.bytes
         assertArrayEquals(bytes, byteArrayOf(0x67, 0x45, 0x23, 0x01))
+        assertEquals(bytes.int, n)
+
+        n = 0x76543210
+        bytes = n.bytes
+        assertArrayEquals(bytes, byteArrayOf(0x10, 0x32, 0x54, 0x76))
         assertEquals(bytes.int, n)
     }
 
     @Test
     fun longBytes() {
-        val n = 0x0123456789abcdef
-        val bytes = n.bytes
+        var n = 0x0123456789abcdefUL.toLong()
+        var bytes = n.bytes
         assertArrayEquals(bytes, byteArrayOf(0xef.toByte(), 0xcd.toByte(), 0xab.toByte(), 0x89.toByte(), 0x67, 0x45, 0x23, 0x01))
+        assertEquals(bytes.long, n)
+
+        n = 0xfedcba9876543210UL.toLong()
+        bytes = n.bytes
+        assertArrayEquals(bytes, byteArrayOf(0x10, 0x32, 0x54, 0x76, 0x98.toByte(), 0xba.toByte(), 0xdc.toByte(), 0xfe.toByte()))
         assertEquals(bytes.long, n)
     }
 }
