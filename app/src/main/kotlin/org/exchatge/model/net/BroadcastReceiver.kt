@@ -21,11 +21,12 @@ package org.exchatge.model.net
 import android.content.Context
 import android.content.Intent
 import org.exchatge.model.assert
+import org.exchatge.model.kernel
 
 class BroadcastReceiver : android.content.BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
         assert(intent.action == Intent.ACTION_BOOT_COMPLETED)
-        context.startService(Intent(context, NetService::class.java))
+        context.kernel.net.startService()
     }
 }

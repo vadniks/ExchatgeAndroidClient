@@ -18,8 +18,8 @@
 
 package org.exchatge.presenter
 
-import org.exchatge.model.App
 import org.exchatge.model.Kernel
+import org.exchatge.model.kernel
 import org.exchatge.view.Activity
 
 class ActivityPresenter(private val kernel: Kernel) {
@@ -42,7 +42,6 @@ class ActivityPresenter(private val kernel: Kernel) {
         private var initialized = false
 
         @JvmStatic
-        val Activity.activityPresenter get() = (applicationContext as App)
-            .kernel.presenter.also { it.activityGetter = { this } }
+        val Activity.activityPresenter get() = kernel.presenter.also { it.activityGetter = { this } }
     }
 }

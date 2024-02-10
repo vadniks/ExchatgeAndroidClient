@@ -42,9 +42,11 @@ class Net(private val kernel: Kernel) {
     }
 
     suspend fun listen() { // TODO: add an 'exit' button to UI which will close the activity as well as the service to completely shutdown the whole app
+        var a = 0
+        // TODO: check if db is opened
         while (NetService.running) {
-            log("n l")
-            // check if db is opened
+            log("n l $a")
+            a += 1
             delay(500)
         }
     }

@@ -27,15 +27,14 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import org.exchatge.model.App
 import org.exchatge.model.assertNotMainThread
 import org.exchatge.model.assert
+import org.exchatge.model.kernel
 import org.exchatge.model.log
 import java.util.concurrent.atomic.AtomicBoolean
 
 class NetService : Service() {
     private lateinit var listenJob: Job
-    private val kernel get() = (application as App).kernel
 
     @OptIn(DelicateCoroutinesApi::class)
     override fun onCreate() {
@@ -52,17 +51,17 @@ class NetService : Service() {
 
             kernel.net.listen()
             listenJob.cancel()
-            stopSelf()
+            stopSelf() // *
         }
     }
 
-    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int) = START_STICKY.also { log("ns osc") } // open db here
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int) = START_STICKY.also { log("ns osc") } // TODO: open db here
 
     override fun onBind(intent: Intent?) = null as IBinder?
 
     override fun onTaskRemoved(rootIntent: Intent?) {
         log("ns otr")
-        // close db here
+        // TODO: close db here
         super.onTaskRemoved(rootIntent)
     }
 
@@ -76,8 +75,6 @@ class NetService : Service() {
 
         kernel.net.onDestroy()
         super.onDestroy()
-
-        startService(Intent(this, this.javaClass))
     }
 
     companion object {
