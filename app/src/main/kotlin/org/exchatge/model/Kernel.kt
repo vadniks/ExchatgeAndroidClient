@@ -19,10 +19,18 @@
 package org.exchatge.model
 
 import android.content.Context
+import android.os.Looper
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import org.exchatge.model.database.Database
 import org.exchatge.model.net.Net
 import org.exchatge.presenter.ActivityPresenter
+import java.util.concurrent.ConcurrentLinkedQueue
 
+@OptIn(DelicateCoroutinesApi::class)
 class Kernel(private val contextGetter: () -> Context) {
     val context get() = contextGetter() // getters are used instead of the object itself as the storing context smwhr is a memory leak
     val crypto = Crypto()
@@ -30,13 +38,23 @@ class Kernel(private val contextGetter: () -> Context) {
     val net = Net(this)
     val presenter = ActivityPresenter(this)
 
+    private val asyncActionsQueue = ConcurrentLinkedQueue<() -> Unit>()
+    private val asyncActionsJob: Job
+
     // TODO: add asyncActionsThread
     // TODO: add settings to ui to adjust options which will be stored as sharedPreferences
 
     init {
         assert(!initialized)
         initialized = true
+
+        asyncActionsJob = GlobalScope.launch {
+            while (net.running)
+                asyncActionsQueue.poll()?.invoke()
+        }
     }
+
+    fun async(action: () -> Unit) = asyncActionsQueue.add(action)
 
     fun onActivityCreate() {
         net.startService()
@@ -47,6 +65,9 @@ class Kernel(private val contextGetter: () -> Context) {
     }
 
     fun onNetDestroy() {
+        runBlocking {
+            asyncActionsJob.join()
+        }
         database.close()
     }
 
