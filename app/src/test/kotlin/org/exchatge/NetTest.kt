@@ -23,6 +23,8 @@ import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import java.nio.ByteOrder
 import org.exchatge.model.assert
+import org.exchatge.model.net.boolean
+import org.exchatge.model.net.byte
 import org.exchatge.model.net.bytes
 import org.exchatge.model.net.int
 import org.exchatge.model.net.long
@@ -34,6 +36,14 @@ class NetTest {
         assertEquals(ByteOrder.nativeOrder(), ByteOrder.LITTLE_ENDIAN)
         @Suppress("KotlinConstantConditions")
         assert(Byte.SIZE_BYTES == 1 && Char.SIZE_BYTES == 2 && Int.SIZE_BYTES == 4 && Long.SIZE_BYTES == 8)
+    }
+
+    @Test
+    fun booleanByte() {
+        assertEquals(true.byte, 1)
+        assertEquals(false.byte, 0)
+        assertEquals(0.toByte().boolean, false)
+        assertEquals(1.toByte().boolean, true)
     }
 
     @Test
