@@ -23,7 +23,6 @@ import kotlinx.coroutines.delay
 import org.exchatge.model.Crypto
 import org.exchatge.model.Kernel
 import org.exchatge.model.assert
-import org.exchatge.model.assertNotMainThread
 import java.net.Socket
 
 private const val SERVER_ADDRESS = "192.168.1.57" // TODO: debug only
@@ -104,7 +103,9 @@ class Net(private val kernel: Kernel) {
         try { socket!!.getOutputStream().write(buffer); true }
         catch (_: Exception) { false }
 
-    private fun hasSomethingToRead() = socket!!.getInputStream().available() > 0
+    private fun hasSomethingToRead() =
+        try { socket!!.getInputStream().available() > 0 }
+        catch (_: Exception) { false }
 
     private fun waitForReceiveWithTimeout(): Boolean {
         val start = System.currentTimeMillis()
@@ -128,11 +129,24 @@ class Net(private val kernel: Kernel) {
     }
 
     suspend fun listen() { // TODO: add an 'exit' button to UI which will close the activity as well as the service to completely shutdown the whole app
-        while (NetService.running) {
+        while (NetService.running && !socket!!.isClosed && socket!!.isConnected && hasSomethingToRead()) {
             // TODO: check if db is opened
-            assertNotMainThread()
+            tryReadMessage()
             delay(500)
         }
+    }
+
+    private fun tryReadMessage() {
+        val message = receive()
+
+        if (message == null)
+            run {  } // TODO: handle disconnection
+        else
+            processMessage(NetMessage.unpack(message))
+    }
+
+    private fun processMessage(message: NetMessage) {
+
     }
 
     fun onDestroy() {

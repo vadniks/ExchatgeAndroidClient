@@ -108,6 +108,7 @@ data class NetMessage(
 
             val size = bytes.sliceArray((4 + 8) until (4 * 2 + 8)).int
             assert(size == 0 || size in 1..MAX_MESSAGE_BODY_SIZE)
+            assert(size == 0 && bytes.size == MESSAGE_HEAD_SIZE || size > 0 && bytes.size > MESSAGE_HEAD_SIZE)
 
             return NetMessage(
                 bytes.sliceArray(0 until 4).int,
