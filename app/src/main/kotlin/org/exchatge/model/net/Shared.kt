@@ -20,7 +20,7 @@ package org.exchatge.model.net
 
 import org.exchatge.model.assert
 
-val Boolean.byte get() = if (this) 1 else 0
+val Boolean.byte get(): Byte = if (this) 1 else 0
 
 val Byte.boolean get() = this == 1.toByte()
 

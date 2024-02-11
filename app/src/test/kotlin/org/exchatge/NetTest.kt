@@ -27,11 +27,15 @@ import org.exchatge.model.assert
 import org.exchatge.model.net.MESSAGE_HEAD_SIZE
 import org.exchatge.model.net.NetMessage
 import org.exchatge.model.net.TOKEN_SIZE
+import org.exchatge.model.net.USERNAME_SIZE
+import org.exchatge.model.net.USER_INFO_SIZE
+import org.exchatge.model.net.UserInfo
 import org.exchatge.model.net.boolean
 import org.exchatge.model.net.byte
 import org.exchatge.model.net.bytes
 import org.exchatge.model.net.int
 import org.exchatge.model.net.long
+import kotlin.random.Random
 
 class NetTest {
 
@@ -44,8 +48,8 @@ class NetTest {
 
     @Test
     fun booleanByte() {
-        assertEquals(true.byte, 1)
-        assertEquals(false.byte, 0)
+        assertEquals(true.byte, 1.toByte())
+        assertEquals(false.byte, 0.toByte())
         assertEquals(0.toByte().boolean, false)
         assertEquals(1.toByte().boolean, true)
     }
@@ -115,5 +119,20 @@ class NetTest {
         val unpacked = NetMessage.unpack(packed)
 
         assertEquals(original, unpacked)
+    }
+
+    @Test
+    fun userInfoUnpack() {
+        val original = UserInfo(1, false, Random.nextBytes(USERNAME_SIZE))
+
+        val packed = ByteArray(USER_INFO_SIZE)
+        System.arraycopy(original.id.bytes, 0, packed, 0, 4)
+        packed[4] = original.connected.byte
+        System.arraycopy(original.name, 0, packed, 5, USERNAME_SIZE)
+
+        val unpacked = UserInfo.unpack(packed)
+        assertEquals(original.id, unpacked.id)
+        assertEquals(original.connected, unpacked.connected)
+        assertArrayEquals(original.name, unpacked.name)
     }
 }
