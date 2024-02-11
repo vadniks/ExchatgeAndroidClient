@@ -62,10 +62,6 @@ dependencies {
     // build fails with this message: debugAndroidTest Kotlin StreamCorruptedException: unexpected EOF in middle of data block
     // but if this ksp dependency is disabled the build succeeds
     implementation("androidx.room:room-ktx:2.6.1")
-    implementation("androidx.room:room-rxjava3:2.6.1")
-
-    implementation("io.reactivex.rxjava3:rxandroid:3.0.2")
-    implementation("io.reactivex.rxjava3:rxkotlin:3.0.1")
 
     implementation("com.goterl:lazysodium-android:5.1.0@aar")
     implementation("net.java.dev.jna:jna:5.14.0@aar")

@@ -24,6 +24,9 @@ import org.exchatge.model.Crypto
 import org.exchatge.model.Kernel
 import org.exchatge.model.assert
 import java.net.Socket
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.atomic.AtomicReference
 
 private const val SERVER_ADDRESS = "192.168.1.57" // TODO: debug only
 
@@ -40,6 +43,11 @@ class Net(private val kernel: Kernel) {
     private val crypto get() = kernel.crypto
     private val encryptedMessageMaxSize = crypto.encryptedSize(MAX_MESSAGE_SIZE)
     private var coders: Crypto.Coders? = null
+    private val authenticated = AtomicBoolean(false)
+    private val userId = AtomicInteger(FROM_ANONYMOUS)
+    private val tokenAnonymous = ByteArray(TOKEN_SIZE)
+    private val tokenUnsignedValue = ByteArray(TOKEN_UNSIGNED_VALUE_SIZE) { 255.toByte() }
+    private val token = AtomicReference(tokenAnonymous.copyOf())
 
     init {
         assert(!initialized)
@@ -146,12 +154,53 @@ class Net(private val kernel: Kernel) {
     }
 
     private fun processMessage(message: NetMessage) {
+        if (message.from == FROM_SERVER) {
+            processMessageFromServer(message)
+            return
+        }
+
+        assert(authenticated.get())
+
+        when (message.flag) {
+            FLAG_PROCEED -> {
+                assert(message.body != null)
+                // TODO: handle usual message
+            }
+            else -> Unit
+        }
+    }
+
+    private fun processMessageFromServer(message: NetMessage) {
+        assert(crypto.checkServerSignedBytes(
+            message.token.sliceArray(0 until Crypto.SIGNATURE_SIZE),
+            tokenUnsignedValue,
+            serverSignPublicKey
+        ))
+
+        when (message.flag) {
+            FLAG_LOGGED_IN -> {
+                assert(message.body != null)
+                authenticated.set(true)
+                userId.set(message.to)
+                token.set(message.body!!.sliceArray(0 until TOKEN_SIZE))
+
+                // TODO: onLogInResult(true)
+            }
+            FLAG_REGISTERED -> Unit
+            FLAG_FETCH_USERS -> {
+
+            }
+            FLAG_ERROR -> processErrors(message)
+        }
+    }
+
+    private fun processErrors(message: NetMessage) {
 
     }
 
     fun onDestroy() {
         socket?.close()
-        kernel.onNetDestroy()
+        kernel.onNetDestroy();
     }
 
     private companion object {
@@ -159,5 +208,27 @@ class Net(private val kernel: Kernel) {
         private var initialized = false
 
         private const val TIMEOUT = 5000
+
+        private const val FROM_ANONYMOUS = 0xffffffff.toInt()
+        private const val FROM_SERVER = 0x7fffffff
+
+        private const val TO_SERVER = 0x7ffffffe
+
+        private const val FLAG_PROCEED = 0x00000000
+        private const val FLAG_BROADCAST = 0x10000000
+        private const val FLAG_LOG_IN = 0x00000004
+        private const val FLAG_LOGGED_IN = 0x00000005
+        private const val FLAG_REGISTER = 0x00000006
+        private const val FLAG_REGISTERED = 0x00000007
+        private const val FLAG_ERROR = 0x00000009
+        private const val FLAG_FETCH_USERS = 0x0000000c
+        private const val FLAG_FETCH_MESSAGES = 0x0000000d
+        private const val FLAG_EXCHANGE_KEYS = 0x000000a0
+        private const val FLAG_EXCHANGE_KEYS_DONE = 0x000000b0
+        private const val FLAG_EXCHANGE_HEADERS = 0x000000c0
+        private const val FLAG_EXCHANGE_HEADERS_DONE = 0x000000d0
+        private const val FLAG_FILE_ASK = 0x000000e0
+        private const val FLAG_FILE = 0x000000f0
+        private const val FLAG_SHUTDOWN = 0x7fffffff
     }
 }
