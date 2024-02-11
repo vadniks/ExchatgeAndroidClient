@@ -21,10 +21,17 @@ package org.exchatge.model
 import android.content.Context
 import android.os.Looper
 import android.util.Log
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 fun assert(condition: Boolean) { if (!condition) throw IllegalStateException() }
 fun assertNotMainThread() = assert(Looper.getMainLooper().thread !== Thread.currentThread())
 fun log(message: String) = Log.d(null, message)
 val Context.kernel get() = (applicationContext as App).kernel
+fun bypassMainThreadRestriction(action: () -> Unit) = runBlocking { launch(Dispatchers.Default) { action() } } // TODO: debug only
+fun Mutex.blockingWithLock(action: () -> Unit) = runBlocking { withLock { action() } }
 
 class Reference<T>(var referenced: T)

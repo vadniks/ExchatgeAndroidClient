@@ -21,7 +21,6 @@ package org.exchatge.model
 import android.content.Context
 import android.widget.Toast
 import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
@@ -58,8 +57,6 @@ class Kernel(private val contextGetter: () -> Context) {
     fun async(action: () -> Unit) = asyncActionsQueue.add(action)
 
     fun toast(text: String) = Toast.makeText(context, text, Toast.LENGTH_SHORT).show().also { log(text) } // TODO: debug only
-
-    fun bypassMainThreadRestriction(action: () -> Unit) = runBlocking { launch(Dispatchers.Default) { action() } }
 
     fun onActivityCreate() {
         net.startService()
