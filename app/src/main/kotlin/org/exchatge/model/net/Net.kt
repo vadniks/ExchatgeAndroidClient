@@ -112,7 +112,7 @@ class Net(private val kernel: Kernel) {
         catch (_: Exception) { false }
 
     private fun write(buffer: ByteArray) =
-        try { socket!!.getOutputStream().write(buffer); true }
+        try { socket!!.getOutputStream().write(buffer).also { log("w " + buffer.size) }; true }
         catch (_: Exception) { false }
 
     private fun hasSomethingToRead() =
@@ -143,18 +143,15 @@ class Net(private val kernel: Kernel) {
     suspend fun listen() { // TODO: add an 'exit' button to UI which will close the activity as well as the service to completely shutdown the whole app
         while (NetService.running && socket != null && !socket!!.isClosed && socket!!.isConnected && hasSomethingToRead()) {
             // TODO: check if db is opened
-            tryReadMessage()
+            if (tryReadMessage()) break
             delay(500)
         }
+        log("disconnected") // TODO: handle disconnection
     }
 
-    private fun tryReadMessage() {
-        val message = receive()
-
-        if (message == null)
-            log("disconnected") // TODO: handle disconnection
-        else
-            processMessage(NetMessage.unpack(message))
+    private fun tryReadMessage(): Boolean {
+        processMessage(NetMessage.unpack(receive() ?: return true))
+        return false
     }
 
     private fun processMessage(message: NetMessage) {
@@ -205,6 +202,7 @@ class Net(private val kernel: Kernel) {
     }
 
     fun onDestroy() {
+        log("close")
         socket?.close()
         kernel.onNetDestroy()
     }

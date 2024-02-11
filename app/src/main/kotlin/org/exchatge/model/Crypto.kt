@@ -64,7 +64,7 @@ class Crypto {
         if (!lazySodium.cryptoSecretStreamInitPull(coders.decryptionState, serverStreamHeader, keys.serverKey))
             return null
 
-        val clientStreamHeader = ByteArray(KEY_SIZE)
+        val clientStreamHeader = ByteArray(HEADER_SIZE)
         if (!lazySodium.cryptoSecretStreamInitPush(coders.encryptionState, clientStreamHeader, keys.clientKey))
             return null
 
