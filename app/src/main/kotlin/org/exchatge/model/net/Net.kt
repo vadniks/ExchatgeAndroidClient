@@ -28,6 +28,7 @@ import org.exchatge.model.bypassMainThreadRestriction
 import org.exchatge.model.log
 import java.net.InetSocketAddress
 import java.net.Socket
+import java.net.SocketTimeoutException
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicReference
@@ -74,11 +75,11 @@ class Net(private val kernel: Kernel) {
         if (socket == null) return@bypassMainThreadRestriction // unable to connect
         val ready =
             try { initiateSecuredConnection() }
-            catch (_: RuntimeException) { false }
+            catch (_: SocketTimeoutException) { false }
         log("ready = $ready") // if (!ready) // error while connecting
     }
 
-    @Throws(RuntimeException::class)
+    @Throws(SocketTimeoutException::class)
     private fun initiateSecuredConnection(): Boolean {
         coders = crypto.makeCoders()
 
@@ -115,10 +116,11 @@ class Net(private val kernel: Kernel) {
         return write(clientCoderHeader)
     }
 
-    @Throws(RuntimeException::class)
+    @Throws(SocketTimeoutException::class)
     private fun read(buffer: ByteArray) =
         try { socket!!.getInputStream().read(buffer) == buffer.size } // false if disconnected
-        catch (_: Exception) { throw RuntimeException() } // timeout
+        catch (e: SocketTimeoutException) { throw SocketTimeoutException() } // timeout
+        catch (_: Exception) { false } // error - disconnect
 
     private fun write(buffer: ByteArray) =
         try { socket!!.getOutputStream().write(buffer).also { log("w " + buffer.size) }; true }
@@ -137,7 +139,7 @@ class Net(private val kernel: Kernel) {
         return false
     }
 
-    @Throws(RuntimeException::class)
+    @Throws(SocketTimeoutException::class)
     private fun receive(): NetMessage? {
         val sizeBytes = ByteArray(4)
         if (!read(sizeBytes)) return null // disconnected
@@ -159,12 +161,12 @@ class Net(private val kernel: Kernel) {
             // TODO: check if db is opened
             log("listen")
             try { if (tryReadMessage()) break }
-            catch (_: RuntimeException) { continue }
+            catch (_: SocketTimeoutException) { continue }
         }
         log("disconnected") // TODO: handle disconnection
     }
 
-    @Throws(RuntimeException::class)
+    @Throws(SocketTimeoutException::class)
     private fun tryReadMessage(): Boolean {
         processMessage(receive() ?: return true)
         return false
