@@ -25,10 +25,10 @@ val Boolean.byte get(): Byte = if (this) 1 else 0
 val Byte.boolean get() = this == 1.toByte()
 
 val Int.bytes get() = byteArrayOf(
-    (this and 0xff).toByte(), // ands are redundant in this function
-    ((this shr 8) and 0xff).toByte(),
-    ((this shr 16) and 0xff).toByte(),
-    ((this shr 24) and 0xff).toByte()
+    this.toByte(),
+    (this shr 8).toByte(),
+    (this shr 16).toByte(),
+    (this shr 24).toByte()
 )
 
 val ByteArray.int get(): Int {
@@ -36,18 +36,18 @@ val ByteArray.int get(): Int {
     return (this[0].toInt() and 0xff) or
         ((this[1].toInt() and 0xff) shl 8) or
         ((this[2].toInt() and 0xff) shl 16) or
-        ((this[3].toInt() and 0xff) shl 24)
+        (this[3].toInt() shl 24)
 }
 
 val Long.bytes get() = byteArrayOf(
-    (this and 0xff).toByte(), // ands are redundant in this function
-    ((this shr 8) and 0xff).toByte(),
-    ((this shr 16) and 0xff).toByte(),
-    ((this shr 24) and 0xff).toByte(),
-    ((this shr 32) and 0xff).toByte(),
-    ((this shr 40) and 0xff).toByte(),
-    ((this shr 48) and 0xff).toByte(),
-    ((this shr 56) and 0xff).toByte(),
+    this.toByte(),
+    (this shr 8).toByte(),
+    (this shr 16).toByte(),
+    (this shr 24).toByte(),
+    (this shr 32).toByte(),
+    (this shr 40).toByte(),
+    (this shr 48).toByte(),
+    (this shr 56).toByte(),
 )
 
 val ByteArray.long get(): Long {
@@ -59,5 +59,5 @@ val ByteArray.long get(): Long {
         ((this[4].toLong() and 0xff) shl 32) or
         ((this[5].toLong() and 0xff) shl 40) or
         ((this[6].toLong() and 0xff) shl 48) or
-        ((this[7].toLong() and 0xff) shl 56)
+        (this[7].toLong() shl 56)
 }
