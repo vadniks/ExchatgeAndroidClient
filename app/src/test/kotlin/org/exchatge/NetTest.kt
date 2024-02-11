@@ -21,8 +21,12 @@ package org.exchatge
 import org.junit.Test
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import java.nio.ByteOrder
 import org.exchatge.model.assert
+import org.exchatge.model.net.MESSAGE_HEAD_SIZE
+import org.exchatge.model.net.NetMessage
+import org.exchatge.model.net.TOKEN_SIZE
 import org.exchatge.model.net.boolean
 import org.exchatge.model.net.byte
 import org.exchatge.model.net.bytes
@@ -70,5 +74,32 @@ class NetTest {
         bytes = n.bytes
         assertArrayEquals(bytes, byteArrayOf(0x10, 0x32, 0x54, 0x76, 0x98.toByte(), 0xba.toByte(), 0xdc.toByte(), 0xfe.toByte()))
         assertEquals(bytes.long, n)
+    }
+
+    @Test
+    fun messagePack() = booleanArrayOf(true, false).forEach { first ->
+        val message = NetMessage(
+            0, 1, 2, 3, 4, 5,
+            ByteArray(TOKEN_SIZE) { 6 },
+            if (first) ByteArray(10) { 7 } else null
+        )
+        assertEquals(message.size, if (first) message.body!!.size else 0)
+
+        val packed = message.pack()
+        assertEquals(packed.size, MESSAGE_HEAD_SIZE + message.size)
+
+        assertEquals(packed.sliceArray(0 until 4).int, message.flag)
+        assertEquals(packed.sliceArray(4 until (4 + 8)).long, message.timestamp)
+        assertEquals(packed.sliceArray((4 + 8) until (4 * 2 + 8)).int, message.size)
+        assertEquals(packed.sliceArray((4 * 2 + 8) until (4 * 3 + 8)).int, message.index)
+        assertEquals(packed.sliceArray((4 * 3 + 8) until (4 * 4 + 8)).int, message.count)
+        assertEquals(packed.sliceArray((4 * 4 + 8) until (4 * 5 + 8)).int, message.from)
+        assertEquals(packed.sliceArray((4 * 5 + 8) until (4 * 6 + 8)).int, message.to)
+        assertArrayEquals(packed.sliceArray((4 * 6 + 8) until (4 * 6 + 8 + TOKEN_SIZE)), message.token)
+
+        if (first)
+            assertArrayEquals(packed.sliceArray(MESSAGE_HEAD_SIZE until (MESSAGE_HEAD_SIZE + message.size)), message.body)
+        else
+            assertNull(message.body)
     }
 }
