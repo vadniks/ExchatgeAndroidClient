@@ -22,7 +22,11 @@ import org.exchatge.model.assert
 
 val Boolean.byte get(): Byte = if (this) 1 else 0
 
-val Byte.boolean get() = this == 1.toByte()
+val Byte.boolean get() = when (this) {
+    1.toByte() -> true
+    0.toByte() -> false
+    else -> throw IllegalStateException()
+}
 
 val Int.bytes get() = byteArrayOf(
     this.toByte(),
