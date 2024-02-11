@@ -131,6 +131,7 @@ class Net(private val kernel: Kernel) {
         try { socket!!.getInputStream().available() > 0 }
         catch (e: Exception) { log("e $e"); false }
 
+    @Deprecated("no need")
     private fun waitForReceiveWithTimeout(): Boolean {
         val start = System.currentTimeMillis()
         while (System.currentTimeMillis() - start < TIMEOUT)
