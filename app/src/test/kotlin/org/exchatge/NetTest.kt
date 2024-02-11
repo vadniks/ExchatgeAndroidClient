@@ -102,4 +102,18 @@ class NetTest {
         else
             assertNull(message.body)
     }
+
+    @Test
+    fun messageUnpack() = booleanArrayOf(true, false).forEach { first ->
+        val original = NetMessage(
+            0, 1, 2, 3, 4, 5,
+            ByteArray(TOKEN_SIZE) { 6 },
+            if (first) ByteArray(10) { 7 } else null
+        )
+
+        val packed = original.pack()
+        val unpacked = NetMessage.unpack(packed)
+
+        assertEquals(original, unpacked)
+    }
 }
