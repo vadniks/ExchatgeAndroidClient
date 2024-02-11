@@ -23,6 +23,7 @@ import kotlinx.coroutines.delay
 import org.exchatge.model.Crypto
 import org.exchatge.model.Kernel
 import org.exchatge.model.assert
+import org.exchatge.model.log
 import java.net.Socket
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
@@ -59,12 +60,15 @@ class Net(private val kernel: Kernel) {
             kernel.context.startService(Intent(kernel.context, NetService::class.java))!! // TODO: start the service only if the user has logged in
     }
 
-    fun onCreate() {
+    fun onCreate() = kernel.bypassMainThread {
         socket = try { Socket(SERVER_ADDRESS, 8080) }
         catch (_: Exception) { null } // unable to connect
 
-        if (socket == null) return // unable to connect
-        initiateSecuredConnection()
+        log("connected = " + socket?.isConnected)
+
+        if (socket == null) return@bypassMainThread // unable to connect
+        val ready = initiateSecuredConnection()
+        log("ready = $ready")
     }
 
     private fun initiateSecuredConnection(): Boolean {
@@ -137,7 +141,7 @@ class Net(private val kernel: Kernel) {
     }
 
     suspend fun listen() { // TODO: add an 'exit' button to UI which will close the activity as well as the service to completely shutdown the whole app
-        while (NetService.running && !socket!!.isClosed && socket!!.isConnected && hasSomethingToRead()) {
+        while (NetService.running && socket != null && !socket!!.isClosed && socket!!.isConnected && hasSomethingToRead()) {
             // TODO: check if db is opened
             tryReadMessage()
             delay(500)
@@ -148,12 +152,14 @@ class Net(private val kernel: Kernel) {
         val message = receive()
 
         if (message == null)
-            run {  } // TODO: handle disconnection
+            log("disconnected") // TODO: handle disconnection
         else
             processMessage(NetMessage.unpack(message))
     }
 
     private fun processMessage(message: NetMessage) {
+        log("message: $message")
+
         if (message.from == FROM_SERVER) {
             processMessageFromServer(message)
             return
@@ -200,7 +206,7 @@ class Net(private val kernel: Kernel) {
 
     fun onDestroy() {
         socket?.close()
-        kernel.onNetDestroy();
+        kernel.onNetDestroy()
     }
 
     private companion object {

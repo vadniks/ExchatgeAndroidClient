@@ -101,6 +101,18 @@ data class NetMessage(
         return bytes
     }
 
+    override fun toString() = """NetMessage(
+        flag=$flag, 
+        timestamp=$timestamp, 
+        index=$index, 
+        count=$count, 
+        from=$from, 
+        to=$to, 
+        token=${token.contentToString()}, 
+        body=${body?.contentToString()}, 
+        size=$size
+    )""".trimMargin()
+
     companion object {
 
         fun unpack(bytes: ByteArray): NetMessage {
