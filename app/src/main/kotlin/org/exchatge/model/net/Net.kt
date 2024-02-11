@@ -157,7 +157,7 @@ class Net(private val kernel: Kernel) {
         return NetMessage.unpack(decrypted!!)
     }
 
-    suspend fun listen() { // TODO: add an 'exit' button to UI which will close the activity as well as the service to completely shutdown the whole app
+    fun listen() { // TODO: add an 'exit' button to UI which will close the activity as well as the service to completely shutdown the whole app
         while (NetService.running && socket != null && !socket!!.isClosed && socket!!.isConnected) {
             // TODO: check if db is opened
             log("listen")
