@@ -59,7 +59,7 @@ class Kernel(private val contextGetter: () -> Context) {
 
     fun toast(text: String) = Toast.makeText(context, text, Toast.LENGTH_SHORT).show().also { log(text) } // TODO: debug only
 
-    fun bypassMainThread(action: () -> Unit) = runBlocking { launch(Dispatchers.Default) { action() } }
+    fun bypassMainThreadRestriction(action: () -> Unit) = runBlocking { launch(Dispatchers.Default) { action() } }
 
     fun onActivityCreate() {
         net.startService()

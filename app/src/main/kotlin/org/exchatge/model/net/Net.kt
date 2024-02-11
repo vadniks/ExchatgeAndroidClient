@@ -60,13 +60,13 @@ class Net(private val kernel: Kernel) {
             kernel.context.startService(Intent(kernel.context, NetService::class.java))!! // TODO: start the service only if the user has logged in
     }
 
-    fun onCreate() = kernel.bypassMainThread {
+    fun onCreate() = kernel.bypassMainThreadRestriction {
         socket = try { Socket(SERVER_ADDRESS, 8080) }
         catch (_: Exception) { null } // unable to connect
 
         log("connected = " + socket?.isConnected)
 
-        if (socket == null) return@bypassMainThread // unable to connect
+        if (socket == null) return@bypassMainThreadRestriction // unable to connect
         val ready = initiateSecuredConnection()
         log("ready = $ready")
     }
