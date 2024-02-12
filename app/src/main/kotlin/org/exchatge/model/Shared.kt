@@ -31,7 +31,8 @@ fun assert(condition: Boolean) { if (!condition) throw IllegalStateException() }
 fun assertNotMainThread() = assert(Looper.getMainLooper().thread !== Thread.currentThread())
 fun log(message: String) = Log.d(null, message)
 val Context.kernel get() = (applicationContext as App).kernel
-fun bypassMainThreadRestriction(action: () -> Unit) = runBlocking { launch(Dispatchers.Default) { action() } } // TODO: debug only
+@Deprecated("debug only", ReplaceWith("")) fun bypassMainThreadRestriction(action: () -> Unit) = runBlocking { launch(Dispatchers.Default) { action() } } // TODO: debug only
 fun Mutex.blockingWithLock(action: () -> Unit) = runBlocking { withLock { action() } }
 
 class Reference<T>(var referenced: T)
+enum class Ternary { POSITIVE, ZERO, NEGATIVE } // true, else, false

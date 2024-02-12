@@ -22,6 +22,8 @@ import android.content.Intent
 import kotlinx.coroutines.sync.Mutex
 import org.exchatge.model.Crypto
 import org.exchatge.model.Kernel
+import org.exchatge.model.Reference
+import org.exchatge.model.Ternary
 import org.exchatge.model.assert
 import org.exchatge.model.blockingWithLock
 import org.exchatge.model.bypassMainThreadRestriction
@@ -68,23 +70,23 @@ class Net(private val kernel: Kernel) {
     fun onCreate() = bypassMainThreadRestriction {
         socket = try { Socket().apply { connect(InetSocketAddress(SERVER_ADDRESS, 8080), 1000 * 60 * 60) } }
         catch (_: Exception) { null } // unable to connect
-        socket!!.soTimeout = 500 // delay between socket read tries (while (open) { delay(500); tryRead() })
 
         log("connected = " + socket?.isConnected)
-
         if (socket == null) return@bypassMainThreadRestriction // unable to connect
+        socket!!.soTimeout = 500 // delay between socket read tries (while (open) { delay(500); tryRead() })
+
         val ready =
             try { initiateSecuredConnection() }
             catch (_: SocketTimeoutException) { false }
         log("ready = $ready") // if (!ready) // error while connecting
     }
 
-    @Throws(SocketTimeoutException::class)
     private fun initiateSecuredConnection(): Boolean {
+        fun read(buffer: ByteArray) = this.read(buffer) == Ternary.POSITIVE
+
         coders = crypto.makeCoders()
 
         val signedServerPublicKey = ByteArray(Crypto.SIGNATURE_SIZE + Crypto.KEY_SIZE)
-        if (!waitForReceiveWithTimeout()) return false // disconnected
         if (!read(signedServerPublicKey)) return false
 
         val serverPublicKey = signedServerPublicKey.sliceArray(Crypto.SIGNATURE_SIZE until signedServerPublicKey.size)
@@ -101,7 +103,6 @@ class Net(private val kernel: Kernel) {
         if (!write(crypto.clientPublicKey(keys))) return false
 
         val signedServerCoderHeader = ByteArray(Crypto.SIGNATURE_SIZE + Crypto.HEADER_SIZE)
-        if (!waitForReceiveWithTimeout()) return false
         if (!read(signedServerCoderHeader)) return false
 
         val serverCoderHeader = signedServerCoderHeader.sliceArray(Crypto.SIGNATURE_SIZE until signedServerCoderHeader.size)
@@ -116,61 +117,71 @@ class Net(private val kernel: Kernel) {
         return write(clientCoderHeader)
     }
 
-    @Throws(SocketTimeoutException::class)
     private fun read(buffer: ByteArray) =
-        try { socket!!.getInputStream().read(buffer) == buffer.size } // false if disconnected
-        catch (e: SocketTimeoutException) { throw SocketTimeoutException() } // timeout
-        catch (_: Exception) { false } // error - disconnect
+        try { if (socket!!.getInputStream().read(buffer) == buffer.size) Ternary.POSITIVE else Ternary.NEGATIVE } // negative if disconnected
+        catch (e: SocketTimeoutException) { Ternary.ZERO } // timeout
+        catch (_: Exception) { Ternary.NEGATIVE } // error - disconnect
 
     private fun write(buffer: ByteArray) =
         try { socket!!.getOutputStream().write(buffer).also { log("w " + buffer.size) }; true }
         catch (_: Exception) { false }
 
-    @Deprecated("")
-    private fun hasSomethingToRead() =
-        try { socket!!.getInputStream().available() > 0 }
-        catch (e: Exception) { log("e $e"); false }
-
-    @Deprecated("no need")
-    private fun waitForReceiveWithTimeout(): Boolean {
-        val start = System.currentTimeMillis()
-        while (System.currentTimeMillis() - start < TIMEOUT)
-            if (hasSomethingToRead())
-                return true
-        return false
-    }
-
-    @Throws(SocketTimeoutException::class)
-    private fun receive(): NetMessage? {
+    private fun receive(disconnected: Reference<Boolean>): NetMessage? {
         val sizeBytes = ByteArray(4)
-        if (!read(sizeBytes)) return null // disconnected
+        when (read(sizeBytes)) {
+            Ternary.ZERO -> return null // timeout - no new messages so far
+            Ternary.NEGATIVE -> {
+                disconnected.referenced = true // error or connection closed
+                return null
+            }
+            Ternary.POSITIVE -> Unit // proceed
+        }
+
         val size = sizeBytes.int
         assert(size in 0..encryptedMessageMaxSize)
 
         val buffer = ByteArray(size)
-        if (!read(buffer)) return null
+        when (read(buffer)) {
+            Ternary.ZERO -> return null // timeout - no new messages so far
+            Ternary.NEGATIVE -> {
+                disconnected.referenced = true // error or connection closed
+                return null
+            }
+            Ternary.POSITIVE -> Unit // proceed
+        }
 
         var decrypted: ByteArray? = null
         codersMutex.blockingWithLock { decrypted = crypto.decrypt(coders!!, buffer) }
         assert(decrypted != null)
 
+        disconnected.referenced = false
         return NetMessage.unpack(decrypted!!)
     }
+
+    // TODO: mutexes
 
     fun listen() { // TODO: add an 'exit' button to UI which will close the activity as well as the service to completely shutdown the whole app
         while (NetService.running && socket != null && !socket!!.isClosed && socket!!.isConnected) {
             // TODO: check if db is opened
             log("listen")
-            try { if (tryReadMessage()) break }
-            catch (_: SocketTimeoutException) { continue }
+            if (tryReadMessage() == Ternary.NEGATIVE) break
         }
         log("disconnected") // TODO: handle disconnection
     }
 
-    @Throws(SocketTimeoutException::class)
-    private fun tryReadMessage(): Boolean {
-        processMessage(receive() ?: return true)
-        return false
+    private fun tryReadMessage(): Ternary {
+        val disconnected = Reference(false)
+        val received = receive(disconnected)
+
+        return when {
+            received != null -> {
+                processMessage(received)
+                Ternary.POSITIVE
+            }
+
+            disconnected.referenced -> Ternary.NEGATIVE
+            else -> Ternary.ZERO
+        }
     }
 
     private fun processMessage(message: NetMessage) {
