@@ -41,10 +41,9 @@ data class NetMessage(
 
     init {
         assert(
-            timestamp >= 0
+            timestamp > 0
             && index >= 0
             && count >= 0
-            && from >= 0
             && to >= 0
         )
         assert(token.size == TOKEN_SIZE)

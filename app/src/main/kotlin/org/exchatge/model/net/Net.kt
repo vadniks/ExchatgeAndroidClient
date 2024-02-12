@@ -88,12 +88,11 @@ class Net(private val kernel: Kernel) {
         val ready = initiateSecuredConnection()
         log("ready = $ready") // if (!ready) // error while connecting
         if (ready) invalidated.set(false)
+        if (ready) logIn() // TODO: debug only
     }
 
     private fun initiateSecuredConnection(): Boolean {
         fun read(buffer: ByteArray) = this.read(buffer) == Ternary.POSITIVE
-
-        coders = crypto.makeCoders()
 
         val signedServerPublicKey = ByteArray(Crypto.SIGNATURE_SIZE + Crypto.KEY_SIZE)
         if (!read(signedServerPublicKey)) return false
@@ -122,7 +121,8 @@ class Net(private val kernel: Kernel) {
             serverSignPublicKey
         ))
 
-        val clientCoderHeader = crypto.initializeCoders(keys, serverCoderHeader) ?: return false
+        coders = crypto.makeCoders()
+        val clientCoderHeader = crypto.initializeCoders(coders!!, keys, serverCoderHeader) ?: return false
         return write(clientCoderHeader)
     }
 
@@ -137,7 +137,7 @@ class Net(private val kernel: Kernel) {
         catch (_: Exception) { Ternary.NEGATIVE } // error - disconnect
 
     private fun write(buffer: ByteArray) =
-        try { mutex.withLockBlocking { socket!!.getOutputStream().write(buffer) }; true } // TODO: add mutex for socket
+        try { mutex.withLockBlocking { socket!!.getOutputStream().write(buffer).also { log("write " + buffer.size) } }; true }
         catch (_: Exception) { false }
 
     private fun receive(disconnected: Reference<Boolean>): NetMessage? {
@@ -185,16 +185,17 @@ class Net(private val kernel: Kernel) {
 
         val encryptedSize = crypto.encryptedSize(packedSize)
         assert(encryptedSize <= encryptedMessageMaxSize)
+        assert(encrypted!!.size == encryptedSize)
 
         val buffer = ByteArray(4 + encryptedSize)
         System.arraycopy(encryptedSize.bytes, 0, buffer, 0, 4)
-        System.arraycopy(encrypted!!, 0, buffer, 4, encryptedSize)
+        System.arraycopy(encrypted, 0, buffer, 4, encryptedSize)
 
         return write(buffer)
     }
 
     fun send(body: ByteArray, to: Int) {
-        assert(running && !invalidated.get())
+        assert(running && !invalidated.get() && to >= 0 && userId.get() >= 0)
         send(FLAG_PROCEED, body, to)
     }
 

@@ -54,13 +54,13 @@ class Crypto {
         )) keys else null
     }
 
-    fun initializeCoders(keys: Keys, serverStreamHeader: ByteArray): ByteArray? {
+    fun initializeCoders(coders: Coders, keys: Keys, serverStreamHeader: ByteArray): ByteArray? {
         assert(serverStreamHeader.size == HEADER_SIZE)
 
         keys as KeysImpl
         assert(keys.valid)
 
-        val coders = CodersImpl()
+        coders as CodersImpl
         if (!lazySodium.cryptoSecretStreamInitPull(coders.decryptionState, serverStreamHeader, keys.serverKey))
             return null
 
