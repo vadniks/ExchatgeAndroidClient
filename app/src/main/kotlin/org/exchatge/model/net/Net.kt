@@ -25,7 +25,7 @@ import org.exchatge.model.Kernel
 import org.exchatge.model.Reference
 import org.exchatge.model.Ternary
 import org.exchatge.model.assert
-import org.exchatge.model.blockingWithLock
+import org.exchatge.model.withLockBlocking
 import org.exchatge.model.log
 import java.net.InetSocketAddress
 import java.net.Socket
@@ -52,7 +52,7 @@ class Net(private val kernel: Kernel) {
     private val crypto get() = kernel.crypto
     private val encryptedMessageMaxSize = crypto.encryptedSize(MAX_MESSAGE_SIZE)
     private var coders: Crypto.Coders? = null
-    private val codersMutex = Mutex()
+    private val mutex = Mutex()
     private val authenticated = AtomicBoolean(false)
     private val userId = AtomicInteger(FROM_ANONYMOUS)
     private val tokenAnonymous = ByteArray(TOKEN_SIZE)
@@ -73,12 +73,15 @@ class Net(private val kernel: Kernel) {
     fun onCreate() {} // executes in main thread
 
     fun onPostCreate() {
-        socket = try { Socket().apply { connect(InetSocketAddress(SERVER_ADDRESS, 8080), 1000 * 60 * 60) } }
-        catch (_: Exception) { null } // unable to connect
+        mutex.withLockBlocking {
+            socket =
+                try { Socket().apply { connect(InetSocketAddress(SERVER_ADDRESS, 8080), 1000 * 60 * 60) } }
+                catch (_: Exception) { null } // unable to connect
+        }
 
         log("connected = " + socket?.isConnected)
         if (socket == null) return // unable to connect
-        socket!!.soTimeout = 500 // delay between socket read tries (while (open) { delay(500); tryRead() })
+        mutex.withLockBlocking { socket!!.soTimeout = 500 } // delay between socket read tries (while (open) { delay(500); tryRead() })
 
         val ready = initiateSecuredConnection()
         log("ready = $ready") // if (!ready) // error while connecting
@@ -122,12 +125,17 @@ class Net(private val kernel: Kernel) {
     }
 
     private fun read(buffer: ByteArray) =
-        try { if (socket!!.getInputStream().read(buffer) == buffer.size) Ternary.POSITIVE else Ternary.NEGATIVE } // negative if disconnected
+        try {
+            if (mutex.withLockBlocking { socket!!.getInputStream().read(buffer) } == buffer.size)
+                Ternary.POSITIVE
+            else
+                Ternary.NEGATIVE // disconnected
+        }
         catch (e: SocketTimeoutException) { Ternary.NEUTRAL } // timeout
         catch (_: Exception) { Ternary.NEGATIVE } // error - disconnect
 
     private fun write(buffer: ByteArray) =
-        try { socket!!.getOutputStream().write(buffer).also { log("w " + buffer.size) }; true } // TODO: add mutex for socket
+        try { mutex.withLockBlocking { socket!!.getOutputStream().write(buffer) }; true } // TODO: add mutex for socket
         catch (_: Exception) { false }
 
     private fun receive(disconnected: Reference<Boolean>): NetMessage? {
@@ -154,8 +162,7 @@ class Net(private val kernel: Kernel) {
             Ternary.POSITIVE -> Unit // proceed
         }
 
-        var decrypted: ByteArray? = null
-        codersMutex.blockingWithLock { decrypted = crypto.decrypt(coders!!, buffer) }
+        val decrypted = mutex.withLockBlocking { crypto.decrypt(coders!!, buffer) }
         assert(decrypted != null)
 
         disconnected.referenced = false
@@ -171,7 +178,7 @@ class Net(private val kernel: Kernel) {
         val packed = message.pack()
         assert(packed.size == packedSize)
 
-        val encrypted = codersMutex.blockingWithLock { crypto.encrypt(coders!!, packed) }
+        val encrypted = mutex.withLockBlocking { crypto.encrypt(coders!!, packed) }
         assert(encrypted != null)
 
         val encryptedSize = crypto.encryptedSize(packedSize)
@@ -190,7 +197,7 @@ class Net(private val kernel: Kernel) {
     // TODO: add an 'exit' button to UI which will close the activity as well as the service to completely shutdown the whole app
 
     fun listen() {
-        while (NetService.running && socket != null && !socket!!.isClosed && socket!!.isConnected) {
+        while (NetService.running && mutex.withLockBlocking { socket != null && !socket!!.isClosed && socket!!.isConnected }) {
             log("listen")
             if (tryReadMessage() == Ternary.NEGATIVE) break
         }
@@ -208,7 +215,6 @@ class Net(private val kernel: Kernel) {
                 processMessage(received)
                 Ternary.POSITIVE
             }
-
             disconnected.referenced -> Ternary.NEGATIVE
             else -> Ternary.NEUTRAL
         }
@@ -280,7 +286,7 @@ class Net(private val kernel: Kernel) {
 
     fun onDestroy() {
         log("close")
-        socket?.close()
+        mutex.withLockBlocking { socket?.close() }
         kernel.onNetDestroy()
     }
 
