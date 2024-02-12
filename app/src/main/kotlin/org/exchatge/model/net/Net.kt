@@ -30,6 +30,7 @@ import org.exchatge.model.log
 import java.net.InetSocketAddress
 import java.net.Socket
 import java.net.SocketTimeoutException
+import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicReference
@@ -55,11 +56,15 @@ class Net(private val kernel: Kernel) {
     private val mutex = Mutex()
     private val authenticated = AtomicBoolean(false)
     private val userId = AtomicInteger(FROM_ANONYMOUS)
+    val currentUserId get() = userId.get()
     private val tokenAnonymous = ByteArray(TOKEN_SIZE)
     private val tokenUnsignedValue = ByteArray(TOKEN_UNSIGNED_VALUE_SIZE) { 255.toByte() }
     private val token = AtomicReference(tokenAnonymous.copyOf())
     private val invalidated = AtomicBoolean(true) // hasn't been connected (and secured connection established) or has disconnected - reinitialization needed (startService again)
-    val currentUserId get() = userId.get()
+//    val invalidated get() = ...
+    private val fetchingUsers = AtomicBoolean(false)
+    private val fetchingMessages = AtomicBoolean(false)
+    private val userInfos = ConcurrentLinkedQueue<UserInfo>()
 
     init {
         assert(!initialized)
@@ -78,7 +83,7 @@ class Net(private val kernel: Kernel) {
 
         mutex.withLockBlocking {
             socket =
-                try { Socket().apply { connect(InetSocketAddress(SERVER_ADDRESS, 8080), 1000 * 60 * 60) } }
+                try { Socket().apply { connect(InetSocketAddress(SERVER_ADDRESS, 8080), /*TODO: extract constant*/1000 * 60 * 60) } }
                 catch (_: Exception) { null } // unable to connect
         }
 
@@ -267,9 +272,10 @@ class Net(private val kernel: Kernel) {
                 token.set(message.body!!.sliceArray(0 until TOKEN_SIZE))
 
                 // TODO: onLogInResult(true)
+                fetchUsers() // TODO: debug only
             }
             FLAG_REGISTERED -> log("register succeeded")
-            FLAG_FETCH_USERS -> {}
+            FLAG_FETCH_USERS -> onNextUserInfosBundleFetched(message)
             FLAG_ERROR -> processErrors(message)
             FLAG_FETCH_MESSAGES -> {}
             FLAG_BROADCAST -> log("broadcast received ${message.body!!}")
@@ -284,6 +290,22 @@ class Net(private val kernel: Kernel) {
             FLAG_FETCH_MESSAGES -> Unit
             else -> log("error $flag received")
         }
+    }
+
+    private fun onNextUserInfosBundleFetched(message: NetMessage) {
+        assert(running && !invalidated.get() && fetchingUsers.get())
+        assert(message.body != null && message.size in 1..MAX_MESSAGE_BODY_SIZE)
+        if (message.index == 0) userInfos.clear()
+
+        for (i in 0 until message.size step USER_INFO_SIZE)
+            userInfos.add(UserInfo.unpack(message.body!!.sliceArray(i until i + USER_INFO_SIZE)))
+
+        if (message.index < message.count - 1) return
+
+        // TODO: onUsersFetched
+        log("users fetched $userInfos")
+        userInfos.clear()
+        fetchingUsers.set(false)
     }
 
     private fun makeCredentials(username: String, password: String): ByteArray {
@@ -311,8 +333,9 @@ class Net(private val kernel: Kernel) {
     }
 
     fun fetchUsers() {
-//        assert(running && !invalidated.get())
-//        send(FLAG_SHUTDOWN, null, TO_SERVER)
+        assert(running && !invalidated.get() && !fetchingUsers.get() && !fetchingMessages.get())
+        fetchingUsers.set(true)
+        send(FLAG_FETCH_USERS, null, TO_SERVER)
     }
 
     fun sendBroadcast(body: ByteArray) {

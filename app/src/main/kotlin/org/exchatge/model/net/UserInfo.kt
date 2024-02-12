@@ -30,7 +30,7 @@ data class UserInfo(
     val name: ByteArray
 ) {
 
-    init { assert(id > 0 && name.size in 1..USERNAME_SIZE) }
+    init { assert(id >= 0 && name.size in 1..USERNAME_SIZE) }
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -51,6 +51,8 @@ data class UserInfo(
         result = 31 * result + name.contentHashCode()
         return result
     }
+
+    override fun toString() = "UserInfo(id=$id, connected=$connected, name=${name.contentToString()})"
 
     companion object {
 
