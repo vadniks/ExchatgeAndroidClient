@@ -19,6 +19,7 @@
 package org.exchatge.model
 
 import android.content.Context
+import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import kotlinx.coroutines.runBlocking
@@ -30,6 +31,7 @@ fun assertNotMainThread() = assert(Looper.getMainLooper().thread !== Thread.curr
 fun log(message: String) = Log.d(null, message)
 val Context.kernel get() = (applicationContext as App).kernel
 fun <T> Mutex.withLockBlocking(action: () -> T): T = runBlocking { withLock { return@runBlocking action() } }
+fun runInMainThread(action: () -> Unit) = Handler(Looper.getMainLooper()).post { action() }
 
 class Reference<T>(var referenced: T)
 enum class Ternary { POSITIVE, NEUTRAL, NEGATIVE } // true, else, false
