@@ -59,6 +59,7 @@ class Net(private val kernel: Kernel) {
     private val tokenUnsignedValue = ByteArray(TOKEN_UNSIGNED_VALUE_SIZE) { 255.toByte() }
     private val token = AtomicReference(tokenAnonymous.copyOf())
     private val invalidated = AtomicBoolean(true) // hasn't been connected (and secured connection established) or has disconnected - reinitialization needed (startService again)
+    val currentUserId get() = userId.get()
 
     init {
         assert(!initialized)
@@ -195,11 +196,10 @@ class Net(private val kernel: Kernel) {
     }
 
     fun send(body: ByteArray, to: Int) {
-        assert(running && !invalidated.get() && to >= 0 && userId.get() >= 0)
+        assert(running && !invalidated.get() && body.isNotEmpty() && to >= 0)
         send(FLAG_PROCEED, body, to)
     }
 
-    // TODO: mutexes
     // TODO: add an 'exit' button to UI which will close the activity as well as the service to completely shutdown the whole app
 
     fun listen() {
@@ -298,6 +298,31 @@ class Net(private val kernel: Kernel) {
     fun logIn(username: String = USERNAME, password: String = PASSWORD) {
         assert(running && !invalidated.get())
         send(FLAG_LOG_IN, makeCredentials(username, password), TO_SERVER)
+    }
+
+    fun register(username: String = USERNAME, password: String = PASSWORD) {
+        assert(running && !invalidated.get())
+        send(FLAG_REGISTER, makeCredentials(username, password), TO_SERVER)
+    }
+
+    fun shutdownServer() {
+        assert(running && !invalidated.get())
+        send(FLAG_SHUTDOWN, null, TO_SERVER)
+    }
+
+    fun fetchUsers() {
+//        assert(running && !invalidated.get())
+//        send(FLAG_SHUTDOWN, null, TO_SERVER)
+    }
+
+    fun sendBroadcast(body: ByteArray) {
+        assert(running && !invalidated.get() && body.isNotEmpty())
+        send(FLAG_BROADCAST, body, TO_SERVER)
+    }
+
+    fun fetchMessages() {
+//        assert(running && !invalidated.get())
+//        send(FLAG_SHUTDOWN, null, TO_SERVER)
     }
 
     fun onDestroy() {
