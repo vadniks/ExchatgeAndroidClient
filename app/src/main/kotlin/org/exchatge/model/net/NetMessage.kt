@@ -51,6 +51,10 @@ data class NetMessage(
         assert(body == null || body.size in 1..MAX_MESSAGE_BODY_SIZE)
     }
 
+    constructor(flag: Int, body: ByteArray?, to: Int, from: Int, token: ByteArray) : this(
+        flag, System.currentTimeMillis(), 0, 1, from, to, token, body
+    )
+
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false

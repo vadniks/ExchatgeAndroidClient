@@ -35,7 +35,7 @@
         android:roundIcon="@drawable/ic_launcher_background"
         android:supportsRtl="true"
         android:theme="@style/Theme.Exchatge"
-        tools:targetApi="31">
+        tools:targetApi="34">
 
         <service
             android:name=".model.net.NetService"

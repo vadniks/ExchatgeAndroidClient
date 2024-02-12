@@ -58,6 +58,7 @@ class Net(private val kernel: Kernel) {
     private val tokenAnonymous = ByteArray(TOKEN_SIZE)
     private val tokenUnsignedValue = ByteArray(TOKEN_UNSIGNED_VALUE_SIZE) { 255.toByte() }
     private val token = AtomicReference(tokenAnonymous.copyOf())
+    private var invalidated = true // hasn't been connected (and secured connection established) or has disconnected - reinitialization needed (startService again)
 
     init {
         assert(!initialized)
@@ -79,10 +80,9 @@ class Net(private val kernel: Kernel) {
         if (socket == null) return // unable to connect
         socket!!.soTimeout = 500 // delay between socket read tries (while (open) { delay(500); tryRead() })
 
-        val ready =
-            try { initiateSecuredConnection() }
-            catch (_: SocketTimeoutException) { false }
+        val ready = initiateSecuredConnection()
         log("ready = $ready") // if (!ready) // error while connecting
+        if (ready) invalidated = false
     }
 
     private fun initiateSecuredConnection(): Boolean {
@@ -127,7 +127,7 @@ class Net(private val kernel: Kernel) {
         catch (_: Exception) { Ternary.NEGATIVE } // error - disconnect
 
     private fun write(buffer: ByteArray) =
-        try { socket!!.getOutputStream().write(buffer).also { log("w " + buffer.size) }; true }
+        try { socket!!.getOutputStream().write(buffer).also { log("w " + buffer.size) }; true } // TODO: add mutex for socket
         catch (_: Exception) { false }
 
     private fun receive(disconnected: Reference<Boolean>): NetMessage? {
@@ -162,15 +162,40 @@ class Net(private val kernel: Kernel) {
         return NetMessage.unpack(decrypted!!)
     }
 
-    // TODO: mutexes
+    private fun send(flag: Int, body: ByteArray?, to: Int): Boolean {
+        assert(body != null && body.size in 1..MAX_MESSAGE_BODY_SIZE || body == null && flag != FLAG_PROCEED && flag != FLAG_BROADCAST)
 
-    fun listen() { // TODO: add an 'exit' button to UI which will close the activity as well as the service to completely shutdown the whole app
+        val message = NetMessage(flag, body, to, userId.get(), token.get())
+
+        val packedSize = MESSAGE_HEAD_SIZE + message.size
+        val packed = message.pack()
+        assert(packed.size == packedSize)
+
+        val encrypted = codersMutex.blockingWithLock { crypto.encrypt(coders!!, packed) }
+        assert(encrypted != null)
+
+        val encryptedSize = crypto.encryptedSize(packedSize)
+        assert(encryptedSize <= encryptedMessageMaxSize)
+
+        val buffer = ByteArray(4 + encryptedSize)
+        System.arraycopy(encryptedSize.bytes, 0, buffer, 0, 4)
+        System.arraycopy(encrypted!!, 0, buffer, 4, encryptedSize)
+
+        return write(buffer)
+    }
+
+    fun send(body: ByteArray, to: Int) = send(FLAG_PROCEED, body, to)
+
+    // TODO: mutexes
+    // TODO: add an 'exit' button to UI which will close the activity as well as the service to completely shutdown the whole app
+
+    fun listen() {
         while (NetService.running && socket != null && !socket!!.isClosed && socket!!.isConnected) {
-            // TODO: check if db is opened
             log("listen")
             if (tryReadMessage() == Ternary.NEGATIVE) break
         }
         log("disconnected") // disconnected - logging in is required to reconnect // TODO: handle disconnection
+        invalidated = true
         // then the execution goes to onDestroy
     }
 
@@ -200,10 +225,15 @@ class Net(private val kernel: Kernel) {
         assert(authenticated.get())
 
         when (message.flag) {
+            FLAG_EXCHANGE_KEYS -> {}
+            FLAG_EXCHANGE_KEYS_DONE, FLAG_EXCHANGE_HEADERS, FLAG_EXCHANGE_HEADERS_DONE -> {}
+            FLAG_FILE_ASK -> {}
+            FLAG_FILE -> {}
             FLAG_PROCEED -> {
                 assert(message.body != null)
                 // TODO: handle usual message
             }
+            FLAG_FETCH_MESSAGES -> {}
             else -> Unit
         }
     }
@@ -217,6 +247,8 @@ class Net(private val kernel: Kernel) {
 
         when (message.flag) {
             FLAG_LOGGED_IN -> {
+                log("log in succeeded")
+
                 assert(message.body != null)
                 authenticated.set(true)
                 userId.set(message.to)
@@ -224,15 +256,25 @@ class Net(private val kernel: Kernel) {
 
                 // TODO: onLogInResult(true)
             }
-            FLAG_REGISTERED -> Unit
-            FLAG_FETCH_USERS -> {
-
-            }
+            FLAG_REGISTERED -> log("register succeeded")
+            FLAG_FETCH_USERS -> {}
             FLAG_ERROR -> processErrors(message)
+            FLAG_FETCH_MESSAGES -> {}
+            FLAG_BROADCAST -> log("broadcast received ${message.body!!}")
         }
     }
 
     private fun processErrors(message: NetMessage) {
+        assert(message.size == 4 && message.body != null)
+        when (val flag = message.body!!.sliceArray(0 until 4).int) {
+            FLAG_LOG_IN -> log("log in failed")
+            FLAG_REGISTER -> log("register failed")
+            FLAG_FETCH_MESSAGES -> Unit
+            else -> log("error $flag received")
+        }
+    }
+
+    fun logIn(username: ByteArray = USERNAME.toByteArray(), password: ByteArray = PASSWORD.toByteArray()) {
 
     }
 

@@ -29,7 +29,7 @@ fun assert(condition: Boolean) { if (!condition) throw IllegalStateException() }
 fun assertNotMainThread() = assert(Looper.getMainLooper().thread !== Thread.currentThread())
 fun log(message: String) = Log.d(null, message)
 val Context.kernel get() = (applicationContext as App).kernel
-fun Mutex.blockingWithLock(action: () -> Unit) = runBlocking { withLock { action() } }
+fun <T> Mutex.blockingWithLock(action: () -> T): T = runBlocking { withLock { return@runBlocking action() } }
 
 class Reference<T>(var referenced: T)
 enum class Ternary { POSITIVE, NEUTRAL, NEGATIVE } // true, else, false
