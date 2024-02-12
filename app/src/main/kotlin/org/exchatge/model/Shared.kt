@@ -32,4 +32,4 @@ val Context.kernel get() = (applicationContext as App).kernel
 fun Mutex.blockingWithLock(action: () -> Unit) = runBlocking { withLock { action() } }
 
 class Reference<T>(var referenced: T)
-enum class Ternary { POSITIVE, ZERO, NEGATIVE } // true, else, false
+enum class Ternary { POSITIVE, NEUTRAL, NEGATIVE } // true, else, false

@@ -40,6 +40,7 @@
         <service
             android:name=".model.net.NetService"
             android:exported="false"/>
+        <!-- android:stopWithTask="true" // on task removal service's onDestroy is called, for future... -->
 
         <receiver
             android:name=".model.net.BroadcastReceiver"

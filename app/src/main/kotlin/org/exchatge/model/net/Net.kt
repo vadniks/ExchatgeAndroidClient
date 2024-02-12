@@ -43,6 +43,9 @@ private val serverSignPublicKey = byteArrayOf( // TODO: debug only
     71, 215.toByte(), 74, 172.toByte(), 27, 225.toByte(), 26, 249.toByte()
 )
 
+private const val USERNAME = "admin" // TODO: debug only
+private const val PASSWORD = "admin"
+
 class Net(private val kernel: Kernel) {
     val running get() = NetService.running
     private var socket: Socket? = null
@@ -120,7 +123,7 @@ class Net(private val kernel: Kernel) {
 
     private fun read(buffer: ByteArray) =
         try { if (socket!!.getInputStream().read(buffer) == buffer.size) Ternary.POSITIVE else Ternary.NEGATIVE } // negative if disconnected
-        catch (e: SocketTimeoutException) { Ternary.ZERO } // timeout
+        catch (e: SocketTimeoutException) { Ternary.NEUTRAL } // timeout
         catch (_: Exception) { Ternary.NEGATIVE } // error - disconnect
 
     private fun write(buffer: ByteArray) =
@@ -130,7 +133,7 @@ class Net(private val kernel: Kernel) {
     private fun receive(disconnected: Reference<Boolean>): NetMessage? {
         val sizeBytes = ByteArray(4)
         when (read(sizeBytes)) {
-            Ternary.ZERO -> return null // timeout - no new messages so far
+            Ternary.NEUTRAL -> return null // timeout - no new messages so far
             Ternary.NEGATIVE -> {
                 disconnected.referenced = true // error or connection closed
                 return null
@@ -143,7 +146,7 @@ class Net(private val kernel: Kernel) {
 
         val buffer = ByteArray(size)
         when (read(buffer)) {
-            Ternary.ZERO -> return null // timeout - no new messages so far
+            Ternary.NEUTRAL -> return null // timeout - no new messages so far
             Ternary.NEGATIVE -> {
                 disconnected.referenced = true // error or connection closed
                 return null
@@ -182,7 +185,7 @@ class Net(private val kernel: Kernel) {
             }
 
             disconnected.referenced -> Ternary.NEGATIVE
-            else -> Ternary.ZERO
+            else -> Ternary.NEUTRAL
         }
     }
 

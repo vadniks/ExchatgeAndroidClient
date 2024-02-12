@@ -29,8 +29,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.exchatge.model.assert
 import org.exchatge.model.kernel
+import org.exchatge.model.log
 import java.util.concurrent.atomic.AtomicBoolean
-import kotlin.system.exitProcess
 
 class NetService : Service() {
     private lateinit var listenJob: Job
@@ -56,6 +56,7 @@ class NetService : Service() {
     override fun onBind(intent: Intent?) = null as IBinder?
 
     override fun onDestroy() {
+        log("ns destroy")
         xRunning.set(false)
 
         runBlocking {
@@ -64,7 +65,6 @@ class NetService : Service() {
 
         net.onDestroy()
         super.onDestroy()
-        exitProcess(0)
     }
 
     companion object {
