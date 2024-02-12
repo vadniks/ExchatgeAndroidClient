@@ -58,7 +58,7 @@ class Net(private val kernel: Kernel) {
     private val tokenAnonymous = ByteArray(TOKEN_SIZE)
     private val tokenUnsignedValue = ByteArray(TOKEN_UNSIGNED_VALUE_SIZE) { 255.toByte() }
     private val token = AtomicReference(tokenAnonymous.copyOf())
-    private var invalidated = true // hasn't been connected (and secured connection established) or has disconnected - reinitialization needed (startService again)
+    private val invalidated = AtomicBoolean(true) // hasn't been connected (and secured connection established) or has disconnected - reinitialization needed (startService again)
 
     init {
         assert(!initialized)
@@ -73,6 +73,8 @@ class Net(private val kernel: Kernel) {
     fun onCreate() {} // executes in main thread
 
     fun onPostCreate() {
+        assert(invalidated.get())
+
         mutex.withLockBlocking {
             socket =
                 try { Socket().apply { connect(InetSocketAddress(SERVER_ADDRESS, 8080), 1000 * 60 * 60) } }
@@ -85,7 +87,7 @@ class Net(private val kernel: Kernel) {
 
         val ready = initiateSecuredConnection()
         log("ready = $ready") // if (!ready) // error while connecting
-        if (ready) invalidated = false
+        if (ready) invalidated.set(false)
     }
 
     private fun initiateSecuredConnection(): Boolean {
@@ -191,18 +193,21 @@ class Net(private val kernel: Kernel) {
         return write(buffer)
     }
 
-    fun send(body: ByteArray, to: Int) = send(FLAG_PROCEED, body, to)
+    fun send(body: ByteArray, to: Int) {
+        assert(running && !invalidated.get())
+        send(FLAG_PROCEED, body, to)
+    }
 
     // TODO: mutexes
     // TODO: add an 'exit' button to UI which will close the activity as well as the service to completely shutdown the whole app
 
     fun listen() {
-        while (NetService.running && mutex.withLockBlocking { socket != null && !socket!!.isClosed && socket!!.isConnected }) {
+        while (NetService.running && !invalidated.get() && mutex.withLockBlocking { socket != null && !socket!!.isClosed && socket!!.isConnected }) {
             log("listen")
             if (tryReadMessage() == Ternary.NEGATIVE) break
         }
         log("disconnected") // disconnected - logging in is required to reconnect // TODO: handle disconnection
-        invalidated = true
+        invalidated.set(true)
         // then the execution goes to onDestroy
     }
 
@@ -280,8 +285,18 @@ class Net(private val kernel: Kernel) {
         }
     }
 
-    fun logIn(username: ByteArray = USERNAME.toByteArray(), password: ByteArray = PASSWORD.toByteArray()) {
+    private fun makeCredentials(username: String, password: String): ByteArray {
+        assert(username.length in 1..USERNAME_SIZE && password.length in 1..UNHASHED_PASSWORD_SIZE)
+        val credentials = ByteArray(USERNAME_SIZE + UNHASHED_PASSWORD_SIZE)
 
+        System.arraycopy(username.toByteArray(), 0, credentials, 0, username.length)
+        System.arraycopy(password.toByteArray(), 0, credentials, USERNAME_SIZE, password.length)
+        return credentials
+    }
+
+    fun logIn(username: String = USERNAME, password: String = PASSWORD) {
+        assert(running && !invalidated.get())
+        send(FLAG_LOG_IN, makeCredentials(username, password), TO_SERVER)
     }
 
     fun onDestroy() {
