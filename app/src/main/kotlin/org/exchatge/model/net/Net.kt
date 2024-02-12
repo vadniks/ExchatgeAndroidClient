@@ -167,7 +167,8 @@ class Net(private val kernel: Kernel) {
             log("listen")
             if (tryReadMessage() == Ternary.NEGATIVE) break
         }
-        log("disconnected") // TODO: handle disconnection
+        log("disconnected") // disconnected - logging in is required to reconnect // TODO: handle disconnection
+        // then the execution goes to onDestroy
     }
 
     private fun tryReadMessage(): Ternary {

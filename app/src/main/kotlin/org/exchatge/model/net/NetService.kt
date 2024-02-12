@@ -30,6 +30,7 @@ import kotlinx.coroutines.runBlocking
 import org.exchatge.model.assert
 import org.exchatge.model.kernel
 import java.util.concurrent.atomic.AtomicBoolean
+import kotlin.system.exitProcess
 
 class NetService : Service() {
     private lateinit var listenJob: Job
@@ -63,6 +64,7 @@ class NetService : Service() {
 
         net.onDestroy()
         super.onDestroy()
+        exitProcess(0)
     }
 
     companion object {
