@@ -250,8 +250,7 @@ class Net(private val kernel: Kernel) {
                 assert(message.body != null)
                 // TODO: handle usual message
             }
-            FLAG_FETCH_MESSAGES -> {}
-            else -> Unit
+            FLAG_FETCH_MESSAGES -> onNextMessageFetched(message)
         }
     }
 
@@ -277,7 +276,7 @@ class Net(private val kernel: Kernel) {
             FLAG_REGISTERED -> log("register succeeded")
             FLAG_FETCH_USERS -> onNextUserInfosBundleFetched(message)
             FLAG_ERROR -> processErrors(message)
-            FLAG_FETCH_MESSAGES -> {}
+            FLAG_FETCH_MESSAGES -> onEmptyMessagesFetchReplyReceived(message)
             FLAG_BROADCAST -> log("broadcast received ${message.body!!}")
         }
     }
@@ -285,9 +284,9 @@ class Net(private val kernel: Kernel) {
     private fun processErrors(message: NetMessage) {
         assert(message.size == 4 && message.body != null)
         when (val flag = message.body!!.sliceArray(0 until 4).int) {
-            FLAG_LOG_IN -> log("log in failed")
+            FLAG_LOG_IN -> log("log in failed") // TODO: handle
             FLAG_REGISTER -> log("register failed")
-            FLAG_FETCH_MESSAGES -> Unit
+            FLAG_FETCH_MESSAGES -> log("fetch messages failed")
             else -> log("error $flag received")
         }
     }
@@ -306,6 +305,20 @@ class Net(private val kernel: Kernel) {
         log("users fetched $userInfos")
         userInfos.clear()
         fetchingUsers.set(false)
+    }
+
+    private fun onNextMessageFetched(message: NetMessage) {
+        assert(running && !invalidated.get() && fetchingMessages.get() && message.body != null)
+        val last = message.index == message.count - 1
+
+        log("next message fetched $message") // TODO: handle
+        if (last) fetchingMessages.set(false)
+    }
+
+    private fun onEmptyMessagesFetchReplyReceived(message: NetMessage) {
+        assert(running && !invalidated.get() && message.body != null && message.count == 1)
+        log("empty messages fetch reply $message " + message.body!!.sliceArray(1 + 8 until 1 + 8 + 4).int) // TODO: handle
+        fetchingMessages.set(false)
     }
 
     private fun makeCredentials(username: String, password: String): ByteArray {
@@ -343,9 +356,16 @@ class Net(private val kernel: Kernel) {
         send(FLAG_BROADCAST, body, TO_SERVER)
     }
 
-    fun fetchMessages() {
-//        assert(running && !invalidated.get())
-//        send(FLAG_SHUTDOWN, null, TO_SERVER)
+    fun fetchMessages(id: Int, afterTimestamp: Long) {
+        assert(running && !invalidated.get() && id >= 0 && afterTimestamp >= 0 && !fetchingUsers.get() && !fetchingMessages.get())
+        fetchingMessages.set(true)
+
+        val body = ByteArray(1 + 8 + 4)
+        body[0] = 1
+        System.arraycopy(afterTimestamp.bytes, 0, body, 1, 8)
+        System.arraycopy(id.bytes, 0, body, 1 + 8, 4)
+
+        send(FLAG_FETCH_MESSAGES, body, TO_SERVER)
     }
 
     fun onDestroy() {
