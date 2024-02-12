@@ -26,7 +26,6 @@ import org.exchatge.model.Reference
 import org.exchatge.model.Ternary
 import org.exchatge.model.assert
 import org.exchatge.model.blockingWithLock
-import org.exchatge.model.bypassMainThreadRestriction
 import org.exchatge.model.log
 import java.net.InetSocketAddress
 import java.net.Socket
@@ -67,12 +66,14 @@ class Net(private val kernel: Kernel) {
             kernel.context.startService(Intent(kernel.context, NetService::class.java))!! // TODO: start the service only if the user has logged in
     }
 
-    fun onCreate() = bypassMainThreadRestriction {
+    fun onCreate() {} // executes in main thread
+
+    fun onPostCreate() {
         socket = try { Socket().apply { connect(InetSocketAddress(SERVER_ADDRESS, 8080), 1000 * 60 * 60) } }
         catch (_: Exception) { null } // unable to connect
 
         log("connected = " + socket?.isConnected)
-        if (socket == null) return@bypassMainThreadRestriction // unable to connect
+        if (socket == null) return // unable to connect
         socket!!.soTimeout = 500 // delay between socket read tries (while (open) { delay(500); tryRead() })
 
         val ready =
