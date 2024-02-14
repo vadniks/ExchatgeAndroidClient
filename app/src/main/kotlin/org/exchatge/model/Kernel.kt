@@ -50,7 +50,7 @@ class Kernel(val context: Context) {
         override val context get() = this@Kernel.context
         override val crypto get() = this@Kernel.crypto
 
-        override fun onNetDestroy() {}
+        override fun onNetDestroy() { net = null }
         override fun onLogInResult(successful: Boolean) {}
     }
 

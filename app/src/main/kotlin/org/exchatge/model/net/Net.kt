@@ -29,10 +29,6 @@ import org.exchatge.model.log
 import java.net.InetSocketAddress
 import java.net.Socket
 import java.net.SocketTimeoutException
-import java.util.concurrent.ConcurrentLinkedQueue
-import java.util.concurrent.atomic.AtomicBoolean
-import java.util.concurrent.atomic.AtomicInteger
-import java.util.concurrent.atomic.AtomicReference
 
 private const val SERVER_ADDRESS = "192.168.1.57" // TODO: debug only
 
@@ -48,21 +44,20 @@ private const val PASSWORD = "admin"
 
 class Net(private val initiator: NetInitiator) {
     val running get() = NetService.running
+    private lateinit var destroy: () -> Unit // goes to onDestroy
     private var socket: Socket? = null
     private val crypto get() = initiator.crypto
     private val encryptedMessageMaxSize = crypto.encryptedSize(MAX_MESSAGE_SIZE)
     private var coders: Crypto.Coders? = null
     private val mutex = Mutex()
-    private val authenticated = AtomicBoolean(false)
-    private val userId = AtomicInteger(FROM_ANONYMOUS)
-    val currentUserId get() = userId.get()
+    @Volatile private var authenticated = false
+    @Volatile var userId = FROM_ANONYMOUS; private set
     private val tokenAnonymous = ByteArray(TOKEN_SIZE)
     private val tokenUnsignedValue = ByteArray(TOKEN_UNSIGNED_VALUE_SIZE) { 255.toByte() }
-    private val token = AtomicReference(tokenAnonymous.copyOf())
-    private val invalidated = AtomicBoolean(true)
-    private val fetchingUsers = AtomicBoolean(false)
-    private val fetchingMessages = AtomicBoolean(false)
-    private val userInfos = ConcurrentLinkedQueue<UserInfo>()
+    @Volatile private var token = tokenAnonymous.copyOf()
+    @Volatile private var fetchingUsers = false
+    @Volatile private var fetchingMessages = false
+    private val userInfos = ArrayList<UserInfo>()
 
     init {
         assert(!initialized)
@@ -72,11 +67,9 @@ class Net(private val initiator: NetInitiator) {
             initiator.context.startService(Intent(initiator.context, NetService::class.java))!! // TODO: start the service only if the user has logged in
     }
 
-    fun onCreate() {} // executes in main thread
+    fun onCreate(destroy: () -> Unit) { this.destroy = destroy }
 
     fun onPostCreate() {
-        assert(invalidated.get())
-
         mutex.withLockBlocking {
             socket =
                 try { Socket().apply { connect(InetSocketAddress(SERVER_ADDRESS, 8080), /*TODO: extract constant*/1000 * 60 * 60) } }
@@ -84,13 +77,21 @@ class Net(private val initiator: NetInitiator) {
         }
 
         log("connected = " + socket?.isConnected)
-        if (socket == null) return // unable to connect
+        if (socket == null) {
+            destroy()
+            return
+        }
         mutex.withLockBlocking { socket!!.soTimeout = 500 } // delay between socket read tries (while (open) { delay(500); tryRead() })
 
         val ready = initiateSecuredConnection()
         log("ready = $ready") // if (!ready) // error while connecting
-        if (ready) invalidated.set(false)
-        if (ready) logIn() // TODO: debug only
+
+        if (!ready) {
+            destroy()
+            return
+        }
+
+        logIn() // TODO: debug only
     }
 
     private fun initiateSecuredConnection(): Boolean {
@@ -176,7 +177,7 @@ class Net(private val initiator: NetInitiator) {
     private fun send(flag: Int, body: ByteArray?, to: Int): Boolean {
         assert(body != null && body.size in 1..MAX_MESSAGE_BODY_SIZE || body == null && flag != FLAG_PROCEED && flag != FLAG_BROADCAST)
 
-        val message = NetMessage(flag, body, to, userId.get(), token.get())
+        val message = NetMessage(flag, body, to, userId, token)
 
         val packedSize = MESSAGE_HEAD_SIZE + message.size
         val packed = message.pack()
@@ -197,19 +198,18 @@ class Net(private val initiator: NetInitiator) {
     }
 
     fun send(body: ByteArray, to: Int) {
-        assert(running && !invalidated.get() && body.isNotEmpty() && to >= 0)
+        assert(running && body.isNotEmpty() && to >= 0)
         send(FLAG_PROCEED, body, to)
     }
 
     // TODO: add an 'exit' button to UI which will close the activity as well as the service to completely shutdown the whole app
 
     fun listen() {
-        while (NetService.running && !invalidated.get() && mutex.withLockBlocking { socket != null && !socket!!.isClosed && socket!!.isConnected }) {
+        while (NetService.running && mutex.withLockBlocking { socket != null && !socket!!.isClosed && socket!!.isConnected }) {
             log("listen")
             if (tryReadMessage() == Ternary.NEGATIVE) break
         }
         log("disconnected") // disconnected - logging in is required to reconnect // TODO: handle disconnection
-        invalidated.set(true)
         // then the execution goes to onDestroy
     }
 
@@ -235,7 +235,7 @@ class Net(private val initiator: NetInitiator) {
             return
         }
 
-        assert(authenticated.get())
+        assert(authenticated)
 
         when (message.flag) {
             FLAG_EXCHANGE_KEYS -> {}
@@ -262,9 +262,9 @@ class Net(private val initiator: NetInitiator) {
                 log("log in succeeded")
 
                 assert(message.body != null)
-                authenticated.set(true)
-                userId.set(message.to)
-                token.set(message.body!!.sliceArray(0 until TOKEN_SIZE))
+                authenticated = true
+                userId = message.to
+                token = message.body!!.sliceArray(0 until TOKEN_SIZE)
 
                 // TODO: onLogInResult(true)
                 fetchUsers() // TODO: debug only
@@ -288,7 +288,7 @@ class Net(private val initiator: NetInitiator) {
     }
 
     private fun onNextUserInfosBundleFetched(message: NetMessage) {
-        assert(running && !invalidated.get() && fetchingUsers.get())
+        assert(running && fetchingUsers)
         assert(message.body != null && message.size in 1..MAX_MESSAGE_BODY_SIZE)
         if (message.index == 0) userInfos.clear()
 
@@ -300,21 +300,21 @@ class Net(private val initiator: NetInitiator) {
         // TODO: onUsersFetched
         log("users fetched $userInfos")
         userInfos.clear()
-        fetchingUsers.set(false)
+        fetchingUsers = false
     }
 
     private fun onNextMessageFetched(message: NetMessage) {
-        assert(running && !invalidated.get() && fetchingMessages.get() && message.body != null)
+        assert(running && fetchingMessages && message.body != null)
         val last = message.index == message.count - 1
 
         log("next message fetched $message") // TODO: handle
-        if (last) fetchingMessages.set(false)
+        if (last) fetchingMessages = false
     }
 
     private fun onEmptyMessagesFetchReplyReceived(message: NetMessage) {
-        assert(running && !invalidated.get() && message.body != null && message.count == 1)
+        assert(running && message.body != null && message.count == 1)
         log("empty messages fetch reply $message " + message.body!!.sliceArray(1 + 8 until 1 + 8 + 4).int) // TODO: handle
-        fetchingMessages.set(false)
+        fetchingMessages = false
     }
 
     private fun makeCredentials(username: String, password: String): ByteArray {
@@ -327,34 +327,34 @@ class Net(private val initiator: NetInitiator) {
     }
 
     fun logIn(username: String = USERNAME, password: String = PASSWORD) {
-        assert(running && !invalidated.get())
+        assert(running)
         send(FLAG_LOG_IN, makeCredentials(username, password), TO_SERVER)
     }
 
     fun register(username: String = USERNAME, password: String = PASSWORD) {
-        assert(running && !invalidated.get())
+        assert(running)
         send(FLAG_REGISTER, makeCredentials(username, password), TO_SERVER)
     }
 
     fun shutdownServer() {
-        assert(running && !invalidated.get())
+        assert(running)
         send(FLAG_SHUTDOWN, null, TO_SERVER)
     }
 
     fun fetchUsers() {
-        assert(running && !invalidated.get() && !fetchingUsers.get() && !fetchingMessages.get())
-        fetchingUsers.set(true)
+        assert(running && !fetchingUsers && !fetchingMessages)
+        fetchingUsers = true
         send(FLAG_FETCH_USERS, null, TO_SERVER)
     }
 
     fun sendBroadcast(body: ByteArray) {
-        assert(running && !invalidated.get() && body.isNotEmpty())
+        assert(running && body.isNotEmpty())
         send(FLAG_BROADCAST, body, TO_SERVER)
     }
 
     fun fetchMessages(id: Int, afterTimestamp: Long) {
-        assert(running && !invalidated.get() && id >= 0 && afterTimestamp >= 0 && !fetchingUsers.get() && !fetchingMessages.get())
-        fetchingMessages.set(true)
+        assert(running && id >= 0 && afterTimestamp >= 0 && !fetchingUsers && !fetchingMessages)
+        fetchingMessages = true
 
         val body = ByteArray(1 + 8 + 4)
         body[0] = 1

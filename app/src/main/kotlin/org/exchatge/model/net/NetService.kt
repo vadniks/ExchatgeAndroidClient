@@ -29,7 +29,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.exchatge.model.assert
 import org.exchatge.model.kernel
-import java.util.concurrent.atomic.AtomicBoolean
+import org.exchatge.model.log
 
 class NetService : Service() {
     private lateinit var listenJob: Job
@@ -41,15 +41,21 @@ class NetService : Service() {
 
     @OptIn(DelicateCoroutinesApi::class)
     override fun onCreate() {
-        assert(!xRunning.get())
+        assert(!running)
         super.onCreate()
 
-        net!!.onCreate()
-        xRunning.set(true)
+        running = true
+
+        net.onCreate {
+            running = false
+            runBlocking { listenJob.join() }
+            stopSelf()
+            log("ns destroy x")
+        }
 
         listenJob = GlobalScope.launch(Dispatchers.IO) {
-            net!!.onPostCreate()
-            net!!.listen()
+            net.onPostCreate()
+            net.listen()
             stopSelf()
         }
     }
@@ -59,21 +65,15 @@ class NetService : Service() {
     override fun onBind(intent: Intent?) = null as IBinder?
 
     override fun onDestroy() {
-        xRunning.set(false)
-
-        runBlocking {
-            listenJob.join()
-        }
-
-        net!!.onDestroy()
+        running = false
+        runBlocking { listenJob.join() }
+        net.onDestroy()
         super.onDestroy()
     }
 
     companion object {
         @JvmStatic
-        private val xRunning = AtomicBoolean(false)
-
-        @JvmStatic
-        val running get() = xRunning.get()
+        @Volatile
+        var running = false; private set
     }
 }
