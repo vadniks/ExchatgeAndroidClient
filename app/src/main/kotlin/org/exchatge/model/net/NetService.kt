@@ -44,7 +44,7 @@ class NetService : Service() {
         net.onCreate()
         xRunning.set(true)
 
-        listenJob = GlobalScope.launch(Dispatchers.Default) {
+        listenJob = GlobalScope.launch(Dispatchers.IO) {
             net.onPostCreate()
             net.listen()
             stopSelf()
