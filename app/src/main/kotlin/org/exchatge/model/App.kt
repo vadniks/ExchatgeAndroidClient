@@ -26,6 +26,6 @@ class App : Application() {
 
     override fun onCreate() {
         super.onCreate()
-        xKernel = Kernel { this }
+        xKernel = Kernel(this)
     }
 }

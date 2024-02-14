@@ -21,7 +21,6 @@ package org.exchatge.model.net
 import android.content.Intent
 import kotlinx.coroutines.sync.Mutex
 import org.exchatge.model.Crypto
-import org.exchatge.model.Kernel
 import org.exchatge.model.Reference
 import org.exchatge.model.Ternary
 import org.exchatge.model.assert
@@ -47,10 +46,10 @@ private val serverSignPublicKey = byteArrayOf( // TODO: debug only
 private const val USERNAME = "admin" // TODO: debug only
 private const val PASSWORD = "admin"
 
-class Net(private val kernel: Kernel) {
+class Net(private val initiator: NetInitiator) {
     val running get() = NetService.running
     private var socket: Socket? = null
-    private val crypto get() = kernel.crypto
+    private val crypto get() = initiator.crypto
     private val encryptedMessageMaxSize = crypto.encryptedSize(MAX_MESSAGE_SIZE)
     private var coders: Crypto.Coders? = null
     private val mutex = Mutex()
@@ -60,8 +59,7 @@ class Net(private val kernel: Kernel) {
     private val tokenAnonymous = ByteArray(TOKEN_SIZE)
     private val tokenUnsignedValue = ByteArray(TOKEN_UNSIGNED_VALUE_SIZE) { 255.toByte() }
     private val token = AtomicReference(tokenAnonymous.copyOf())
-    private val invalidated = AtomicBoolean(true) // hasn't been connected (and secured connection established) or has disconnected - reinitialization needed (startService again)
-//    val invalidated get() = ...
+    private val invalidated = AtomicBoolean(true)
     private val fetchingUsers = AtomicBoolean(false)
     private val fetchingMessages = AtomicBoolean(false)
     private val userInfos = ConcurrentLinkedQueue<UserInfo>()
@@ -69,11 +67,9 @@ class Net(private val kernel: Kernel) {
     init {
         assert(!initialized)
         initialized = true
-    }
 
-    fun startService() {
         if (!NetService.running)
-            kernel.context.startService(Intent(kernel.context, NetService::class.java))!! // TODO: start the service only if the user has logged in
+            initiator.context.startService(Intent(initiator.context, NetService::class.java))!! // TODO: start the service only if the user has logged in
     }
 
     fun onCreate() {} // executes in main thread
@@ -371,7 +367,7 @@ class Net(private val kernel: Kernel) {
     fun onDestroy() {
         log("close")
         mutex.withLockBlocking { socket?.close() }
-        kernel.onNetDestroy()
+        initiator.onNetDestroy()
     }
 
     private companion object {

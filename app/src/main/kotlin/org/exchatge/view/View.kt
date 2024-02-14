@@ -16,17 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package org.exchatge.model.net
+package org.exchatge.view
 
-import android.content.Context
-import android.content.Intent
-import org.exchatge.model.assert
-import org.exchatge.model.kernel
-
-class BroadcastReceiver : android.content.BroadcastReceiver() {
-
-    override fun onReceive(context: Context, intent: Intent) {
-        assert(intent.action == Intent.ACTION_BOOT_COMPLETED)
-        context.kernel.initializeNet()
-    }
+interface View {
 }

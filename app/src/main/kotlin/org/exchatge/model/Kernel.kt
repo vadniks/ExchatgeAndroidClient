@@ -20,16 +20,15 @@ package org.exchatge.model
 
 import android.content.Context
 import android.widget.Toast
-import org.exchatge.model.database.Database
 import org.exchatge.model.net.Net
-import org.exchatge.presenter.ActivityPresenter
+import org.exchatge.model.net.NetInitiator
+import org.exchatge.presenter.Presenter
+import org.exchatge.presenter.PresenterInitiator
 
-class Kernel(private val contextGetter: () -> Context) {
-    val context get() = contextGetter() // getters are used instead of the object itself as the storing context smwhr is a memory leak
+class Kernel(val context: Context) {
     val crypto = Crypto()
-    val database = Database.init(context)
-    val net = Net(this)
-    val presenter = ActivityPresenter(this)
+    @Volatile var net: Net? = null; private set
+    val presenter = Presenter(PresenterInitiatorImpl())
 
     // TODO: add settings to ui to adjust options which will be stored as sharedPreferences
 
@@ -40,16 +39,19 @@ class Kernel(private val contextGetter: () -> Context) {
 
     fun toast(text: String) = Toast.makeText(context, text, Toast.LENGTH_SHORT).show().also { log(text) } // TODO: debug only
 
-    fun onActivityCreate() {
-        net.startService()
+    fun initializeNet() { net = Net(NetInitiatorImpl()) }
+
+    private inner class PresenterInitiatorImpl : PresenterInitiator {
+        override fun onActivityCreate() = initializeNet()
+        override fun onActivityDestroy() {}
     }
 
-    fun onActivityDestroy() {
-        database.close()
-    }
+    private inner class NetInitiatorImpl : NetInitiator {
+        override val context get() = this@Kernel.context
+        override val crypto get() = this@Kernel.crypto
 
-    fun onNetDestroy() {
-        database.close()
+        override fun onNetDestroy() {}
+        override fun onLogInResult(successful: Boolean) {}
     }
 
     private companion object {

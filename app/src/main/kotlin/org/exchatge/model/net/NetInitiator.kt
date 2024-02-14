@@ -19,14 +19,12 @@
 package org.exchatge.model.net
 
 import android.content.Context
-import android.content.Intent
-import org.exchatge.model.assert
-import org.exchatge.model.kernel
+import org.exchatge.model.Crypto
 
-class BroadcastReceiver : android.content.BroadcastReceiver() {
+interface NetInitiator {
+    val context: Context
+    val crypto: Crypto
 
-    override fun onReceive(context: Context, intent: Intent) {
-        assert(intent.action == Intent.ACTION_BOOT_COMPLETED)
-        context.kernel.initializeNet()
-    }
+    fun onNetDestroy()
+    fun onLogInResult(successful: Boolean)
 }

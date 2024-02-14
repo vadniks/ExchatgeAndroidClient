@@ -30,18 +30,17 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import org.exchatge.presenter.ActivityPresenter
-import org.exchatge.presenter.ActivityPresenter.Companion.activityPresenter
+import org.exchatge.presenter.Presenter
 import org.exchatge.view.pages.ConversationPage
 import org.exchatge.view.pages.LogInRegisterPage
 import org.exchatge.view.pages.UsersListPage
 
-class Activity : ComponentActivity() {
-    private lateinit var presenter: ActivityPresenter
+class Activity : ComponentActivity(), View {
+    private lateinit var presenter: Presenter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        presenter = activityPresenter
+        presenter = Presenter.instance(this)
 
         setContent {
             org.exchatge.view.Preview()

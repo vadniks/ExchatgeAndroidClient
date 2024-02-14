@@ -18,27 +18,27 @@
 
 package org.exchatge.presenter
 
-import org.exchatge.model.Kernel
 import org.exchatge.model.kernel
 import org.exchatge.view.Activity
+import org.exchatge.view.View
 
-class ActivityPresenter(private val kernel: Kernel) {
-    private var activityGetter: (() -> Activity)? = null // not storing the activity directly to avoid memory leak as its storing is a memory leak
-    val activityRunning get() = activityGetter != null
+class Presenter(private val initiator: PresenterInitiator) {
+    @Volatile private var view: View? = null
+    val activityRunning get() = view != null
 
     init {
         assert(!initialized)
         initialized = true
     }
 
-    fun onActivityCreate(activity: Activity) {
-        activityGetter = { activity }
-        kernel.onActivityCreate()
+    fun onActivityCreate(view: View) {
+        this.view = view
+        initiator.onActivityCreate()
     }
 
     fun onActivityDestroy() {
-        activityGetter = null
-        kernel.onActivityDestroy()
+        view = null
+        initiator.onActivityDestroy()
     }
 
     companion object {
@@ -46,6 +46,6 @@ class ActivityPresenter(private val kernel: Kernel) {
         private var initialized = false
 
         @JvmStatic
-        val Activity.activityPresenter get() = kernel.presenter.also { it.onActivityCreate(this) }
+        fun instance(activity: Activity) = activity.applicationContext.kernel.presenter.also { it.onActivityCreate(activity) }
     }
 }
