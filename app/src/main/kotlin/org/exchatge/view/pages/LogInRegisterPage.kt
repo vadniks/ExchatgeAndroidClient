@@ -40,8 +40,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.exchatge.R
-import org.exchatge.presenter.ActivityPresenter.Companion.activityPresenter
-import org.exchatge.view.Activity
+import org.exchatge.view.currentPage
 
 private val paddingModifier = Modifier.padding(2.5f.dp)
 
@@ -49,7 +48,7 @@ private var username by mutableStateOf("")
 private var password by mutableStateOf("")
 
 @Composable
-fun LogInRegisterPage(activity: Activity) = Column(
+fun LogInRegisterPage() = Column(
     modifier = Modifier.fillMaxSize(),
     verticalArrangement = Arrangement.Center,
     horizontalAlignment = Alignment.CenterHorizontally
@@ -73,7 +72,7 @@ fun LogInRegisterPage(activity: Activity) = Column(
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Button(
-                onClick = { if (username.isNotEmpty() && password.isNotEmpty()) activity.presenter.logIn(username, password) }, // TODO: debug only
+                onClick = { currentPage = 1 }, // TODO: debug only
                 modifier = paddingModifier
             ) {
                 Text(stringResource(R.string.logIn))

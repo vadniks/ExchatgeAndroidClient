@@ -52,7 +52,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.exchatge.R
-import org.exchatge.view.Activity
+import org.exchatge.view.currentPage
 import java.text.SimpleDateFormat
 
 private val opponentUsername = "User" // TODO: debug only
@@ -60,7 +60,7 @@ private var enteredText by mutableStateOf("")
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ConversationPage(activity: Activity) = Scaffold(
+fun ConversationPage() = Scaffold(
     topBar = {
         TopAppBar(
             title = {
@@ -75,7 +75,7 @@ fun ConversationPage(activity: Activity) = Scaffold(
             },
             colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
             navigationIcon = {
-                IconButton(onClick = { activity.currentPage = 1 }) { // TODO: debug only
+                IconButton(onClick = { currentPage = 1 }) { // TODO: debug only
                     Icon(
                         imageVector = Icons.Filled.ArrowBack,
                         contentDescription = stringResource(R.string.back)

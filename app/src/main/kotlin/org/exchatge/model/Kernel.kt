@@ -48,11 +48,9 @@ class Kernel(private val contextGetter: () -> Context) {
         assert(!initialized)
         initialized = true
 
-        asyncActionsJob = GlobalScope.launch { // TODO: launch when service starts
-            while (net.running) {
-                log("async queue " + asyncActionsQueue.size)
+        asyncActionsJob = GlobalScope.launch {
+            while (net.running)
                 asyncActionsQueue.poll()?.invoke()
-            }
         }
     }
 
@@ -63,10 +61,6 @@ class Kernel(private val contextGetter: () -> Context) {
     fun onActivityCreate() {
         net.startService()
     }
-
-    fun logIn(username: String, password: String) = net.logIn(username, password)
-
-    fun onLogInResult(successful: Boolean) = presenter.onLogInResult(successful)
 
     fun onActivityDestroy() {
         database.close()

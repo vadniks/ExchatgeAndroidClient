@@ -55,14 +55,15 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.exchatge.R
-import org.exchatge.view.Activity
+import org.exchatge.view.FileExchangeDialog
+import org.exchatge.view.currentPage
 
 private val currentUser = "User" // TODO: debug only
 private val admin = true
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun UsersListPage(activity: Activity) = Scaffold(
+fun UsersListPage() = Scaffold(
     topBar = {
         TopAppBar(
             title = {
@@ -78,7 +79,7 @@ fun UsersListPage(activity: Activity) = Scaffold(
             },
             colors = topAppBarColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
             navigationIcon = {
-                IconButton(onClick = { activity.currentPage = 0 }) { // TODO: debug only
+                IconButton(onClick = { currentPage = 0 }) { // TODO: debug only
                     Icon(
                         imageVector = Icons.Filled.ExitToApp,
                         contentDescription = stringResource(R.string.logOut)
@@ -99,7 +100,6 @@ fun UsersListPage(activity: Activity) = Scaffold(
     LazyColumn(modifier = Modifier.fillMaxSize().padding(top = paddingValues.calculateTopPadding())) {
         items(10) { // TODO: debug only
             UserInfo(
-                activity,
                 id = it,
                 name = "User$it",
                 online = it % 2 == 0,
@@ -116,7 +116,6 @@ fun UsersListPage(activity: Activity) = Scaffold(
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun UserInfo(
-    activity: Activity,
     id: Int,
     name: String,
     online: Boolean,
@@ -146,7 +145,7 @@ private fun UserInfo(
         )
     },
     modifier = Modifier.fillMaxWidth().combinedClickable(onClick = {
-        activity.currentPage = 2 // TODO: debug only
+        currentPage = 2 // TODO: debug only
     }, onLongClick = {})
 )
 

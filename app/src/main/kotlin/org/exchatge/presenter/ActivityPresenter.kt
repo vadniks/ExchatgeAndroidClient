@@ -18,22 +18,13 @@
 
 package org.exchatge.presenter
 
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
-import org.exchatge.R
 import org.exchatge.model.Kernel
 import org.exchatge.model.kernel
-import org.exchatge.model.log
-import org.exchatge.model.runInMainThread
 import org.exchatge.view.Activity
-import java.util.concurrent.atomic.AtomicBoolean
 
 class ActivityPresenter(private val kernel: Kernel) {
     private var activityGetter: (() -> Activity)? = null // not storing the activity directly to avoid memory leak as its storing is a memory leak
     val activityRunning get() = activityGetter != null
-    private val loading = AtomicBoolean(false)
-    private val activity get() = activityGetter?.invoke()
 
     init {
         assert(!initialized)
@@ -43,26 +34,6 @@ class ActivityPresenter(private val kernel: Kernel) {
     fun onActivityCreate(activity: Activity) {
         activityGetter = { activity }
         kernel.onActivityCreate()
-    }
-
-    fun showSnackbar(text: String) {
-        if (!activityRunning) return
-        runInMainThread { kernel.toast(text) } // TODO: figure out how to show snackbar in compose
-    }
-
-    fun logIn(username: String, password: String) {
-        if (!activityRunning) return
-        loading.set(true)
-         runBlocking { launch(Dispatchers.Default) { log("x ap login"); kernel.logIn(username, password) } }
-    }
-
-    fun onLogInResult(successful: Boolean) {
-        if (!activityRunning) return
-
-        if (successful) activity?.currentPage = 1
-        else showSnackbar(activity!!.getString(R.string.error))
-
-        loading.set(false)
     }
 
     fun onActivityDestroy() {

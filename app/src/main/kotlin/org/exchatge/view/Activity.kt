@@ -29,6 +29,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import org.exchatge.presenter.ActivityPresenter
 import org.exchatge.presenter.ActivityPresenter.Companion.activityPresenter
 import org.exchatge.view.pages.ConversationPage
@@ -36,38 +37,36 @@ import org.exchatge.view.pages.LogInRegisterPage
 import org.exchatge.view.pages.UsersListPage
 
 class Activity : ComponentActivity() {
-    private lateinit var xPresenter: ActivityPresenter
-    val presenter get() = xPresenter
-    var currentPage by mutableIntStateOf(0)
+    private lateinit var presenter: ActivityPresenter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        xPresenter = activityPresenter
+        presenter = activityPresenter
 
         setContent {
-            Preview(currentPage, this)
+            org.exchatge.view.Preview()
         }
     }
 
     override fun onDestroy() {
-        xPresenter.onActivityDestroy()
+        presenter.onActivityDestroy()
         super.onDestroy()
     }
 }
 
-// TODO: make currentPage's type to be enum
+var currentPage by mutableIntStateOf(1) // TODO: debug only
 
-//@Preview(showBackground = true, showSystemUi = true)
+@Preview(showBackground = true, showSystemUi = true)
 @Composable
-fun Preview(currentPage: Int, activity: Activity) = ExchatgeTheme(darkTheme = true) {
+fun Preview() = ExchatgeTheme/*(darkTheme = true)*/ {
     Surface(
         modifier = Modifier.fillMaxSize(), //.border(1.0f.dp, color = Color.Black, RoundedCornerShape(1.0f.dp)),
         color = MaterialTheme.colorScheme.background
     ) {
         when (currentPage) {
-            0 -> LogInRegisterPage(activity)
-            1 -> UsersListPage(activity)
-            2 -> ConversationPage(activity)
+            0 -> LogInRegisterPage()
+            1 -> UsersListPage()
+            2 -> ConversationPage()
         }
     }
 }

@@ -94,7 +94,7 @@ class Net(private val kernel: Kernel) {
         val ready = initiateSecuredConnection()
         log("ready = $ready") // if (!ready) // error while connecting
         if (ready) invalidated.set(false)
-//        if (ready) logIn() // TODO: debug only
+        if (ready) logIn() // TODO: debug only
     }
 
     private fun initiateSecuredConnection(): Boolean {
@@ -270,7 +270,7 @@ class Net(private val kernel: Kernel) {
                 userId.set(message.to)
                 token.set(message.body!!.sliceArray(0 until TOKEN_SIZE))
 
-                kernel.onLogInResult(true)
+                // TODO: onLogInResult(true)
                 fetchUsers() // TODO: debug only
             }
             FLAG_REGISTERED -> log("register succeeded")
@@ -284,10 +284,7 @@ class Net(private val kernel: Kernel) {
     private fun processErrors(message: NetMessage) {
         assert(message.size == 4 && message.body != null)
         when (val flag = message.body!!.sliceArray(0 until 4).int) {
-            FLAG_LOG_IN -> {
-                log("log in failed")
-                kernel.onLogInResult(false)
-            }
+            FLAG_LOG_IN -> log("log in failed") // TODO: handle
             FLAG_REGISTER -> log("register failed")
             FLAG_FETCH_MESSAGES -> log("fetch messages failed")
             else -> log("error $flag received")
@@ -335,7 +332,7 @@ class Net(private val kernel: Kernel) {
 
     fun logIn(username: String = USERNAME, password: String = PASSWORD) {
         assert(running && !invalidated.get())
-        send(FLAG_LOG_IN, makeCredentials(username, password), TO_SERVER).also { log("n lg s $it") }
+        send(FLAG_LOG_IN, makeCredentials(username, password), TO_SERVER)
     }
 
     fun register(username: String = USERNAME, password: String = PASSWORD) {
