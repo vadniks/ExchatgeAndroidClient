@@ -20,5 +20,6 @@ package org.exchatge.presenter
 
 interface PresenterInitiator {
     fun onActivityCreate()
+    fun logIn(username: String, password: String)
     fun onActivityDestroy()
 }

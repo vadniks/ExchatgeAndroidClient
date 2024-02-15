@@ -24,11 +24,13 @@ import org.exchatge.model.net.Net
 import org.exchatge.model.net.NetInitiator
 import org.exchatge.presenter.PresenterImpl
 import org.exchatge.presenter.PresenterInitiator
+import java.util.concurrent.ConcurrentLinkedQueue
 
 class Kernel(val context: Context) {
     val crypto = Crypto()
     @Volatile var net: Net? = null; private set
     val presenter = PresenterImpl(PresenterInitiatorImpl())
+    private val pendingNetRequests = ConcurrentLinkedQueue<() -> Unit>()
 
     // TODO: add settings to ui to adjust options which will be stored as sharedPreferences
 
@@ -39,10 +41,20 @@ class Kernel(val context: Context) {
 
     fun toast(text: String) = Toast.makeText(context, text, Toast.LENGTH_SHORT).show().also { log(text) } // TODO: debug only
 
-    fun initializeNet() { net = Net(NetInitiatorImpl()) }
+    fun initializeNet() {
+        assert(net == null)
+        net = Net(NetInitiatorImpl())
+    }
 
     private inner class PresenterInitiatorImpl : PresenterInitiator {
-        override fun onActivityCreate() = initializeNet()
+        override fun onActivityCreate() {}
+
+        override fun logIn(username: String, password: String) { // TODO: encrypt credentials in place
+            assert(net == null)
+            pendingNetRequests.add { runAsync { net?.logIn(username, password) } }
+            initializeNet()
+        }
+
         override fun onActivityDestroy() {}
     }
 
@@ -50,8 +62,14 @@ class Kernel(val context: Context) {
         override val context get() = this@Kernel.context
         override val crypto get() = this@Kernel.crypto
 
+        override fun onConnectResult(successful: Boolean) {
+            log("connected $successful")
+            if (successful) while (!pendingNetRequests.isEmpty()) pendingNetRequests.poll()?.invoke()
+        }
+
         override fun onNetDestroy() { net = null }
-        override fun onLogInResult(successful: Boolean) {}
+
+        override fun onLogInResult(successful: Boolean) { runInMain { toast("log in $successful") } }
     }
 
     private companion object {

@@ -25,6 +25,7 @@ interface NetInitiator {
     val context: Context
     val crypto: Crypto
 
+    fun onConnectResult(successful: Boolean)
     fun onNetDestroy()
     fun onLogInResult(successful: Boolean)
 }

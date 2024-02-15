@@ -53,15 +53,20 @@ class PresenterImpl(private val initiator: PresenterInitiator): Presenter {
         initiator.onActivityDestroy()
     }
 
-    override fun logIn() {}
+    override fun logIn() = initiator.logIn(username, password)
+
     override fun register() {}
 
     override fun logOut() {}
+
     override fun administrate() {}
+
     override fun conversation(id: Int, remove: Boolean) {}
 
     override fun returnFromPage() {}
+
     override fun fileChoose() {}
+
     override fun sendMessage() {}
 
     companion object {

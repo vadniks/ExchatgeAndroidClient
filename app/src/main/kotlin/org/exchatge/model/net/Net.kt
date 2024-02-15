@@ -58,9 +58,6 @@ class Net(private val initiator: NetInitiator) {
     private val userInfos = ArrayList<UserInfo>()
 
     init {
-        assert(!initialized)
-        initialized = true
-
         if (!NetService.running)
             initiator.context.startService(Intent(initiator.context, NetService::class.java))!! // TODO: start the service only if the user has logged in
     }
@@ -75,14 +72,23 @@ class Net(private val initiator: NetInitiator) {
         }
 
         log("connected = " + socket?.isConnected)
-        if (socket == null) return
+        if (socket == null) {
+            initiator.onConnectResult(false)
+            return
+        }
         synchronized(lock) { socket!!.soTimeout = 500 } // delay between socket read tries (while (open) { delay(500); tryRead() })
 
         val ready = initiateSecuredConnection()
         log("ready = $ready") // if (!ready) // error while connecting
 
-        if (!ready) return
-        logIn() // TODO: debug only
+        if (!ready) {
+            initiator.onConnectResult(false)
+            return
+        }
+
+        initiator.onConnectResult(true)
+
+        //logIn() // TODO: debug only
     }
 
     private fun initiateSecuredConnection(): Boolean {
@@ -257,8 +263,9 @@ class Net(private val initiator: NetInitiator) {
                 userId = message.to
                 token = message.body!!.sliceArray(0 until TOKEN_SIZE)
 
-                // TODO: onLogInResult(true)
-                fetchUsers() // TODO: debug only
+                initiator.onLogInResult(true)
+
+//                fetchUsers() // TODO: debug only
             }
             FLAG_REGISTERED -> log("register succeeded")
             FLAG_FETCH_USERS -> onNextUserInfosBundleFetched(message)
@@ -273,6 +280,7 @@ class Net(private val initiator: NetInitiator) {
         when (val flag = message.body!!.sliceArray(0 until 4).int) {
             FLAG_LOG_IN -> {
                 log("log in failed")
+                initiator.onLogInResult(false)
                 disconnect()
             }
             FLAG_REGISTER -> log("register failed")
@@ -375,9 +383,6 @@ class Net(private val initiator: NetInitiator) {
     }
 
     private companion object {
-        @JvmStatic
-        private var initialized = false
-
         private const val TIMEOUT = 5000
 
         private const val FROM_ANONYMOUS = 0xffffffff.toInt()
