@@ -43,10 +43,11 @@ private const val PASSWORD = "admin"
 class Net(private val initiator: NetInitiator) {
     val running get() = NetService.running
     @Volatile private var socket: Socket? = null
+    private val lock = this
+    val connected get() = synchronized(lock) { socket != null && !socket!!.isClosed && socket!!.isConnected }
     private val crypto get() = initiator.crypto
     private val encryptedMessageMaxSize = crypto.encryptedSize(MAX_MESSAGE_SIZE)
     private var coders: Crypto.Coders? = null
-    private val lock = this
     @Volatile private var authenticated = false // reads and writes to this field are atomic and writes are always made visible to other threads - just an atomic flag
     @Volatile var userId = FROM_ANONYMOUS; private set
     private val tokenAnonymous = ByteArray(TOKEN_SIZE)
@@ -188,14 +189,14 @@ class Net(private val initiator: NetInitiator) {
     }
 
     fun send(body: ByteArray, to: Int) {
-        assert(running && body.isNotEmpty() && to >= 0)
+        assert(running && connected && body.isNotEmpty() && to >= 0)
         send(FLAG_PROCEED, body, to)
     }
 
     // TODO: add an 'exit' button to UI which will close the activity as well as the service to completely shutdown the whole app
 
     fun listen() {
-        while (NetService.running && synchronized(lock) { socket != null && !socket!!.isClosed && socket!!.isConnected }) {
+        while (NetService.running && connected) {
             log("listen")
             if (tryReadMessage() == Ternary.NEGATIVE) break
         }
@@ -270,7 +271,10 @@ class Net(private val initiator: NetInitiator) {
     private fun processErrors(message: NetMessage) {
         assert(message.size == 4 && message.body != null)
         when (val flag = message.body!!.sliceArray(0 until 4).int) {
-            FLAG_LOG_IN -> log("log in failed") // TODO: handle
+            FLAG_LOG_IN -> {
+                log("log in failed")
+                disconnect()
+            }
             FLAG_REGISTER -> log("register failed")
             FLAG_FETCH_MESSAGES -> log("fetch messages failed")
             else -> log("error $flag received")
@@ -278,7 +282,7 @@ class Net(private val initiator: NetInitiator) {
     }
 
     private fun onNextUserInfosBundleFetched(message: NetMessage) {
-        assert(running && fetchingUsers)
+        assert(running && connected && fetchingUsers)
         assert(message.body != null && message.size in 1..MAX_MESSAGE_BODY_SIZE)
         if (message.index == 0) userInfos.clear()
 
@@ -294,7 +298,7 @@ class Net(private val initiator: NetInitiator) {
     }
 
     private fun onNextMessageFetched(message: NetMessage) {
-        assert(running && fetchingMessages && message.body != null)
+        assert(running && connected && fetchingMessages && message.body != null)
         val last = message.index == message.count - 1
 
         log("next message fetched $message") // TODO: handle
@@ -302,7 +306,7 @@ class Net(private val initiator: NetInitiator) {
     }
 
     private fun onEmptyMessagesFetchReplyReceived(message: NetMessage) {
-        assert(running && message.body != null && message.count == 1)
+        assert(running && connected && message.body != null && message.count == 1)
         log("empty messages fetch reply $message " + message.body!!.sliceArray(1 + 8 until 1 + 8 + 4).int) // TODO: handle
         fetchingMessages = false
     }
@@ -316,34 +320,40 @@ class Net(private val initiator: NetInitiator) {
         return credentials
     }
 
+    fun disconnect() = synchronized(lock) {
+        assert(running && connected)
+        socket!!.close()
+        socket = null
+    }
+
     fun logIn(username: String = USERNAME, password: String = PASSWORD) {
-        assert(running)
+        assert(running && connected)
         send(FLAG_LOG_IN, makeCredentials(username, password), TO_SERVER)
     }
 
     fun register(username: String = USERNAME, password: String = PASSWORD) {
-        assert(running)
+        assert(running && connected)
         send(FLAG_REGISTER, makeCredentials(username, password), TO_SERVER)
     }
 
     fun shutdownServer() {
-        assert(running)
+        assert(running && connected)
         send(FLAG_SHUTDOWN, null, TO_SERVER)
     }
 
     fun fetchUsers() {
-        assert(running && !fetchingUsers && !fetchingMessages)
+        assert(running && connected && !fetchingUsers && !fetchingMessages)
         fetchingUsers = true
         send(FLAG_FETCH_USERS, null, TO_SERVER)
     }
 
     fun sendBroadcast(body: ByteArray) {
-        assert(running && body.isNotEmpty())
+        assert(running && connected && body.isNotEmpty())
         send(FLAG_BROADCAST, body, TO_SERVER)
     }
 
     fun fetchMessages(id: Int, afterTimestamp: Long) {
-        assert(running && id >= 0 && afterTimestamp >= 0 && !fetchingUsers && !fetchingMessages)
+        assert(running && connected && id >= 0 && afterTimestamp >= 0 && !fetchingUsers && !fetchingMessages)
         fetchingMessages = true
 
         val body = ByteArray(1 + 8 + 4)
@@ -356,6 +366,7 @@ class Net(private val initiator: NetInitiator) {
 
     fun onDestroy() {
         log("close")
+        assert(!running)
         synchronized(lock) {
             socket?.close()
             socket = null
