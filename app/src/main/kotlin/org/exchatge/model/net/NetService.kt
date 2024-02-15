@@ -29,7 +29,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.exchatge.model.assert
 import org.exchatge.model.kernel
-import org.exchatge.model.log
 
 class NetService : Service() {
     private lateinit var listenJob: Job
@@ -45,11 +44,7 @@ class NetService : Service() {
         super.onCreate()
 
         running = true
-
-        net.onCreate {
-            running = false
-            stopSelf()
-        }
+        net.onCreate()
 
         listenJob = GlobalScope.launch(Dispatchers.IO) {
             net.onPostCreate()

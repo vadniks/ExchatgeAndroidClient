@@ -42,8 +42,7 @@ private const val PASSWORD = "admin"
 
 class Net(private val initiator: NetInitiator) {
     val running get() = NetService.running
-    private lateinit var destroy: () -> Unit // goes to onDestroy
-    private var socket: Socket? = null
+    @Volatile private var socket: Socket? = null
     private val crypto get() = initiator.crypto
     private val encryptedMessageMaxSize = crypto.encryptedSize(MAX_MESSAGE_SIZE)
     private var coders: Crypto.Coders? = null
@@ -65,7 +64,7 @@ class Net(private val initiator: NetInitiator) {
             initiator.context.startService(Intent(initiator.context, NetService::class.java))!! // TODO: start the service only if the user has logged in
     }
 
-    fun onCreate(destroy: () -> Unit) { this.destroy = destroy }
+    fun onCreate() {}
 
     fun onPostCreate() {
         synchronized(lock) {
@@ -75,20 +74,13 @@ class Net(private val initiator: NetInitiator) {
         }
 
         log("connected = " + socket?.isConnected)
-        if (socket == null) {
-            destroy()
-            return
-        }
+        if (socket == null) return
         synchronized(lock) { socket!!.soTimeout = 500 } // delay between socket read tries (while (open) { delay(500); tryRead() })
 
         val ready = initiateSecuredConnection()
         log("ready = $ready") // if (!ready) // error while connecting
 
-        if (!ready) {
-            destroy()
-            return
-        }
-
+        if (!ready) return
         logIn() // TODO: debug only
     }
 
@@ -364,7 +356,10 @@ class Net(private val initiator: NetInitiator) {
 
     fun onDestroy() {
         log("close")
-        synchronized(lock) { socket?.close() }
+        synchronized(lock) {
+            socket?.close()
+            socket = null
+        }
         initiator.onNetDestroy()
     }
 
