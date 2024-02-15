@@ -21,6 +21,8 @@ package org.exchatge.presenter
 import android.os.Bundle
 import org.exchatge.view.View
 import org.exchatge.view.pages.Pages
+import kotlin.reflect.KClass
+import kotlin.reflect.KProperty
 
 interface Presenter {
     val currentPage: Pages
@@ -51,15 +53,28 @@ interface Presenter {
     fun sendMessageRequested()
 }
 
+private class StubPropertyDelegate<T : Any>(private val klass: KClass<T>) {
+
+    @Suppress("UNCHECKED_CAST")
+    operator fun getValue(thisRef: Any?, property: KProperty<*>): T = when (klass) {
+        String::class -> ""
+        Int::class -> 0
+        Boolean::class -> false
+        else -> Any()
+    } as T
+
+    operator fun setValue(thisRef: Any?, property: KProperty<*>, value: T) {}
+}
+
 @Deprecated("stub to make @Preview work")
 object PresenterStub : Presenter {
     override val currentPage get() = Pages.LOG_IN_REGISTER
-    override var username get() = ""; set(_) {}
-    override var password get() = ""; set(_) {}
+    override var username by StubPropertyDelegate(String::class)
+    override var password by StubPropertyDelegate(String::class)
     override val currentUser = ""
     override val admin = false
     override val opponentUsername = ""
-    override var currentConversationMessage get() = ""; set(_) {}
+    override var currentConversationMessage by StubPropertyDelegate(String::class)
 
     override fun onCreate(view: View, savedInstanceState: Bundle?) {}
     override fun onDestroy() {}
