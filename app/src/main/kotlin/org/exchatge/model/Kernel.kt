@@ -22,13 +22,13 @@ import android.content.Context
 import android.widget.Toast
 import org.exchatge.model.net.Net
 import org.exchatge.model.net.NetInitiator
-import org.exchatge.presenter.Presenter
+import org.exchatge.presenter.PresenterImpl
 import org.exchatge.presenter.PresenterInitiator
 
 class Kernel(val context: Context) {
     val crypto = Crypto()
     @Volatile var net: Net? = null; private set
-    val presenter = Presenter(PresenterInitiatorImpl())
+    val presenter = PresenterImpl(PresenterInitiatorImpl())
 
     // TODO: add settings to ui to adjust options which will be stored as sharedPreferences
 

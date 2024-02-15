@@ -28,9 +28,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -40,15 +37,12 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.exchatge.R
-import org.exchatge.view.currentPage
+import org.exchatge.presenter.Presenter
 
 private val paddingModifier = Modifier.padding(2.5f.dp)
 
-private var username by mutableStateOf("")
-private var password by mutableStateOf("")
-
 @Composable
-fun LogInRegisterPage() = Column(
+fun LogInRegisterPage(presenter: Presenter) = Column(
     modifier = Modifier.fillMaxSize(),
     verticalArrangement = Arrangement.Center,
     horizontalAlignment = Alignment.CenterHorizontally
@@ -65,20 +59,20 @@ fun LogInRegisterPage() = Column(
             fontWeight = FontWeight.Bold,
             modifier = paddingModifier
         )
-        TextField(username, R.string.username, false) { username = it }
-        TextField(password, R.string.password, true) { password = it }
+        TextField(presenter.username, R.string.username, false) { presenter.username = it }
+        TextField(presenter.password, R.string.password, true) { presenter.password = it }
         Row(
             Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Button(
-                onClick = { currentPage = 1 }, // TODO: debug only
+                onClick = presenter::logInRequested,
                 modifier = paddingModifier
             ) {
                 Text(stringResource(R.string.logIn))
             }
             Button(
-                onClick = {},
+                onClick = presenter::registerRequested,
                 modifier = paddingModifier
             ) {
                 Text(stringResource(R.string.register))

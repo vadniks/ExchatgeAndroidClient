@@ -18,34 +18,57 @@
 
 package org.exchatge.presenter
 
-import org.exchatge.model.kernel
-import org.exchatge.view.Activity
+import android.os.Bundle
 import org.exchatge.view.View
+import org.exchatge.view.pages.Pages
 
-class Presenter(private val initiator: PresenterInitiator) {
-    @Volatile private var view: View? = null
-    val activityRunning get() = view != null
+interface Presenter {
+    val currentPage: Pages
 
-    init {
-        assert(!initialized)
-        initialized = true
-    }
+    var username: String
+    var password: String
 
-    fun onActivityCreate(view: View) {
-        this.view = view
-        initiator.onActivityCreate()
-    }
+    val currentUser: String
+    val admin: Boolean
 
-    fun onActivityDestroy() {
-        view = null
-        initiator.onActivityDestroy()
-    }
+    val opponentUsername: String
+    var currentConversationMessage: String
 
-    companion object {
-        @JvmStatic
-        private var initialized = false
+    //
 
-        @JvmStatic
-        fun instance(activity: Activity) = activity.applicationContext.kernel.presenter.also { it.onActivityCreate(activity) }
-    }
+    fun onCreate(view: View, savedInstanceState: Bundle?) // TODO: handle config changes and process kill (save activity's state)
+    fun onDestroy()
+
+    fun logInRequested()
+    fun registerRequested()
+
+    fun logOutRequested()
+    fun administrateRequested()
+    fun conversationRequested(id: Int, remove: Boolean)
+
+    fun returnFromPageRequested()
+    fun fileChooseRequested()
+    fun sendMessageRequested()
+}
+
+@Deprecated("stub to make @Preview work")
+object PresenterStub : Presenter {
+    override val currentPage get() = Pages.LOG_IN_REGISTER
+    override var username get() = ""; set(_) {}
+    override var password get() = ""; set(_) {}
+    override val currentUser = ""
+    override val admin = false
+    override val opponentUsername = ""
+    override var currentConversationMessage get() = ""; set(_) {}
+
+    override fun onCreate(view: View, savedInstanceState: Bundle?) {}
+    override fun onDestroy() {}
+    override fun logInRequested() {}
+    override fun registerRequested() {}
+    override fun logOutRequested() {}
+    override fun administrateRequested() {}
+    override fun conversationRequested(id: Int, remove: Boolean) {}
+    override fun returnFromPageRequested() {}
+    override fun fileChooseRequested() {}
+    override fun sendMessageRequested() {}
 }

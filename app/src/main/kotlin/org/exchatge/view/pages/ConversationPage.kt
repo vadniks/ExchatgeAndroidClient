@@ -41,9 +41,6 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -52,22 +49,19 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.exchatge.R
-import org.exchatge.view.currentPage
+import org.exchatge.presenter.Presenter
 import java.text.SimpleDateFormat
-
-private val opponentUsername = "User" // TODO: debug only
-private var enteredText by mutableStateOf("")
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ConversationPage() = Scaffold(
+fun ConversationPage(presenter: Presenter) = Scaffold(
     topBar = {
         TopAppBar(
             title = {
                 Column {
                     Text(stringResource(R.string.appName))
                     Text(
-                        text = opponentUsername,
+                        text = presenter.opponentUsername,
                         fontStyle = FontStyle.Italic,
                         fontSize = 14.sp
                     )
@@ -75,7 +69,7 @@ fun ConversationPage() = Scaffold(
             },
             colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
             navigationIcon = {
-                IconButton(onClick = { currentPage = 1 }) { // TODO: debug only
+                IconButton(onClick = presenter::returnFromPageRequested) { // TODO: debug only
                     Icon(
                         imageVector = Icons.Filled.ArrowBack,
                         contentDescription = stringResource(R.string.back)
@@ -83,7 +77,7 @@ fun ConversationPage() = Scaffold(
                 }
             },
             actions = {
-                IconButton(onClick = {}) {
+                IconButton(onClick = presenter::fileChooseRequested) {
                     Icon(
                         imageVector = Icons.Filled.Add,
                         contentDescription = stringResource(R.string.file)
@@ -106,13 +100,13 @@ fun ConversationPage() = Scaffold(
         }
         Row(modifier = Modifier.fillMaxSize().padding(5.dp)) {
             TextField(
-                value = enteredText,
-                onValueChange = { enteredText = it },
+                value = presenter.currentConversationMessage,
+                onValueChange = { presenter.currentConversationMessage = it },
                 label = { Text(stringResource(R.string.message)) },
                 singleLine = false,
                 modifier = Modifier.fillMaxSize(),
                 trailingIcon = {
-                    IconButton(onClick = {}) {
+                    IconButton(onClick = presenter::sendMessageRequested) {
                         Icon(
                             imageVector = Icons.Filled.Send,
                             contentDescription = stringResource(R.string.send)

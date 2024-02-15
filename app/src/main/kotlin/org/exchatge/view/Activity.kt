@@ -25,14 +25,14 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import org.exchatge.presenter.Presenter
+import org.exchatge.presenter.PresenterImpl
+import org.exchatge.presenter.PresenterStub
 import org.exchatge.view.pages.ConversationPage
 import org.exchatge.view.pages.LogInRegisterPage
+import org.exchatge.view.pages.Pages
 import org.exchatge.view.pages.UsersListPage
 
 class Activity : ComponentActivity(), View {
@@ -40,32 +40,30 @@ class Activity : ComponentActivity(), View {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        presenter = Presenter.instance(this)
-
-        setContent {
-            org.exchatge.view.Preview()
-        }
+        presenter = PresenterImpl.instance(this, savedInstanceState)
+        setContent { Content(presenter) }
     }
 
     override fun onDestroy() {
-        presenter.onActivityDestroy()
+        presenter.onDestroy()
         super.onDestroy()
     }
 }
 
-var currentPage by mutableIntStateOf(1) // TODO: debug only
-
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
-fun Preview() = ExchatgeTheme/*(darkTheme = true)*/ {
+fun Content(
+    @Suppress("DEPRECATION")
+    presenter: Presenter = PresenterStub // will be changed at runtime
+) = ExchatgeTheme/*(darkTheme = true)*/ {
     Surface(
-        modifier = Modifier.fillMaxSize(), //.border(1.0f.dp, color = Color.Black, RoundedCornerShape(1.0f.dp)),
+        modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
     ) {
-        when (currentPage) {
-            0 -> LogInRegisterPage()
-            1 -> UsersListPage()
-            2 -> ConversationPage()
+        when (presenter.currentPage) {
+            Pages.LOG_IN_REGISTER -> LogInRegisterPage(presenter)
+            Pages.USERS_LIST -> UsersListPage(presenter)
+            Pages.CONVERSATION -> ConversationPage(presenter)
         }
     }
 }

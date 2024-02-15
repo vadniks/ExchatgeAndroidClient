@@ -55,31 +55,27 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.exchatge.R
-import org.exchatge.view.FileExchangeDialog
-import org.exchatge.view.currentPage
-
-private val currentUser = "User" // TODO: debug only
-private val admin = true
+import org.exchatge.presenter.Presenter
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun UsersListPage() = Scaffold(
+fun UsersListPage(presenter: Presenter) = Scaffold(
     topBar = {
         TopAppBar(
             title = {
                 Column {
                     Text(stringResource(R.string.appName))
                     Text(
-                        text = currentUser,
+                        text = presenter.currentUser,
                         fontStyle = FontStyle.Italic,
                         fontSize = 14.sp,
-                        fontWeight = if (!admin) FontWeight.Normal else FontWeight.Bold
+                        fontWeight = if (!presenter.admin) FontWeight.Normal else FontWeight.Bold
                     )
                 }
             },
             colors = topAppBarColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
             navigationIcon = {
-                IconButton(onClick = { currentPage = 0 }) { // TODO: debug only
+                IconButton(onClick = presenter::logOutRequested) {
                     Icon(
                         imageVector = Icons.Filled.ExitToApp,
                         contentDescription = stringResource(R.string.logOut)
@@ -87,7 +83,7 @@ fun UsersListPage() = Scaffold(
                 }
             },
             actions = {
-                if (admin) IconButton(onClick = {}) {
+                if (presenter.admin) IconButton(onClick = presenter::administrateRequested) {
                     Icon(
                         imageVector = Icons.Filled.Menu,
                         contentDescription = stringResource(R.string.administrate)
@@ -100,6 +96,7 @@ fun UsersListPage() = Scaffold(
     LazyColumn(modifier = Modifier.fillMaxSize().padding(top = paddingValues.calculateTopPadding())) {
         items(10) { // TODO: debug only
             UserInfo(
+                presenter,
                 id = it,
                 name = "User$it",
                 online = it % 2 == 0,
@@ -116,6 +113,7 @@ fun UsersListPage() = Scaffold(
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun UserInfo(
+    presenter: Presenter,
     id: Int,
     name: String,
     online: Boolean,
@@ -144,9 +142,10 @@ private fun UserInfo(
             color = MaterialTheme.colorScheme.secondary
         )
     },
-    modifier = Modifier.fillMaxWidth().combinedClickable(onClick = {
-        currentPage = 2 // TODO: debug only
-    }, onLongClick = {})
+    modifier = Modifier.fillMaxWidth().combinedClickable(
+        onClick = { presenter.conversationRequested(id, false) },
+        onLongClick = { presenter.conversationRequested(id, true) }
+    )
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
