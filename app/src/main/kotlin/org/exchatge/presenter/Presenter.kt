@@ -16,6 +16,8 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+@file:Suppress("DEPRECATION") // ViewStub
+
 package org.exchatge.presenter
 
 import android.os.Bundle
@@ -64,7 +66,7 @@ private class StubPropertyDelegate<T : Any>(private val klass: KClass<T>) {
 object PresenterStub : Presenter {
     private val stringStub = StubPropertyDelegate(String::class)
 
-    @Suppress("DEPRECATION") override val view = ViewStub
+    override val view = ViewStub
     override val currentPage get() = Pages.LOG_IN_REGISTER
     override var username by stringStub
     override var password by stringStub
