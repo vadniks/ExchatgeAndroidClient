@@ -19,6 +19,12 @@
 package org.exchatge.view
 
 interface View {
-    fun setSnackbarMaker(maker: (String) -> Unit)
+    fun setShowSnackbarImpl(impl: suspend (String) -> Unit)
     fun snackbar(text: String)
+}
+
+@Deprecated("stub to make @Preview work")
+object ViewStub : View {
+    override fun setShowSnackbarImpl(impl: suspend (String) -> Unit) {}
+    override fun snackbar(text: String) {}
 }

@@ -31,7 +31,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import kotlinx.coroutines.runBlocking
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
 import org.exchatge.presenter.Presenter
 import org.exchatge.presenter.PresenterImpl
 import org.exchatge.presenter.PresenterStub
@@ -40,12 +41,11 @@ import org.exchatge.view.pages.LogInRegisterPage
 import org.exchatge.view.pages.Pages
 import org.exchatge.view.pages.UsersListPage
 import org.exchatge.model.assert // TODO: move assert and runIn* from model to root package
-import org.exchatge.model.runAsync
 
 class Activity : ComponentActivity(), View {
     private lateinit var presenter: Presenter
     @Volatile private var running = false
-    private lateinit var snackbarMaker: (String) -> Unit
+    private lateinit var showSnackbarImpl: suspend (String) -> Unit
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -54,11 +54,11 @@ class Activity : ComponentActivity(), View {
         setContent { Content(presenter) }
     }
 
-    override fun setSnackbarMaker(maker: (String) -> Unit) { snackbarMaker = maker }
+    override fun setShowSnackbarImpl(impl: suspend (String) -> Unit) { showSnackbarImpl = impl }
 
     override fun snackbar(text: String) {
         assert(running)
-        snackbarMaker(text)
+        lifecycleScope.launch { showSnackbarImpl(text) }
     }
 
     override fun onDestroy() {
@@ -74,10 +74,7 @@ fun Content(
     presenter: Presenter = PresenterStub // gets replaced at runtime
 ) = ExchatgeTheme/*(darkTheme = true)*/ {
     val snackbarHostState = remember { SnackbarHostState() }
-
-    presenter.view?.setSnackbarMaker { // nullability-safe call to make @Preview work
-        runAsync { runBlocking { snackbarHostState.showSnackbar(it) } }
-    }
+    presenter.view!!.setShowSnackbarImpl(snackbarHostState::showSnackbar)
 
     Surface(
         modifier = Modifier.fillMaxSize(),

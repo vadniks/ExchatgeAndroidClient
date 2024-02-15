@@ -20,6 +20,7 @@ package org.exchatge.presenter
 
 import android.os.Bundle
 import org.exchatge.view.View
+import org.exchatge.view.ViewStub
 import org.exchatge.view.pages.Pages
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty
@@ -63,7 +64,7 @@ private class StubPropertyDelegate<T : Any>(private val klass: KClass<T>) {
 object PresenterStub : Presenter {
     private val stringStub = StubPropertyDelegate(String::class)
 
-    override val view = null
+    @Suppress("DEPRECATION") override val view = ViewStub
     override val currentPage get() = Pages.LOG_IN_REGISTER
     override var username by stringStub
     override var password by stringStub
