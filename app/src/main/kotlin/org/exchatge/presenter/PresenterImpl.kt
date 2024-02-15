@@ -58,8 +58,8 @@ class PresenterImpl(private val initiator: PresenterInitiator): Presenter {
 
     override fun logOutRequested() {}
     override fun administrateRequested() {}
-
     override fun conversationRequested(id: Int, remove: Boolean) {}
+
     override fun returnFromPageRequested() {}
     override fun fileChooseRequested() {}
     override fun sendMessageRequested() {}
