@@ -48,9 +48,7 @@ class NetService : Service() {
 
         net.onCreate {
             running = false
-            runBlocking { listenJob.join() }
             stopSelf()
-            log("ns destroy x")
         }
 
         listenJob = GlobalScope.launch(Dispatchers.IO) {
