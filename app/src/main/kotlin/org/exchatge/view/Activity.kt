@@ -16,6 +16,8 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+@file:Suppress("DEPRECATION") // PresenterStub
+
 package org.exchatge.view
 
 import android.os.Bundle
@@ -53,7 +55,6 @@ class Activity : ComponentActivity(), View {
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun Content(
-    @Suppress("DEPRECATION")
     presenter: Presenter = PresenterStub // will be changed at runtime
 ) = ExchatgeTheme/*(darkTheme = true)*/ {
     Surface(
