@@ -19,12 +19,10 @@
 package org.exchatge.model.net
 
 import android.content.Intent
-import kotlinx.coroutines.sync.Mutex
 import org.exchatge.model.Crypto
 import org.exchatge.model.Reference
 import org.exchatge.model.Ternary
 import org.exchatge.model.assert
-import org.exchatge.model.withLockBlocking
 import org.exchatge.model.log
 import java.net.InetSocketAddress
 import java.net.Socket
@@ -49,8 +47,8 @@ class Net(private val initiator: NetInitiator) {
     private val crypto get() = initiator.crypto
     private val encryptedMessageMaxSize = crypto.encryptedSize(MAX_MESSAGE_SIZE)
     private var coders: Crypto.Coders? = null
-    private val mutex = Mutex()
-    @Volatile private var authenticated = false
+    private val lock = this
+    @Volatile private var authenticated = false // reads and writes to this field are atomic and writes are always made visible to other threads - just an atomic flag
     @Volatile var userId = FROM_ANONYMOUS; private set
     private val tokenAnonymous = ByteArray(TOKEN_SIZE)
     private val tokenUnsignedValue = ByteArray(TOKEN_UNSIGNED_VALUE_SIZE) { 255.toByte() }
@@ -70,7 +68,7 @@ class Net(private val initiator: NetInitiator) {
     fun onCreate(destroy: () -> Unit) { this.destroy = destroy }
 
     fun onPostCreate() {
-        mutex.withLockBlocking {
+        synchronized(lock) {
             socket =
                 try { Socket().apply { connect(InetSocketAddress(SERVER_ADDRESS, 8080), /*TODO: extract constant*/1000 * 60 * 60) } }
                 catch (_: Exception) { null } // unable to connect
@@ -81,7 +79,7 @@ class Net(private val initiator: NetInitiator) {
             destroy()
             return
         }
-        mutex.withLockBlocking { socket!!.soTimeout = 500 } // delay between socket read tries (while (open) { delay(500); tryRead() })
+        synchronized(lock) { socket!!.soTimeout = 500 } // delay between socket read tries (while (open) { delay(500); tryRead() })
 
         val ready = initiateSecuredConnection()
         log("ready = $ready") // if (!ready) // error while connecting
@@ -131,7 +129,7 @@ class Net(private val initiator: NetInitiator) {
 
     private fun read(buffer: ByteArray) =
         try {
-            if (mutex.withLockBlocking { socket!!.getInputStream().read(buffer) } == buffer.size)
+            if (synchronized(lock) { socket!!.getInputStream().read(buffer) } == buffer.size)
                 Ternary.POSITIVE
             else
                 Ternary.NEGATIVE // disconnected
@@ -140,7 +138,7 @@ class Net(private val initiator: NetInitiator) {
         catch (_: Exception) { Ternary.NEGATIVE } // error - disconnect
 
     private fun write(buffer: ByteArray) =
-        try { mutex.withLockBlocking { socket!!.getOutputStream().write(buffer).also { log("write " + buffer.size) } }; true }
+        try { synchronized(lock) { socket!!.getOutputStream().write(buffer).also { log("write " + buffer.size) } }; true }
         catch (_: Exception) { false }
 
     private fun receive(disconnected: Reference<Boolean>): NetMessage? {
@@ -167,7 +165,7 @@ class Net(private val initiator: NetInitiator) {
             Ternary.POSITIVE -> Unit // proceed
         }
 
-        val decrypted = mutex.withLockBlocking { crypto.decrypt(coders!!, buffer) }
+        val decrypted = synchronized(lock) { crypto.decrypt(coders!!, buffer) }
         assert(decrypted != null)
 
         disconnected.referenced = false
@@ -183,7 +181,7 @@ class Net(private val initiator: NetInitiator) {
         val packed = message.pack()
         assert(packed.size == packedSize)
 
-        val encrypted = mutex.withLockBlocking { crypto.encrypt(coders!!, packed) }
+        val encrypted = synchronized(lock) { crypto.encrypt(coders!!, packed) }
         assert(encrypted != null)
 
         val encryptedSize = crypto.encryptedSize(packedSize)
@@ -205,7 +203,7 @@ class Net(private val initiator: NetInitiator) {
     // TODO: add an 'exit' button to UI which will close the activity as well as the service to completely shutdown the whole app
 
     fun listen() {
-        while (NetService.running && mutex.withLockBlocking { socket != null && !socket!!.isClosed && socket!!.isConnected }) {
+        while (NetService.running && synchronized(lock) { socket != null && !socket!!.isClosed && socket!!.isConnected }) {
             log("listen")
             if (tryReadMessage() == Ternary.NEGATIVE) break
         }
@@ -366,7 +364,7 @@ class Net(private val initiator: NetInitiator) {
 
     fun onDestroy() {
         log("close")
-        mutex.withLockBlocking { socket?.close() }
+        synchronized(lock) { socket?.close() }
         initiator.onNetDestroy()
     }
 

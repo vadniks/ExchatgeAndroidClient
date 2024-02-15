@@ -71,7 +71,7 @@ class NetService : Service() {
 
     companion object {
         @JvmStatic
-        @Volatile
+        @Volatile // reads and writes to this field are atomic and writes are always made visible to other threads
         var running = false; private set
     }
 }

@@ -22,16 +22,12 @@ import android.content.Context
 import android.os.Looper
 import android.util.Log
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 import kotlin.coroutines.EmptyCoroutineContext
 
 fun assert(condition: Boolean) { if (!condition) throw IllegalStateException() }
 fun assertNotMainThread() = assert(Looper.getMainLooper().thread !== Thread.currentThread())
 fun log(message: String) = Log.d(null, message)
 val Context.kernel get() = (applicationContext as App).kernel
-fun <T> Mutex.withLockBlocking(action: () -> T): T = runBlocking { withLock { return@runBlocking action() } }
 fun runInMain(action: () -> Unit) = Dispatchers.Main.dispatch(EmptyCoroutineContext) { action() }
 fun runAsync(action: () -> Unit) = Dispatchers.Default.dispatch(EmptyCoroutineContext) { action() }
 
