@@ -69,12 +69,12 @@ class Activity : ComponentActivity(), View {
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun Content(
-    presenter: Presenter = PresenterStub // gets replaced at runtime
+    presenter: Presenter = PresenterStub // gets replaced at runtime as in preview mode other modules and the activity itself are NOT even instantiated so stubs are needed
 ) = ExchatgeTheme/*(darkTheme = true)*/ {
     val xSnackbarHostState = remember { SnackbarHostState() }
     presenter.view!!.setShowSnackbarImpl(xSnackbarHostState::showSnackbar)
 
-    val pagesSharedImpl = object : PagesShared, Presenter by presenter {
+    val pagesSharedImpl = object : PagesShared, Presenter by presenter { // complex dependency injection
         override val snackbarHostState = xSnackbarHostState
     }
 
