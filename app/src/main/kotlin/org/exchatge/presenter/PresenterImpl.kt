@@ -53,7 +53,9 @@ class PresenterImpl(private val initiator: PresenterInitiator): Presenter {
         initiator.onActivityDestroy()
     }
 
-    override fun logIn() = initiator.logIn(username, password)
+    override fun logIn() = initiator.scheduleLogIn()
+
+    fun credentials() = username to password
 
     override fun register() {}
 
