@@ -16,8 +16,6 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-@file:Suppress("DEPRECATION") // ViewStub
-
 package org.exchatge.presenter
 
 import android.os.Bundle
@@ -62,8 +60,7 @@ private class StubPropertyDelegate<T : Any>(private val klass: KClass<T>) {
     operator fun setValue(thisRef: Any?, property: KProperty<*>, value: T) {}
 }
 
-@Deprecated("stub to make @Preview work")
-object PresenterStub : Presenter {
+object PresenterStub : Presenter { // stub to make @Preview work
     private val stringStub = StubPropertyDelegate(String::class)
 
     override val view = ViewStub

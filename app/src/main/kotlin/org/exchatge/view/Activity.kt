@@ -16,8 +16,6 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-@file:Suppress("DEPRECATION") // PresenterStub
-
 package org.exchatge.view
 
 import android.os.Bundle

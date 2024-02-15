@@ -23,8 +23,7 @@ interface View {
     fun snackbar(text: String)
 }
 
-@Deprecated("stub to make @Preview work")
-object ViewStub : View {
+object ViewStub : View { // stub to make @Preview work
     override fun setShowSnackbarImpl(impl: suspend (String) -> Unit) {}
     override fun snackbar(text: String) {}
 }
