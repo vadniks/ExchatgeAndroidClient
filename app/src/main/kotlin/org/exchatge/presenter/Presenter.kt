@@ -68,13 +68,15 @@ private class StubPropertyDelegate<T : Any>(private val klass: KClass<T>) {
 
 @Deprecated("stub to make @Preview work")
 object PresenterStub : Presenter {
+    private val stringStub = StubPropertyDelegate(String::class)
+
     override val currentPage get() = Pages.LOG_IN_REGISTER
-    override var username by StubPropertyDelegate(String::class)
-    override var password by StubPropertyDelegate(String::class)
+    override var username by stringStub
+    override var password by stringStub
     override val currentUser = ""
     override val admin = false
     override val opponentUsername = ""
-    override var currentConversationMessage by StubPropertyDelegate(String::class)
+    override var currentConversationMessage by stringStub
 
     override fun onCreate(view: View, savedInstanceState: Bundle?) {}
     override fun onDestroy() {}

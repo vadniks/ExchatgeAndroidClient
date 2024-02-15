@@ -55,7 +55,7 @@ class Activity : ComponentActivity(), View {
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun Content(
-    presenter: Presenter = PresenterStub // will be changed at runtime
+    presenter: Presenter = PresenterStub // is replaced at runtime
 ) = ExchatgeTheme/*(darkTheme = true)*/ {
     Surface(
         modifier = Modifier.fillMaxSize(),
