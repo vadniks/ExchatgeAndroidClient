@@ -66,13 +66,13 @@ fun LogInRegisterPage(presenter: Presenter) = Column(
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Button(
-                onClick = presenter::logInRequested,
+                onClick = presenter::logIn,
                 modifier = paddingModifier
             ) {
                 Text(stringResource(R.string.logIn))
             }
             Button(
-                onClick = presenter::registerRequested,
+                onClick = presenter::register,
                 modifier = paddingModifier
             ) {
                 Text(stringResource(R.string.register))

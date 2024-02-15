@@ -41,16 +41,16 @@ interface Presenter {
     fun onCreate(view: View, savedInstanceState: Bundle?) // TODO: handle config changes and process kill (save activity's state)
     fun onDestroy()
 
-    fun logInRequested()
-    fun registerRequested()
+    fun logIn()
+    fun register()
 
-    fun logOutRequested()
-    fun administrateRequested()
-    fun conversationRequested(id: Int, remove: Boolean)
+    fun logOut()
+    fun administrate()
+    fun conversation(id: Int, remove: Boolean)
 
-    fun returnFromPageRequested()
-    fun fileChooseRequested()
-    fun sendMessageRequested()
+    fun returnFromPage()
+    fun fileChoose()
+    fun sendMessage()
 }
 
 private class StubPropertyDelegate<T : Any>(private val klass: KClass<T>) {
@@ -80,12 +80,12 @@ object PresenterStub : Presenter {
 
     override fun onCreate(view: View, savedInstanceState: Bundle?) {}
     override fun onDestroy() {}
-    override fun logInRequested() {}
-    override fun registerRequested() {}
-    override fun logOutRequested() {}
-    override fun administrateRequested() {}
-    override fun conversationRequested(id: Int, remove: Boolean) {}
-    override fun returnFromPageRequested() {}
-    override fun fileChooseRequested() {}
-    override fun sendMessageRequested() {}
+    override fun logIn() {}
+    override fun register() {}
+    override fun logOut() {}
+    override fun administrate() {}
+    override fun conversation(id: Int, remove: Boolean) {}
+    override fun returnFromPage() {}
+    override fun fileChoose() {}
+    override fun sendMessage() {}
 }

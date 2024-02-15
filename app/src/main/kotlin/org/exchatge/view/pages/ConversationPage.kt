@@ -69,7 +69,7 @@ fun ConversationPage(presenter: Presenter) = Scaffold(
             },
             colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
             navigationIcon = {
-                IconButton(onClick = presenter::returnFromPageRequested) { // TODO: debug only
+                IconButton(onClick = presenter::returnFromPage) { // TODO: debug only
                     Icon(
                         imageVector = Icons.Filled.ArrowBack,
                         contentDescription = stringResource(R.string.back)
@@ -77,7 +77,7 @@ fun ConversationPage(presenter: Presenter) = Scaffold(
                 }
             },
             actions = {
-                IconButton(onClick = presenter::fileChooseRequested) {
+                IconButton(onClick = presenter::fileChoose) {
                     Icon(
                         imageVector = Icons.Filled.Add,
                         contentDescription = stringResource(R.string.file)
@@ -106,7 +106,7 @@ fun ConversationPage(presenter: Presenter) = Scaffold(
                 singleLine = false,
                 modifier = Modifier.fillMaxSize(),
                 trailingIcon = {
-                    IconButton(onClick = presenter::sendMessageRequested) {
+                    IconButton(onClick = presenter::sendMessage) {
                         Icon(
                             imageVector = Icons.Filled.Send,
                             contentDescription = stringResource(R.string.send)

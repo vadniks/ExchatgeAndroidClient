@@ -75,7 +75,7 @@ fun UsersListPage(presenter: Presenter) = Scaffold(
             },
             colors = topAppBarColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
             navigationIcon = {
-                IconButton(onClick = presenter::logOutRequested) {
+                IconButton(onClick = presenter::logOut) {
                     Icon(
                         imageVector = Icons.Filled.ExitToApp,
                         contentDescription = stringResource(R.string.logOut)
@@ -83,7 +83,7 @@ fun UsersListPage(presenter: Presenter) = Scaffold(
                 }
             },
             actions = {
-                if (presenter.admin) IconButton(onClick = presenter::administrateRequested) {
+                if (presenter.admin) IconButton(onClick = presenter::administrate) {
                     Icon(
                         imageVector = Icons.Filled.Menu,
                         contentDescription = stringResource(R.string.administrate)
@@ -143,8 +143,8 @@ private fun UserInfo(
         )
     },
     modifier = Modifier.fillMaxWidth().combinedClickable(
-        onClick = { presenter.conversationRequested(id, false) },
-        onLongClick = { presenter.conversationRequested(id, true) }
+        onClick = { presenter.conversation(id, false) },
+        onLongClick = { presenter.conversation(id, true) }
     )
 )
 

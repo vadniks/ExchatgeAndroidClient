@@ -53,16 +53,16 @@ class PresenterImpl(private val initiator: PresenterInitiator): Presenter {
         initiator.onActivityDestroy()
     }
 
-    override fun logInRequested() {}
-    override fun registerRequested() {}
+    override fun logIn() {}
+    override fun register() {}
 
-    override fun logOutRequested() {}
-    override fun administrateRequested() {}
-    override fun conversationRequested(id: Int, remove: Boolean) {}
+    override fun logOut() {}
+    override fun administrate() {}
+    override fun conversation(id: Int, remove: Boolean) {}
 
-    override fun returnFromPageRequested() {}
-    override fun fileChooseRequested() {}
-    override fun sendMessageRequested() {}
+    override fun returnFromPage() {}
+    override fun fileChoose() {}
+    override fun sendMessage() {}
 
     companion object {
         @JvmStatic
