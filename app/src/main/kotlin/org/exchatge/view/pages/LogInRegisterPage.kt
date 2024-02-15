@@ -40,13 +40,13 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.exchatge.R
-import org.exchatge.presenter.Presenter
+import org.exchatge.view.PagesShared
 
 private val paddingModifier = Modifier.padding(2.5f.dp)
 
 @Composable
-fun LogInRegisterPage(presenter: Presenter, snackbarHostState: SnackbarHostState) = Scaffold(
-    snackbarHost = { SnackbarHost(snackbarHostState) }
+fun LogInRegisterPage(pagesShared: PagesShared) = Scaffold(
+    snackbarHost = { SnackbarHost(pagesShared.snackbarHostState) }
 ) { paddingValues ->
     Column(
         modifier = Modifier.fillMaxSize().padding(top = paddingValues.calculateTopPadding()),
@@ -65,20 +65,20 @@ fun LogInRegisterPage(presenter: Presenter, snackbarHostState: SnackbarHostState
                 fontWeight = FontWeight.Bold,
                 modifier = paddingModifier
             )
-            TextField(presenter.username, R.string.username, false) { presenter.username = it }
-            TextField(presenter.password, R.string.password, true) { presenter.password = it }
+            TextField(pagesShared.username, R.string.username, false) { pagesShared.username = it }
+            TextField(pagesShared.password, R.string.password, true) { pagesShared.password = it }
             Row(
                 Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Button(
-                    onClick = presenter::logIn,
+                    onClick = pagesShared::logIn,
                     modifier = paddingModifier
                 ) {
                     Text(stringResource(R.string.logIn))
                 }
                 Button(
-                    onClick = presenter::register,
+                    onClick = pagesShared::register,
                     modifier = paddingModifier
                 ) {
                     Text(stringResource(R.string.register))

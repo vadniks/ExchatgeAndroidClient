@@ -57,28 +57,28 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.exchatge.R
-import org.exchatge.presenter.Presenter
+import org.exchatge.view.PagesShared
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun UsersListPage(presenter: Presenter, snackbarHostState: SnackbarHostState) = Scaffold(
-    snackbarHost = { SnackbarHost(snackbarHostState) },
+fun UsersListPage(pagesShared: PagesShared) = Scaffold(
+    snackbarHost = { SnackbarHost(pagesShared.snackbarHostState) },
     topBar = {
         TopAppBar(
             title = {
                 Column {
                     Text(stringResource(R.string.appName))
                     Text(
-                        text = presenter.currentUser,
+                        text = pagesShared.currentUser,
                         fontStyle = FontStyle.Italic,
                         fontSize = 14.sp,
-                        fontWeight = if (!presenter.admin) FontWeight.Normal else FontWeight.Bold
+                        fontWeight = if (!pagesShared.admin) FontWeight.Normal else FontWeight.Bold
                     )
                 }
             },
             colors = topAppBarColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
             navigationIcon = {
-                IconButton(onClick = presenter::logOut) {
+                IconButton(onClick = pagesShared::logOut) {
                     Icon(
                         imageVector = Icons.Filled.ExitToApp,
                         contentDescription = stringResource(R.string.logOut)
@@ -86,7 +86,7 @@ fun UsersListPage(presenter: Presenter, snackbarHostState: SnackbarHostState) = 
                 }
             },
             actions = {
-                if (presenter.admin) IconButton(onClick = presenter::administrate) {
+                if (pagesShared.admin) IconButton(onClick = pagesShared::administrate) {
                     Icon(
                         imageVector = Icons.Filled.Menu,
                         contentDescription = stringResource(R.string.administrate)
@@ -99,7 +99,7 @@ fun UsersListPage(presenter: Presenter, snackbarHostState: SnackbarHostState) = 
     LazyColumn(modifier = Modifier.fillMaxSize().padding(top = paddingValues.calculateTopPadding())) {
         items(10) { // TODO: debug only
             UserInfo(
-                presenter,
+                pagesShared,
                 id = it,
                 name = "User$it",
                 online = it % 2 == 0,
@@ -116,7 +116,7 @@ fun UsersListPage(presenter: Presenter, snackbarHostState: SnackbarHostState) = 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun UserInfo(
-    presenter: Presenter,
+    pagesShared: PagesShared,
     id: Int,
     name: String,
     online: Boolean,
@@ -146,8 +146,8 @@ private fun UserInfo(
         )
     },
     modifier = Modifier.fillMaxWidth().combinedClickable(
-        onClick = { presenter.conversation(id, false) },
-        onLongClick = { presenter.conversation(id, true) }
+        onClick = { pagesShared.conversation(id, false) },
+        onLongClick = { pagesShared.conversation(id, true) }
     )
 )
 

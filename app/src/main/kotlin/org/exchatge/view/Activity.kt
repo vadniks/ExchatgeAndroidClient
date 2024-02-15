@@ -73,17 +73,21 @@ class Activity : ComponentActivity(), View {
 fun Content(
     presenter: Presenter = PresenterStub // gets replaced at runtime
 ) = ExchatgeTheme/*(darkTheme = true)*/ {
-    val snackbarHostState = remember { SnackbarHostState() }
-    presenter.view!!.setShowSnackbarImpl(snackbarHostState::showSnackbar)
+    val xSnackbarHostState = remember { SnackbarHostState() }
+    presenter.view!!.setShowSnackbarImpl(xSnackbarHostState::showSnackbar)
+
+    val pagesSharedImpl = object : PagesShared, Presenter by presenter {
+        override val snackbarHostState = xSnackbarHostState
+    }
 
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
     ) {
         when (presenter.currentPage) {
-            Pages.LOG_IN_REGISTER -> LogInRegisterPage(presenter, snackbarHostState)
-            Pages.USERS_LIST -> UsersListPage(presenter, snackbarHostState)
-            Pages.CONVERSATION -> ConversationPage(presenter, snackbarHostState)
+            Pages.LOG_IN_REGISTER -> LogInRegisterPage(pagesSharedImpl)
+            Pages.USERS_LIST -> UsersListPage(pagesSharedImpl)
+            Pages.CONVERSATION -> ConversationPage(pagesSharedImpl)
         }
     }
 }

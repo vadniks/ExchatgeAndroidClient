@@ -51,20 +51,20 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.exchatge.R
-import org.exchatge.presenter.Presenter
+import org.exchatge.view.PagesShared
 import java.text.SimpleDateFormat
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ConversationPage(presenter: Presenter, snackbarHostState: SnackbarHostState) = Scaffold(
-    snackbarHost = { SnackbarHost(snackbarHostState) },
+fun ConversationPage(pagesShared: PagesShared) = Scaffold(
+    snackbarHost = { SnackbarHost(pagesShared.snackbarHostState) },
     topBar = {
         TopAppBar(
             title = {
                 Column {
                     Text(stringResource(R.string.appName))
                     Text(
-                        text = presenter.opponentUsername,
+                        text = pagesShared.opponentUsername,
                         fontStyle = FontStyle.Italic,
                         fontSize = 14.sp
                     )
@@ -72,7 +72,7 @@ fun ConversationPage(presenter: Presenter, snackbarHostState: SnackbarHostState)
             },
             colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
             navigationIcon = {
-                IconButton(onClick = presenter::returnFromPage) { // TODO: debug only
+                IconButton(onClick = pagesShared::returnFromPage) { // TODO: debug only
                     Icon(
                         imageVector = Icons.Filled.ArrowBack,
                         contentDescription = stringResource(R.string.back)
@@ -80,7 +80,7 @@ fun ConversationPage(presenter: Presenter, snackbarHostState: SnackbarHostState)
                 }
             },
             actions = {
-                IconButton(onClick = presenter::fileChoose) {
+                IconButton(onClick = pagesShared::fileChoose) {
                     Icon(
                         imageVector = Icons.Filled.Add,
                         contentDescription = stringResource(R.string.file)
@@ -103,13 +103,13 @@ fun ConversationPage(presenter: Presenter, snackbarHostState: SnackbarHostState)
         }
         Row(modifier = Modifier.fillMaxSize().padding(5.dp)) {
             TextField(
-                value = presenter.currentConversationMessage,
-                onValueChange = { presenter.currentConversationMessage = it },
+                value = pagesShared.currentConversationMessage,
+                onValueChange = { pagesShared.currentConversationMessage = it },
                 label = { Text(stringResource(R.string.message)) },
                 singleLine = false,
                 modifier = Modifier.fillMaxSize(),
                 trailingIcon = {
-                    IconButton(onClick = presenter::sendMessage) {
+                    IconButton(onClick = pagesShared::sendMessage) {
                         Icon(
                             imageVector = Icons.Filled.Send,
                             contentDescription = stringResource(R.string.send)
