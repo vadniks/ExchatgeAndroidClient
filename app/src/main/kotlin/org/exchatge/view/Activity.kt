@@ -25,10 +25,13 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import kotlinx.coroutines.runBlocking
 import org.exchatge.presenter.Presenter
 import org.exchatge.presenter.PresenterImpl
 import org.exchatge.presenter.PresenterStub
@@ -36,17 +39,30 @@ import org.exchatge.view.pages.ConversationPage
 import org.exchatge.view.pages.LogInRegisterPage
 import org.exchatge.view.pages.Pages
 import org.exchatge.view.pages.UsersListPage
+import org.exchatge.model.assert // TODO: move assert and runIn* from model to root package
+import org.exchatge.model.runAsync
 
 class Activity : ComponentActivity(), View {
     private lateinit var presenter: Presenter
+    @Volatile private var running = false
+    private lateinit var snackbarMaker: (String) -> Unit
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        running = true
         presenter = PresenterImpl.instance(this, savedInstanceState)
         setContent { Content(presenter) }
     }
 
+    override fun setSnackbarMaker(maker: (String) -> Unit) { snackbarMaker = maker }
+
+    override fun snackbar(text: String) {
+        assert(running)
+        snackbarMaker(text)
+    }
+
     override fun onDestroy() {
+        running = false
         presenter.onDestroy()
         super.onDestroy()
     }
@@ -55,16 +71,22 @@ class Activity : ComponentActivity(), View {
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun Content(
-    presenter: Presenter = PresenterStub // is replaced at runtime
+    presenter: Presenter = PresenterStub // gets replaced at runtime
 ) = ExchatgeTheme/*(darkTheme = true)*/ {
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    presenter.view?.setSnackbarMaker { // nullability-safe call to make @Preview work
+        runAsync { runBlocking { snackbarHostState.showSnackbar(it) } }
+    }
+
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
     ) {
         when (presenter.currentPage) {
-            Pages.LOG_IN_REGISTER -> LogInRegisterPage(presenter)
-            Pages.USERS_LIST -> UsersListPage(presenter)
-            Pages.CONVERSATION -> ConversationPage(presenter)
+            Pages.LOG_IN_REGISTER -> LogInRegisterPage(presenter, snackbarHostState)
+            Pages.USERS_LIST -> UsersListPage(presenter, snackbarHostState)
+            Pages.CONVERSATION -> ConversationPage(presenter, snackbarHostState)
         }
     }
 }

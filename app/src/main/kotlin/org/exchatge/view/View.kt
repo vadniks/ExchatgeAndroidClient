@@ -19,4 +19,6 @@
 package org.exchatge.view
 
 interface View {
+    fun setSnackbarMaker(maker: (String) -> Unit)
+    fun snackbar(text: String)
 }

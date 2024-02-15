@@ -36,6 +36,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
@@ -54,7 +56,8 @@ import java.text.SimpleDateFormat
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ConversationPage(presenter: Presenter) = Scaffold(
+fun ConversationPage(presenter: Presenter, snackbarHostState: SnackbarHostState) = Scaffold(
+    snackbarHost = { SnackbarHost(snackbarHostState) },
     topBar = {
         TopAppBar(
             title = {

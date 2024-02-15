@@ -37,6 +37,7 @@ class Kernel(val context: Context) {
         initialized = true
     }
 
+    @Deprecated("use snackbar instead", replaceWith = ReplaceWith("", ""))
     fun toast(text: String) = Toast.makeText(context, text, Toast.LENGTH_SHORT).show().also { log(text) } // TODO: debug only
 
     fun initializeNet() {
@@ -60,19 +61,18 @@ class Kernel(val context: Context) {
         override val crypto get() = this@Kernel.crypto
 
         override fun onConnectResult(successful: Boolean) {
-            log("connected $successful")
             if (successful)
-                presenter.credentials().let { net!!.logIn(it.first, it.second) }
+                presenter.credentials.let { net!!.logIn(it.first, it.second) }
             else
-                runInMain { toast("Unable to connect") }
+                presenter.onConnectFail()
         }
 
         override fun onNetDestroy() {
             net = null
-            runInMain { toast("disconnected") }
+            presenter.onDisconnected()
         }
 
-        override fun onLogInResult(successful: Boolean) { runInMain { toast("log in $successful") } }
+        override fun onLogInResult(successful: Boolean) = presenter.onLoginResult(successful)
     }
 
     private companion object {

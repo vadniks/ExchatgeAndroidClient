@@ -25,6 +25,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
@@ -42,40 +45,44 @@ import org.exchatge.presenter.Presenter
 private val paddingModifier = Modifier.padding(2.5f.dp)
 
 @Composable
-fun LogInRegisterPage(presenter: Presenter) = Column(
-    modifier = Modifier.fillMaxSize(),
-    verticalArrangement = Arrangement.Center,
-    horizontalAlignment = Alignment.CenterHorizontally
-) {
-    android.R.layout.activity_list_item
+fun LogInRegisterPage(presenter: Presenter, snackbarHostState: SnackbarHostState) = Scaffold(
+    snackbarHost = { SnackbarHost(snackbarHostState) }
+) { paddingValues ->
     Column(
-        modifier = Modifier.fillMaxWidth(0.75f),
+        modifier = Modifier.fillMaxSize().padding(top = paddingValues.calculateTopPadding()),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(
-            stringResource(R.string.appName),
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Bold,
-            modifier = paddingModifier
-        )
-        TextField(presenter.username, R.string.username, false) { presenter.username = it }
-        TextField(presenter.password, R.string.password, true) { presenter.password = it }
-        Row(
-            Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
+        android.R.layout.activity_list_item
+        Column(
+            modifier = Modifier.fillMaxWidth(0.75f),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Button(
-                onClick = presenter::logIn,
+            Text(
+                stringResource(R.string.appName),
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
                 modifier = paddingModifier
+            )
+            TextField(presenter.username, R.string.username, false) { presenter.username = it }
+            TextField(presenter.password, R.string.password, true) { presenter.password = it }
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text(stringResource(R.string.logIn))
-            }
-            Button(
-                onClick = presenter::register,
-                modifier = paddingModifier
-            ) {
-                Text(stringResource(R.string.register))
+                Button(
+                    onClick = presenter::logIn,
+                    modifier = paddingModifier
+                ) {
+                    Text(stringResource(R.string.logIn))
+                }
+                Button(
+                    onClick = presenter::register,
+                    modifier = paddingModifier
+                ) {
+                    Text(stringResource(R.string.register))
+                }
             }
         }
     }

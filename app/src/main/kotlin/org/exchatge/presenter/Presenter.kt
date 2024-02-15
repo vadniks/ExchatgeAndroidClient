@@ -25,29 +25,22 @@ import kotlin.reflect.KClass
 import kotlin.reflect.KProperty
 
 interface Presenter {
+    val view: View?
     val currentPage: Pages
-
     var username: String
     var password: String
-
     val currentUser: String
     val admin: Boolean
-
     val opponentUsername: String
     var currentConversationMessage: String
 
-    //
-
     fun onCreate(view: View, savedInstanceState: Bundle?) // TODO: handle config changes and process kill (save activity's state)
     fun onDestroy()
-
     fun logIn()
     fun register()
-
     fun logOut()
     fun administrate()
     fun conversation(id: Int, remove: Boolean)
-
     fun returnFromPage()
     fun fileChoose()
     fun sendMessage()
@@ -70,6 +63,7 @@ private class StubPropertyDelegate<T : Any>(private val klass: KClass<T>) {
 object PresenterStub : Presenter {
     private val stringStub = StubPropertyDelegate(String::class)
 
+    override val view = null
     override val currentPage get() = Pages.LOG_IN_REGISTER
     override var username by stringStub
     override var password by stringStub

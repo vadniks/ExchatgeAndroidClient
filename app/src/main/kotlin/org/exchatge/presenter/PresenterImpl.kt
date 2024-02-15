@@ -28,7 +28,7 @@ import org.exchatge.view.View
 import org.exchatge.view.pages.Pages
 
 class PresenterImpl(private val initiator: PresenterInitiator): Presenter {
-    @Volatile private var view: View? = null
+    @Volatile override var view: View? = null; private set
     val activityRunning get() = view != null
     override var currentPage by mutableStateOf(Pages.LOG_IN_REGISTER)
     override var username by mutableStateOf("")
@@ -37,6 +37,7 @@ class PresenterImpl(private val initiator: PresenterInitiator): Presenter {
     override var admin = false
     override var opponentUsername = ""
     override var currentConversationMessage by mutableStateOf("")
+    val credentials get() = username to password
 
     init {
         assert(!initialized)
@@ -53,9 +54,25 @@ class PresenterImpl(private val initiator: PresenterInitiator): Presenter {
         initiator.onActivityDestroy()
     }
 
-    override fun logIn() = initiator.scheduleLogIn()
+    override fun logIn() {
+        initiator.scheduleLogIn()
+    }
 
-    fun credentials() = username to password
+    fun onConnectFail() {
+        if (activityRunning) view!!.snackbar("failed to connect")
+    }
+
+    fun onLoginResult(successful: Boolean) {
+        if (activityRunning) view!!.snackbar("Login $successful")
+    }
+
+    fun onErrorReceived() {
+        if (!activityRunning) return
+    }
+
+    fun onDisconnected() {
+        if (activityRunning) view!!.snackbar("disconnected")
+    }
 
     override fun register() {}
 

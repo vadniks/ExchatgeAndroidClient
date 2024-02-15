@@ -87,8 +87,6 @@ class Net(private val initiator: NetInitiator) {
         }
 
         initiator.onConnectResult(true)
-
-        //logIn() // TODO: debug only
     }
 
     private fun initiateSecuredConnection(): Boolean {
@@ -137,7 +135,7 @@ class Net(private val initiator: NetInitiator) {
         catch (_: Exception) { Ternary.NEGATIVE } // error - disconnect
 
     private fun write(buffer: ByteArray) =
-        try { synchronized(lock) { socket!!.getOutputStream().write(buffer).also { log("write " + buffer.size) } }; true }
+        try { synchronized(lock) { socket!!.getOutputStream().write(buffer) }; true }
         catch (_: Exception) { false }
 
     private fun receive(disconnected: Reference<Boolean>): NetMessage? {
@@ -264,8 +262,6 @@ class Net(private val initiator: NetInitiator) {
                 token = message.body!!.sliceArray(0 until TOKEN_SIZE)
 
                 initiator.onLogInResult(true)
-
-//                fetchUsers() // TODO: debug only
             }
             FLAG_REGISTERED -> log("register succeeded")
             FLAG_FETCH_USERS -> onNextUserInfosBundleFetched(message)
