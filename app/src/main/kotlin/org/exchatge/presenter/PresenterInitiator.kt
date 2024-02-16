@@ -22,6 +22,7 @@ interface PresenterInitiator {
     val currentUserId: Int
 
     fun onActivityCreate()
+    fun credentialsLengthCorrect(username: String, password: String): Boolean
     fun scheduleLogIn()
     fun scheduleUsersFetch()
     fun admin(id: Int): Boolean

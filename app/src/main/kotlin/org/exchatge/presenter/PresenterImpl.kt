@@ -25,8 +25,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import org.exchatge.R
 import org.exchatge.model.kernel
-import org.exchatge.model.net.UNHASHED_PASSWORD_SIZE
-import org.exchatge.model.net.USERNAME_SIZE
 import org.exchatge.model.net.UserInfo
 import org.exchatge.model.runInMain
 import org.exchatge.view.Activity
@@ -66,19 +64,13 @@ class PresenterImpl(private val initiator: PresenterInitiator): Presenter {
     }
 
     override fun logIn() {
-        if (username.length !in 1..USERNAME_SIZE || password.length !in 1..UNHASHED_PASSWORD_SIZE) {
+        if (!initiator.credentialsLengthCorrect(username, password)) {
             view!!.snackbar(view!!.string(R.string.incorrectCredentialsLength))
             return
         }
 
         controlsEnabled = false
         loading = true
-        fetchUsers()
-    }
-
-    private fun fetchUsers() {
-        users.clear()
-        currentPage = Pages.USERS_LIST
         initiator.scheduleLogIn()
     }
 
@@ -93,9 +85,11 @@ class PresenterImpl(private val initiator: PresenterInitiator): Presenter {
         if (!activityRunning) return
         view!!.snackbar(view!!.string(if (successful) R.string.loggedInSuccessfully else R.string.failedToLogIn))
 
-        if (successful)
+        if (successful) {
+            users.clear()
+            currentPage = Pages.USERS_LIST
             initiator.scheduleUsersFetch()
-        else {
+        } else {
             loading = false
             controlsEnabled = true
         }

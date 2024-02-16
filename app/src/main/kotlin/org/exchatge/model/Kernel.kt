@@ -22,6 +22,8 @@ import android.content.Context
 import android.widget.Toast
 import org.exchatge.model.net.Net
 import org.exchatge.model.net.NetInitiator
+import org.exchatge.model.net.UNHASHED_PASSWORD_SIZE
+import org.exchatge.model.net.USERNAME_SIZE
 import org.exchatge.model.net.UserInfo
 import org.exchatge.presenter.PresenterImpl
 import org.exchatge.presenter.PresenterInitiator
@@ -50,6 +52,9 @@ class Kernel(val context: Context) {
         override val currentUserId get() = net!!.userId
 
         override fun onActivityCreate() {}
+
+        override fun credentialsLengthCorrect(username: String, password: String) =
+            username.length in 1..USERNAME_SIZE && password.length in 1..UNHASHED_PASSWORD_SIZE
 
         override fun scheduleLogIn() { // TODO: encrypt credentials in place
             assert(net == null)
