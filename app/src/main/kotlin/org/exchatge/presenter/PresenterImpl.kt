@@ -23,6 +23,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import org.exchatge.model.kernel
+import org.exchatge.model.net.UNHASHED_PASSWORD_SIZE
+import org.exchatge.model.net.USERNAME_SIZE
 import org.exchatge.view.Activity
 import org.exchatge.view.View
 import org.exchatge.view.pages.Pages
@@ -58,6 +60,11 @@ class PresenterImpl(private val initiator: PresenterInitiator): Presenter {
     }
 
     override fun logIn() {
+        if (username.length !in 1..USERNAME_SIZE || password.length !in 1..UNHASHED_PASSWORD_SIZE) {
+            view!!.snackbar("Incorrect length of entered credentials") // TODO: put in strings.xml
+            return
+        }
+
         controlsEnabled = false
         loading = true
         initiator.scheduleLogIn()
