@@ -73,7 +73,7 @@ class PresenterImpl(private val initiator: PresenterInitiator): Presenter {
         if (!activityRunning) return
 
         view!!.snackbar("Login $successful")
-        currentPage = Pages.USERS_LIST
+        if (successful) currentPage = Pages.USERS_LIST
 
         loading = false
         controlsEnabled = true
