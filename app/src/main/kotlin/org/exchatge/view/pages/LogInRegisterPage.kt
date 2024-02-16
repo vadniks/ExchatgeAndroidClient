@@ -65,21 +65,33 @@ fun LogInRegisterPage(pagesShared: PagesShared) = Scaffold(
                 fontWeight = FontWeight.Bold,
                 modifier = paddingModifier
             )
-            TextField(pagesShared.username, R.string.username, false) { pagesShared.username = it }
-            TextField(pagesShared.password, R.string.password, true) { pagesShared.password = it }
+            TextField(
+                pagesShared.username,
+                R.string.username,
+                false,
+                pagesShared.controlsEnabled
+            ) { pagesShared.username = it }
+            TextField(
+                pagesShared.password,
+                R.string.password,
+                true,
+                pagesShared.controlsEnabled
+            ) { pagesShared.password = it }
             Row(
                 Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Button(
                     onClick = pagesShared::logIn,
-                    modifier = paddingModifier
+                    modifier = paddingModifier,
+                    enabled = pagesShared.controlsEnabled
                 ) {
                     Text(stringResource(R.string.logIn))
                 }
                 Button(
                     onClick = pagesShared::register,
-                    modifier = paddingModifier
+                    modifier = paddingModifier,
+                    enabled = pagesShared.controlsEnabled
                 ) {
                     Text(stringResource(R.string.register))
                 }
@@ -93,6 +105,7 @@ private fun TextField(
     value: String,
     label: Int,
     password: Boolean,
+    enabled: Boolean,
     onValueChange: (String) -> Unit
 ) = TextField(
     value = value,
@@ -100,5 +113,6 @@ private fun TextField(
     modifier = paddingModifier.fillMaxWidth(),
     label = { Text(stringResource(label)) },
     singleLine = true,
+    enabled = enabled,
     visualTransformation = if (!password) VisualTransformation.None else PasswordVisualTransformation()
 )

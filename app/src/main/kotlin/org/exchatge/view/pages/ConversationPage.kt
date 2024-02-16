@@ -72,7 +72,10 @@ fun ConversationPage(pagesShared: PagesShared) = Scaffold(
             },
             colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
             navigationIcon = {
-                IconButton(onClick = pagesShared::returnFromPage) { // TODO: debug only
+                IconButton(
+                    onClick = pagesShared::returnFromPage,
+                    enabled = pagesShared.controlsEnabled
+                ) {
                     Icon(
                         imageVector = Icons.Filled.ArrowBack,
                         contentDescription = stringResource(R.string.back)
@@ -80,7 +83,10 @@ fun ConversationPage(pagesShared: PagesShared) = Scaffold(
                 }
             },
             actions = {
-                IconButton(onClick = pagesShared::fileChoose) {
+                IconButton(
+                    onClick = pagesShared::fileChoose,
+                    enabled = pagesShared.controlsEnabled
+                ) {
                     Icon(
                         imageVector = Icons.Filled.Add,
                         contentDescription = stringResource(R.string.file)
@@ -108,8 +114,12 @@ fun ConversationPage(pagesShared: PagesShared) = Scaffold(
                 label = { Text(stringResource(R.string.message)) },
                 singleLine = false,
                 modifier = Modifier.fillMaxSize(),
+                enabled = pagesShared.controlsEnabled,
                 trailingIcon = {
-                    IconButton(onClick = pagesShared::sendMessage) {
+                    IconButton(
+                        onClick = pagesShared::sendMessage,
+                        enabled = pagesShared.controlsEnabled
+                    ) {
                         Icon(
                             imageVector = Icons.Filled.Send,
                             contentDescription = stringResource(R.string.send)

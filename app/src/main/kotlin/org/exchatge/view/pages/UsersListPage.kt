@@ -78,7 +78,10 @@ fun UsersListPage(pagesShared: PagesShared) = Scaffold(
             },
             colors = topAppBarColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
             navigationIcon = {
-                IconButton(onClick = pagesShared::logOut) {
+                IconButton(
+                    onClick = pagesShared::logOut,
+                    enabled = pagesShared.controlsEnabled
+                ) {
                     Icon(
                         imageVector = Icons.Filled.ExitToApp,
                         contentDescription = stringResource(R.string.logOut)
@@ -86,7 +89,10 @@ fun UsersListPage(pagesShared: PagesShared) = Scaffold(
                 }
             },
             actions = {
-                if (pagesShared.admin) IconButton(onClick = pagesShared::administrate) {
+                if (pagesShared.admin) IconButton(
+                    onClick = pagesShared::administrate,
+                    enabled = pagesShared.controlsEnabled
+                ) {
                     Icon(
                         imageVector = Icons.Filled.Menu,
                         contentDescription = stringResource(R.string.administrate)
@@ -146,6 +152,7 @@ private fun UserInfo(
         )
     },
     modifier = Modifier.fillMaxWidth().combinedClickable(
+        enabled = pagesShared.controlsEnabled,
         onClick = { pagesShared.conversation(id, false) },
         onLongClick = { pagesShared.conversation(id, true) }
     )

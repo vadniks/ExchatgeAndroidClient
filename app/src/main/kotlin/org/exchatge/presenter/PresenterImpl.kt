@@ -26,11 +26,13 @@ import org.exchatge.model.kernel
 import org.exchatge.view.Activity
 import org.exchatge.view.View
 import org.exchatge.view.pages.Pages
+import kotlin.reflect.KProperty
 
 class PresenterImpl(private val initiator: PresenterInitiator): Presenter {
     @Volatile override var view: View? = null; private set
     val activityRunning get() = view != null
-    override var currentPage by mutableStateOf(Pages.LOG_IN_REGISTER)
+    override var currentPage by SynchronizedMutableState(Pages.LOG_IN_REGISTER, this)
+    @Volatile override var controlsEnabled = true
     override var username by mutableStateOf("")
     override var password by mutableStateOf("")
     override var currentUser = ""
@@ -63,7 +65,10 @@ class PresenterImpl(private val initiator: PresenterInitiator): Presenter {
     }
 
     fun onLoginResult(successful: Boolean) {
-        if (activityRunning) view!!.snackbar("Login $successful")
+        if (!activityRunning) return
+
+        view!!.snackbar("Login $successful")
+        currentPage = Pages.USERS_LIST
     }
 
     fun onErrorReceived() {
@@ -87,6 +92,16 @@ class PresenterImpl(private val initiator: PresenterInitiator): Presenter {
     override fun fileChoose() {}
 
     override fun sendMessage() {}
+
+    private class SynchronizedMutableState<T>(initial: T, private val lock: Any) {
+        private val delegate = mutableStateOf(initial)
+
+        operator fun getValue(thisRef: Any?, property: KProperty<*>): T =
+            synchronized(lock) { delegate.getValue(thisRef, property) }
+
+        operator fun setValue(thisRef: Any?, property: KProperty<*>, value: T) =
+            synchronized(lock) { delegate.setValue(thisRef, property, value) }
+    }
 
     companion object {
         @JvmStatic

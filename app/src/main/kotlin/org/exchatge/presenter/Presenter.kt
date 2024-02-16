@@ -28,6 +28,7 @@ import kotlin.reflect.KProperty
 interface Presenter {
     val view: View?
     val currentPage: Pages
+    val controlsEnabled: Boolean
     var username: String
     var password: String
     val currentUser: String
@@ -65,6 +66,7 @@ object PresenterStub : Presenter { // stub to make @Preview work
 
     override val view = ViewStub
     override val currentPage get() = Pages.LOG_IN_REGISTER
+    override val controlsEnabled = false
     override var username by stringStub
     override var password by stringStub
     override val currentUser = ""
