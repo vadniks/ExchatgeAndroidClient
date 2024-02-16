@@ -72,7 +72,7 @@ class Activity : ComponentActivity(), View {
 @Composable
 fun Content(
     presenter: Presenter = PresenterStub // gets replaced at runtime as in preview mode other modules and the activity itself are NOT even instantiated so stubs are needed
-) = ExchatgeTheme/*(darkTheme = true)*/ {
+) = ExchatgeTheme(darkTheme = presenter is PresenterStub) {
     val xSnackbarHostState = remember { SnackbarHostState() }
     presenter.view!!.setShowSnackbarImpl(xSnackbarHostState::showSnackbar)
 
