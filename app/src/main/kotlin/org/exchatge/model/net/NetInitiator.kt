@@ -28,4 +28,5 @@ interface NetInitiator {
     fun onConnectResult(successful: Boolean)
     fun onNetDestroy()
     fun onLogInResult(successful: Boolean)
+    fun onNextUserFetched(user: UserInfo, last: Boolean)
 }

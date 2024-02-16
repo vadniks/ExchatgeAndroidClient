@@ -24,6 +24,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import org.exchatge.R
 
+data class User(val id: Int, val name: String, val online: Boolean, val conversationExists: Boolean)
+
 @Composable
 fun ConversationSetupDialog(requestedByHost: Boolean, opponentId: Int, opponentName: String) = AlertDialog(
     onDismissRequest = {},

@@ -22,6 +22,7 @@ import android.content.Context
 import android.widget.Toast
 import org.exchatge.model.net.Net
 import org.exchatge.model.net.NetInitiator
+import org.exchatge.model.net.UserInfo
 import org.exchatge.presenter.PresenterImpl
 import org.exchatge.presenter.PresenterInitiator
 
@@ -53,6 +54,11 @@ class Kernel(val context: Context) {
             initializeNet()
         }
 
+        override fun scheduleUsersFetch() {
+            assert(net != null)
+            runAsync { net!!.fetchUsers() }
+        }
+
         override fun onActivityDestroy() {}
     }
 
@@ -61,6 +67,7 @@ class Kernel(val context: Context) {
         override val crypto get() = this@Kernel.crypto
 
         override fun onConnectResult(successful: Boolean) {
+            if (!presenter.activityRunning) return
             if (successful)
                 presenter.credentials.let { net!!.logIn(it.first, it.second) }
             else
@@ -73,6 +80,8 @@ class Kernel(val context: Context) {
         }
 
         override fun onLogInResult(successful: Boolean) = presenter.onLoginResult(successful)
+
+        override fun onNextUserFetched(user: UserInfo, last: Boolean) = presenter.onNextUserFetched(user, last)
     }
 
     private companion object {

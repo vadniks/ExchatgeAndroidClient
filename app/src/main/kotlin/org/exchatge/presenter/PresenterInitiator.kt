@@ -21,5 +21,6 @@ package org.exchatge.presenter
 interface PresenterInitiator {
     fun onActivityCreate()
     fun scheduleLogIn()
+    fun scheduleUsersFetch()
     fun onActivityDestroy()
 }

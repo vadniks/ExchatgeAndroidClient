@@ -19,6 +19,7 @@
 package org.exchatge.presenter
 
 import android.os.Bundle
+import org.exchatge.view.User
 import org.exchatge.view.View
 import org.exchatge.view.ViewStub
 import org.exchatge.view.pages.Pages
@@ -32,6 +33,7 @@ interface Presenter {
     val loading: Boolean
     var username: String
     var password: String
+    val users: List<User>
     val currentUser: String
     val admin: Boolean
     val opponentUsername: String
@@ -71,6 +73,7 @@ object PresenterStub : Presenter { // stub to make @Preview work
     override val loading = true
     override var username by stringStub
     override var password by stringStub
+    override val users: List<User> = emptyList()
     override val currentUser = ""
     override val admin = false
     override val opponentUsername = ""

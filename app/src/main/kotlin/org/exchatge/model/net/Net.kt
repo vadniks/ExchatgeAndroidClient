@@ -55,7 +55,6 @@ class Net(private val initiator: NetInitiator) {
     @Volatile private var token = tokenAnonymous.copyOf()
     @Volatile private var fetchingUsers = false
     @Volatile private var fetchingMessages = false
-    private val userInfos = ArrayList<UserInfo>()
 
     init {
         if (!NetService.running)
@@ -288,16 +287,16 @@ class Net(private val initiator: NetInitiator) {
     private fun onNextUserInfosBundleFetched(message: NetMessage) {
         assert(running && connected && fetchingUsers)
         assert(message.body != null && message.size in 1..MAX_MESSAGE_BODY_SIZE)
-        if (message.index == 0) userInfos.clear()
+        val last = message.index == message.count - 1
 
         for (i in 0 until message.size step USER_INFO_SIZE)
-            userInfos.add(UserInfo.unpack(message.body!!.sliceArray(i until i + USER_INFO_SIZE)))
+            initiator.onNextUserFetched(
+                UserInfo.unpack(message.body!!.sliceArray(i until i + USER_INFO_SIZE)),
+                last && i == message.size - USER_INFO_SIZE
+            )
 
-        if (message.index < message.count - 1) return
-
-        // TODO: onUsersFetched
-        log("users fetched $userInfos")
-        userInfos.clear()
+        if (!last) return
+        log("users fetched")
         fetchingUsers = false
     }
 

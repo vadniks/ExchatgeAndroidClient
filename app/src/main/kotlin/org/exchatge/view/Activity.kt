@@ -21,6 +21,7 @@ package org.exchatge.view
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHostState
@@ -72,7 +73,7 @@ class Activity : ComponentActivity(), View {
 @Composable
 fun Content(
     presenter: Presenter = PresenterStub // gets replaced at runtime as in preview mode other modules and the activity itself are NOT even instantiated so stubs are needed
-) = ExchatgeTheme(darkTheme = presenter is PresenterStub) {
+) = ExchatgeTheme(darkTheme = if (presenter is PresenterStub) true else isSystemInDarkTheme()) {
     val xSnackbarHostState = remember { SnackbarHostState() }
     presenter.view!!.setShowSnackbarImpl(xSnackbarHostState::showSnackbar)
 
