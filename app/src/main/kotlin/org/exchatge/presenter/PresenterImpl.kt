@@ -32,7 +32,8 @@ class PresenterImpl(private val initiator: PresenterInitiator): Presenter {
     @Volatile override var view: View? = null; private set
     val activityRunning get() = view != null
     override var currentPage by SynchronizedMutableState(Pages.LOG_IN_REGISTER, this)
-    @Volatile override var controlsEnabled = true
+    override var controlsEnabled by SynchronizedMutableState(true, this)
+    override var loading by SynchronizedMutableState(false, this)
     override var username by mutableStateOf("")
     override var password by mutableStateOf("")
     override var currentUser = ""
@@ -57,11 +58,15 @@ class PresenterImpl(private val initiator: PresenterInitiator): Presenter {
     }
 
     override fun logIn() {
+        controlsEnabled = false
+        loading = true
         initiator.scheduleLogIn()
     }
 
     fun onConnectFail() {
         if (activityRunning) view!!.snackbar("failed to connect")
+        loading = false
+        controlsEnabled = true
     }
 
     fun onLoginResult(successful: Boolean) {
@@ -69,6 +74,9 @@ class PresenterImpl(private val initiator: PresenterInitiator): Presenter {
 
         view!!.snackbar("Login $successful")
         currentPage = Pages.USERS_LIST
+
+        loading = false
+        controlsEnabled = true
     }
 
     fun onErrorReceived() {

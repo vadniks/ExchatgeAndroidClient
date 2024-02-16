@@ -36,12 +36,12 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
@@ -102,15 +102,18 @@ fun UsersListPage(pagesShared: PagesShared) = Scaffold(
         )
     }
 ) { paddingValues ->
-    LazyColumn(modifier = Modifier.fillMaxSize().padding(top = paddingValues.calculateTopPadding())) {
-        items(10) { // TODO: debug only
-            UserInfo(
-                pagesShared,
-                id = it,
-                name = "User$it",
-                online = it % 2 == 0,
-                conversationExists = it % 3 == 0
-            )
+    Column(modifier = Modifier.padding(top = paddingValues.calculateTopPadding())) {
+        if (pagesShared.loading) LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+        LazyColumn(modifier = Modifier.fillMaxSize()) {
+            items(10) { // TODO: debug only
+                UserInfo(
+                    pagesShared,
+                    id = it,
+                    name = "User$it",
+                    online = it % 2 == 0,
+                    conversationExists = it % 3 == 0
+                )
+            }
         }
     }
 

@@ -25,9 +25,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
@@ -48,12 +48,12 @@ private val paddingModifier = Modifier.padding(2.5f.dp)
 fun LogInRegisterPage(pagesShared: PagesShared) = Scaffold(
     snackbarHost = { SnackbarHost(pagesShared.snackbarHostState) }
 ) { paddingValues ->
+    if (pagesShared.loading) LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
     Column(
         modifier = Modifier.fillMaxSize().padding(top = paddingValues.calculateTopPadding()),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        android.R.layout.activity_list_item
         Column(
             modifier = Modifier.fillMaxWidth(0.75f),
             verticalArrangement = Arrangement.Center,

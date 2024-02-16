@@ -34,10 +34,10 @@ import androidx.compose.material.icons.filled.Send
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
@@ -96,12 +96,10 @@ fun ConversationPage(pagesShared: PagesShared) = Scaffold(
         )
     }
 ) { paddingValues ->
-    Column(modifier = Modifier.fillMaxSize()) {
+    Column(modifier = Modifier.fillMaxSize().padding(top = paddingValues.calculateTopPadding())) {
+        if (pagesShared.loading) LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
         LazyColumn(
-            modifier = Modifier
-                .fillMaxHeight(.9f)
-                .fillMaxWidth()
-                .padding(top = paddingValues.calculateTopPadding())
+            modifier = Modifier.fillMaxHeight(.9f).fillMaxWidth()
         ) {
             items(10) { // TODO: debug only
                 Message(System.currentTimeMillis(), if (it % 2 == 0) "User$it" else null, "Text$it")
