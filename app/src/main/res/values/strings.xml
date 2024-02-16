@@ -50,4 +50,9 @@
     <string name="withSizeOf">with size of</string>
     <string name="bytes">bytes</string>
     <string name="error">Error</string>
+    <string name="incorrectCredentialsLength">Incorrect credentials length</string>
+    <string name="failedToConnect">Failed to connect</string>
+    <string name="loggedInSuccessfully">Logged in successfully</string>
+    <string name="failedToLogIn">Failed to log in</string>
+    <string name="disconnected">Disconnected</string>
 </resources>

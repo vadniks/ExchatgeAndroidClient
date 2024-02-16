@@ -59,6 +59,8 @@ class Activity : ComponentActivity(), View {
         lifecycleScope.launch { showSnackbarImpl(text) }
     }
 
+    override fun string(id: Int) = resources.getString(id)
+
     override fun onDestroy() {
         running = false
         presenter.onDestroy()
