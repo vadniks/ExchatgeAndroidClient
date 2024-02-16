@@ -58,6 +58,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.exchatge.R
 import org.exchatge.view.PagesShared
+import org.exchatge.view.User
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -106,13 +107,7 @@ fun UsersListPage(pagesShared: PagesShared) = Scaffold(
         if (pagesShared.loading) LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
         LazyColumn(modifier = Modifier.fillMaxSize()) {
             for (i in pagesShared.users) item {
-                UserInfo(
-                    pagesShared,
-                    id = i.id,
-                    name = i.name,
-                    online = i.online,
-                    conversationExists = i.conversationExists
-                )
+                UserInfo(pagesShared, i)
             }
         }
     }
@@ -126,14 +121,11 @@ fun UsersListPage(pagesShared: PagesShared) = Scaffold(
 @Composable
 private fun UserInfo(
     pagesShared: PagesShared,
-    id: Int,
-    name: String,
-    online: Boolean,
-    conversationExists: Boolean
+    user: User
 ) = ListItem(
     leadingContent = {
         Text(
-            text = id.toString(),
+            text = user.id.toString(),
             fontSize = 16.sp,
             fontStyle = FontStyle.Italic,
             color = MaterialTheme.colorScheme.secondary
@@ -141,23 +133,23 @@ private fun UserInfo(
     },
     headlineContent = {
         Text(
-            text = name,
+            text = user.name,
             fontSize = 16.sp,
-            fontWeight = if (!conversationExists) FontWeight.Normal else FontWeight.Bold
+            fontWeight = if (!user.conversationExists) FontWeight.Normal else FontWeight.Bold
         )
     },
     supportingContent = {
         Text(
-            text = stringResource(if (online) R.string.online else R.string.offline),
+            text = stringResource(if (user.online) R.string.online else R.string.offline),
             fontSize = 14.sp,
-            fontWeight = if (online) FontWeight.Bold else FontWeight.Normal,
+            fontWeight = if (user.online) FontWeight.Bold else FontWeight.Normal,
             color = MaterialTheme.colorScheme.secondary
         )
     },
     modifier = Modifier.fillMaxWidth().combinedClickable(
         enabled = pagesShared.controlsEnabled,
-        onClick = { pagesShared.conversation(id, false) },
-        onLongClick = { pagesShared.conversation(id, true) }
+        onClick = { pagesShared.conversation(user.id, false) },
+        onLongClick = { pagesShared.conversation(user.id, true) }
     )
 )
 

@@ -24,5 +24,6 @@ interface PresenterInitiator {
     fun onActivityCreate()
     fun scheduleLogIn()
     fun scheduleUsersFetch()
+    fun admin(id: Int): Boolean
     fun onActivityDestroy()
 }

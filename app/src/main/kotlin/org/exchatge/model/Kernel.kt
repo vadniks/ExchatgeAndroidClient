@@ -61,6 +61,8 @@ class Kernel(val context: Context) {
             runAsync { net!!.fetchUsers() }
         }
 
+        override fun admin(id: Int) = id == 0
+
         override fun onActivityDestroy() {}
     }
 
