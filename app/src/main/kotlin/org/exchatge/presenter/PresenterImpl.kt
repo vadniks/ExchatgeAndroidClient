@@ -43,7 +43,7 @@ class PresenterImpl(private val initiator: PresenterInitiator): Presenter {
     override var username by mutableStateOf("")
     override var password by mutableStateOf("")
     override val users = SynchronizedMutableStateList<User>(this) as MutableList<User>
-    override var currentUser = ""
+    override var currentUser by mutableStateOf("")
     override var admin = false
     override var opponentUsername = ""
     override var currentConversationMessage by mutableStateOf("")
@@ -100,9 +100,12 @@ class PresenterImpl(private val initiator: PresenterInitiator): Presenter {
         }
     }
 
-    fun onNextUserFetched(user: UserInfo, last: Boolean) {
+    fun onNextUserFetched(userInfo: UserInfo, last: Boolean) {
         synchronized(this) {
-            users.add(User(user.id, String(user.name), user.connected, false))
+            if (userInfo.id == initiator.currentUserId)
+                currentUser = String(userInfo.name) // TODO: trim trailing zeroes
+            else
+                users.add(User(userInfo.id, String(userInfo.name), userInfo.connected, false))
         }
 
         if (!last) return
@@ -146,7 +149,6 @@ class PresenterImpl(private val initiator: PresenterInitiator): Presenter {
 
     private class SynchronizedMutableStateList<T>(private val lock: Any): MutableList<T> {
         private val delegate = mutableStateListOf<T>()
-
         override val size = synchronized(lock) { delegate.size }
         override fun clear() = synchronized(lock) { delegate.clear() }
         override fun addAll(elements: Collection<T>) = synchronized(lock) { delegate.addAll(elements) }

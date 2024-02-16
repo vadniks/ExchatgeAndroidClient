@@ -19,6 +19,8 @@
 package org.exchatge.presenter
 
 interface PresenterInitiator {
+    val currentUserId: Int
+
     fun onActivityCreate()
     fun scheduleLogIn()
     fun scheduleUsersFetch()

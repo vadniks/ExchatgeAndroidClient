@@ -47,6 +47,8 @@ class Kernel(val context: Context) {
     }
 
     private inner class PresenterInitiatorImpl : PresenterInitiator {
+        override val currentUserId get() = net!!.userId
+
         override fun onActivityCreate() {}
 
         override fun scheduleLogIn() { // TODO: encrypt credentials in place
