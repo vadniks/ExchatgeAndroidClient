@@ -52,6 +52,7 @@ class Net(private val initiator: NetInitiator) {
     @Volatile private var token = tokenAnonymous.copyOf()
     @Volatile private var fetchingUsers = false
     @Volatile private var fetchingMessages = false
+    @Volatile private var destroyed = false
 
     init {
         log("net init")
@@ -62,6 +63,8 @@ class Net(private val initiator: NetInitiator) {
     fun onCreate() {}
 
     fun onPostCreate() {
+        assert(!destroyed)
+
         synchronized(lock) {
             socket =
                 try { Socket().apply { connect(InetSocketAddress(SERVER_ADDRESS, 8080), /*TODO: extract constant*/1000 * 60 * 60) } }
@@ -82,6 +85,7 @@ class Net(private val initiator: NetInitiator) {
             socket!!.close()
             socket = null
             initiator.onConnectResult(false)
+            destroyed = true
             return
         }
 
@@ -192,14 +196,14 @@ class Net(private val initiator: NetInitiator) {
     }
 
     fun send(body: ByteArray, to: Int) {
-        assert(running && connected && body.isNotEmpty() && to >= 0)
+        assert(running && connected && authenticated && !destroyed && body.isNotEmpty() && to >= 0)
         send(FLAG_PROCEED, body, to)
     }
 
     // TODO: add an 'exit' button to UI which will close the activity as well as the service to completely shutdown the whole app
 
     fun listen() {
-        while (NetService.running && connected) {
+        while (running && connected) {
             log("listen")
             if (tryReadMessage() == Ternary.NEGATIVE) break
         }
@@ -222,6 +226,7 @@ class Net(private val initiator: NetInitiator) {
     }
 
     private fun processMessage(message: NetMessage) {
+        assert(running && connected && !destroyed)
         log("message: $message")
 
         if (message.from == FROM_SERVER) {
@@ -263,6 +268,7 @@ class Net(private val initiator: NetInitiator) {
     }
 
     private fun onLoggedIn(message: NetMessage) {
+        assert(running && connected && !destroyed && !authenticated)
         log("log in succeeded")
 
         assert(message.body != null)
@@ -274,7 +280,7 @@ class Net(private val initiator: NetInitiator) {
     }
 
     private fun processErrors(message: NetMessage) {
-        assert(message.size == 4 && message.body != null)
+        assert(running && connected && !destroyed && message.size == 4 && message.body != null)
         when (val flag = message.body!!.sliceArray(0 until 4).int) {
             FLAG_LOG_IN -> {
                 log("log in failed")
@@ -288,7 +294,7 @@ class Net(private val initiator: NetInitiator) {
     }
 
     private fun onNextUserInfosBundleFetched(message: NetMessage) {
-        assert(running && connected && authenticated && fetchingUsers)
+        assert(running && connected && authenticated && !destroyed && fetchingUsers)
         assert(message.body != null && message.size in 1..MAX_MESSAGE_BODY_SIZE)
         val last = message.index == message.count - 1
 
@@ -304,7 +310,7 @@ class Net(private val initiator: NetInitiator) {
     }
 
     private fun onNextMessageFetched(message: NetMessage) {
-        assert(running && connected && fetchingMessages && message.body != null)
+        assert(running && connected && authenticated && !destroyed && fetchingMessages && message.body != null)
         val last = message.index == message.count - 1
 
         log("next message fetched $message") // TODO: handle
@@ -312,7 +318,7 @@ class Net(private val initiator: NetInitiator) {
     }
 
     private fun onEmptyMessagesFetchReplyReceived(message: NetMessage) {
-        assert(running && connected && authenticated && message.body != null && message.count == 1)
+        assert(running && connected && authenticated && !destroyed && message.body != null && message.count == 1)
         log("empty messages fetch reply $message " + message.body!!.sliceArray(1 + 8 until 1 + 8 + 4).int) // TODO: handle
         fetchingMessages = false
     }
@@ -327,39 +333,40 @@ class Net(private val initiator: NetInitiator) {
     }
 
     fun disconnect() = synchronized(lock) { // ...and reset, after this the module should be recreated
-        assert(running && connected)
+        assert(running && connected && !destroyed)
         socket!!.close()
         socket = null
+        destroyed = true
     }
 
     fun logIn(username: String, password: String) {
-        assert(running && connected && !authenticated)
+        assert(running && connected && !authenticated && !destroyed)
         send(FLAG_LOG_IN, makeCredentials(username, password), TO_SERVER)
     }
 
     fun register(username: String, password: String) {
-        assert(running && connected && !authenticated)
+        assert(running && connected && !authenticated && !destroyed)
         send(FLAG_REGISTER, makeCredentials(username, password), TO_SERVER)
     }
 
     fun shutdownServer() {
-        assert(running && connected && authenticated)
+        assert(running && connected && authenticated && !destroyed)
         send(FLAG_SHUTDOWN, null, TO_SERVER)
     }
 
     fun fetchUsers() {
-        assert(running && connected && authenticated && !fetchingUsers && !fetchingMessages)
+        assert(running && connected && authenticated && !destroyed && !fetchingUsers && !fetchingMessages)
         fetchingUsers = true
         send(FLAG_FETCH_USERS, null, TO_SERVER)
     }
 
     fun sendBroadcast(body: ByteArray) {
-        assert(running && connected && authenticated && body.isNotEmpty())
+        assert(running && connected && authenticated && !destroyed && body.isNotEmpty())
         send(FLAG_BROADCAST, body, TO_SERVER)
     }
 
     fun fetchMessages(id: Int, afterTimestamp: Long) {
-        assert(running && connected && authenticated && id >= 0 && afterTimestamp >= 0 && !fetchingUsers && !fetchingMessages)
+        assert(running && connected && authenticated && !destroyed && id >= 0 && afterTimestamp >= 0 && !fetchingUsers && !fetchingMessages)
         fetchingMessages = true
 
         val body = ByteArray(1 + 8 + 4)
@@ -377,6 +384,7 @@ class Net(private val initiator: NetInitiator) {
             socket?.close()
             socket = null
         }
+        destroyed = true
         initiator.onNetDestroy()
     }
 
