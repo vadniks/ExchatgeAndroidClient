@@ -29,7 +29,7 @@ fun assertNotMainThread() = assert(Looper.getMainLooper().thread !== Thread.curr
 fun log(message: String) = Log.d(null, message)
 val Context.kernel get() = (applicationContext as App).kernel
 fun runInMain(action: () -> Unit) = Dispatchers.Main.dispatch(EmptyCoroutineContext) { action() }
-fun runAsync(action: () -> Unit) = Dispatchers.Default.dispatch(EmptyCoroutineContext) { action() }
+fun runAsync(delay: Long = 0, action: () -> Unit) = Dispatchers.Default.dispatch(EmptyCoroutineContext) { Thread.sleep(delay); action() }
 
 class Reference<T>(var referenced: T)
 enum class Ternary { POSITIVE, NEUTRAL, NEGATIVE } // true, else, false

@@ -58,8 +58,8 @@ class Kernel(val context: Context) {
             username.length in 1..USERNAME_SIZE && password.length in 1..UNHASHED_PASSWORD_SIZE
 
         override fun scheduleLogIn() { // TODO: encrypt credentials in place
-            assert(net == null)
-            initializeNet()
+            if (net != null) net!!.disconnect()
+            runAsync(1000) { initializeNet() }
         }
 
         override fun scheduleUsersFetch() {

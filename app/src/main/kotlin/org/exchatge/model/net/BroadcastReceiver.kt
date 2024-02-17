@@ -22,11 +22,13 @@ import android.content.Context
 import android.content.Intent
 import org.exchatge.model.assert
 import org.exchatge.model.kernel
+import org.exchatge.model.log
 
 class BroadcastReceiver : android.content.BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
         assert(intent.action == Intent.ACTION_BOOT_COMPLETED)
+        log("br")
         context.kernel.initializeNet()
     }
 }
