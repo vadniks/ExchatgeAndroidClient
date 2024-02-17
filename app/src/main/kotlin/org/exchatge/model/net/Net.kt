@@ -201,9 +201,12 @@ class Net(private val initiator: NetInitiator) {
     // TODO: add an 'exit' button to UI which will close the activity as well as the service to completely shutdown the whole app
 
     fun listen() {
+        var tracker = Ternary.NEGATIVE // if this tracker is present and it's manipulated like that, the service gets reinitialized with reinitialization of Net class as well. But without this tracker the service isn't reinitialized and just gets unpaused where it was stopped. Weird...
         while (NetService.running && connected) {
             log("listen")
-            if (tryReadMessage() == Ternary.NEGATIVE) break
+            if (tracker == Ternary.NEGATIVE) tracker = Ternary.NEUTRAL
+            log("aaa " + tracker.name)
+            if (tryReadMessage().also { tracker = Ternary.POSITIVE } == Ternary.NEGATIVE) break
         }
         log("disconnected") // disconnected - logging in is required to reconnect // TODO: handle disconnection
         // then the execution goes to onDestroy
