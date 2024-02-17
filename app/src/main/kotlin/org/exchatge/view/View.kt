@@ -18,13 +18,19 @@
 
 package org.exchatge.view
 
+import androidx.activity.OnBackPressedCallback
+
 interface View {
+    fun addOnBackPressedCallback(callback: OnBackPressedCallback)
+    fun finish()
     fun setShowSnackbarImpl(impl: suspend (String) -> Unit)
     fun snackbar(text: String)
     fun string(id: Int): String
 }
 
 object ViewStub : View { // stub to make @Preview work
+    override fun addOnBackPressedCallback(callback: OnBackPressedCallback) {}
+    override fun finish() {}
     override fun setShowSnackbarImpl(impl: suspend (String) -> Unit) {}
     override fun snackbar(text: String) {}
     override fun string(id: Int) = ""

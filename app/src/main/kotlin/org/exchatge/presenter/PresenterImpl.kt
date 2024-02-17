@@ -19,6 +19,7 @@
 package org.exchatge.presenter
 
 import android.os.Bundle
+import androidx.activity.OnBackPressedCallback
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -55,7 +56,17 @@ class PresenterImpl(private val initiator: PresenterInitiator): Presenter {
 
     override fun onCreate(view: View, savedInstanceState: Bundle?) {
         this.view = view
+
+        view.addOnBackPressedCallback(object : OnBackPressedCallback(true)
+        { override fun handleOnBackPressed() = this@PresenterImpl.handleOnBackPressed() })
+
         initiator.onActivityCreate()
+    }
+
+    private fun handleOnBackPressed() = when (currentPage) {
+        Pages.CONVERSATION -> currentPage = Pages.USERS_LIST
+        Pages.USERS_LIST -> currentPage = Pages.LOG_IN_REGISTER // TODO: log out - disconnect
+        Pages.LOG_IN_REGISTER -> view!!.finish()
     }
 
     override fun onResume() {

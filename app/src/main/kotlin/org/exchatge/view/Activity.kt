@@ -20,6 +20,7 @@ package org.exchatge.view
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
@@ -52,6 +53,9 @@ class Activity : ComponentActivity(), View {
         presenter = PresenterImpl.instance(this, savedInstanceState)
         setContent { Content(presenter) }
     }
+
+    override fun addOnBackPressedCallback(callback: OnBackPressedCallback) =
+        onBackPressedDispatcher.addCallback(callback)
 
     override fun setShowSnackbarImpl(impl: suspend (String) -> Unit) { showSnackbarImpl = impl }
 
