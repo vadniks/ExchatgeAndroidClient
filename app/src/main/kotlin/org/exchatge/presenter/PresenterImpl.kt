@@ -58,6 +58,12 @@ class PresenterImpl(private val initiator: PresenterInitiator): Presenter {
         initiator.onActivityCreate()
     }
 
+    override fun onResume() {
+        if (!initiator.loggedIn) return
+        currentPage = Pages.USERS_LIST
+        updateUsersList()
+    }
+
     override fun onDestroy() {
         view = null
         initiator.onActivityDestroy()

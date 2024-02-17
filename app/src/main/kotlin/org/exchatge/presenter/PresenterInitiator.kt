@@ -20,6 +20,7 @@ package org.exchatge.presenter
 
 interface PresenterInitiator {
     val currentUserId: Int
+    val loggedIn: Boolean
 
     fun onActivityCreate()
     fun credentialsLengthCorrect(username: String, password: String): Boolean

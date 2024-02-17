@@ -62,6 +62,11 @@ class Activity : ComponentActivity(), View {
 
     override fun string(id: Int) = resources.getString(id)
 
+    override fun onResume() {
+        super.onResume()
+        presenter.onResume()
+    }
+
     override fun onDestroy() {
         running = false
         presenter.onDestroy()

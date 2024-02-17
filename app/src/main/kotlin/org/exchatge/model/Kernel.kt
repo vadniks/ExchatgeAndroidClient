@@ -50,6 +50,7 @@ class Kernel(val context: Context) {
 
     private inner class PresenterInitiatorImpl : PresenterInitiator {
         override val currentUserId get() = net!!.userId
+        override val loggedIn get() = false
 
         override fun onActivityCreate() {}
 

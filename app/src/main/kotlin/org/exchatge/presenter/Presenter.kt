@@ -40,6 +40,7 @@ interface Presenter {
     var currentConversationMessage: String
 
     fun onCreate(view: View, savedInstanceState: Bundle?) // TODO: handle config changes and process kill (save activity's state)
+    fun onResume()
     fun onDestroy()
     fun logIn()
     fun register()
@@ -81,6 +82,7 @@ object PresenterStub : Presenter { // stub to make @Preview work
     override var currentConversationMessage by stringStub
 
     override fun onCreate(view: View, savedInstanceState: Bundle?) {}
+    override fun onResume() {}
     override fun onDestroy() {}
     override fun logIn() {}
     override fun register() {}

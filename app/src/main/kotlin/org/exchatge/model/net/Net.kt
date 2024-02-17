@@ -81,6 +81,8 @@ class Net(private val initiator: NetInitiator) {
         log("ready = $ready") // if (!ready) // error while connecting
 
         if (!ready) {
+            socket!!.close()
+            socket = null
             initiator.onConnectResult(false)
             return
         }
@@ -285,7 +287,7 @@ class Net(private val initiator: NetInitiator) {
     }
 
     private fun onNextUserInfosBundleFetched(message: NetMessage) {
-        assert(running && connected && fetchingUsers)
+        assert(running && connected && authenticated && fetchingUsers)
         assert(message.body != null && message.size in 1..MAX_MESSAGE_BODY_SIZE)
         val last = message.index == message.count - 1
 
@@ -309,7 +311,7 @@ class Net(private val initiator: NetInitiator) {
     }
 
     private fun onEmptyMessagesFetchReplyReceived(message: NetMessage) {
-        assert(running && connected && message.body != null && message.count == 1)
+        assert(running && connected && authenticated && message.body != null && message.count == 1)
         log("empty messages fetch reply $message " + message.body!!.sliceArray(1 + 8 until 1 + 8 + 4).int) // TODO: handle
         fetchingMessages = false
     }
@@ -330,33 +332,33 @@ class Net(private val initiator: NetInitiator) {
     }
 
     fun logIn(username: String = USERNAME, password: String = PASSWORD) {
-        assert(running && connected)
+        assert(running && connected && !authenticated)
         send(FLAG_LOG_IN, makeCredentials(username, password), TO_SERVER)
     }
 
     fun register(username: String = USERNAME, password: String = PASSWORD) {
-        assert(running && connected)
+        assert(running && connected && !authenticated)
         send(FLAG_REGISTER, makeCredentials(username, password), TO_SERVER)
     }
 
     fun shutdownServer() {
-        assert(running && connected)
+        assert(running && connected && authenticated)
         send(FLAG_SHUTDOWN, null, TO_SERVER)
     }
 
     fun fetchUsers() {
-        assert(running && connected && !fetchingUsers && !fetchingMessages)
+        assert(running && connected && authenticated && !fetchingUsers && !fetchingMessages)
         fetchingUsers = true
         send(FLAG_FETCH_USERS, null, TO_SERVER)
     }
 
     fun sendBroadcast(body: ByteArray) {
-        assert(running && connected && body.isNotEmpty())
+        assert(running && connected && authenticated && body.isNotEmpty())
         send(FLAG_BROADCAST, body, TO_SERVER)
     }
 
     fun fetchMessages(id: Int, afterTimestamp: Long) {
-        assert(running && connected && id >= 0 && afterTimestamp >= 0 && !fetchingUsers && !fetchingMessages)
+        assert(running && connected && authenticated && id >= 0 && afterTimestamp >= 0 && !fetchingUsers && !fetchingMessages)
         fetchingMessages = true
 
         val body = ByteArray(1 + 8 + 4)
