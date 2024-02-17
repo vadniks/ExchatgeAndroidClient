@@ -19,6 +19,7 @@
 package org.exchatge.model
 
 import android.content.Context
+import android.content.SharedPreferences
 import android.widget.Toast
 import org.exchatge.model.net.Net
 import org.exchatge.model.net.NetInitiator
@@ -43,10 +44,13 @@ class Kernel(val context: Context) {
     @Deprecated("use snackbar instead", replaceWith = ReplaceWith("", ""))
     fun toast(text: String) = Toast.makeText(context, text, Toast.LENGTH_SHORT).show().also { log(text) } // TODO: debug only
 
-    fun initializeNet() {
+    private fun initializeNet() {
         assert(net == null)
         net = Net(NetInitiatorImpl())
     }
+
+    fun sharedPreferences(name: String): SharedPreferences =
+        context.getSharedPreferences(name, Context.MODE_PRIVATE)
 
     private inner class PresenterInitiatorImpl : PresenterInitiator {
         override val currentUserId get() = net!!.userId
@@ -57,10 +61,9 @@ class Kernel(val context: Context) {
         override fun credentialsLengthCorrect(username: String, password: String) =
             username.length in 1..USERNAME_SIZE && password.length in 1..UNHASHED_PASSWORD_SIZE
 
-        override fun scheduleLogIn() { // TODO: encrypt credentials in place
-            if (net != null) net!!.disconnect()
-            runAsync(1000) { initializeNet() }
-        }
+        // TODO: encrypt credentials in place
+
+        override fun scheduleLogIn() = runAsync(1000) { initializeNet() }
 
         override fun scheduleUsersFetch() {
             assert(net != null)
@@ -77,7 +80,6 @@ class Kernel(val context: Context) {
         override val crypto get() = this@Kernel.crypto
 
         override fun onConnectResult(successful: Boolean) {
-            if (!presenter.activityRunning) return
             if (successful)
                 presenter.credentials.let { net!!.logIn(it.first, it.second) }
             else

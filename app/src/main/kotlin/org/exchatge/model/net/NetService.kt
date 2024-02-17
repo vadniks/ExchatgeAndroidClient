@@ -29,18 +29,10 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.exchatge.model.assert
 import org.exchatge.model.kernel
-import org.exchatge.model.log
 
 class NetService : Service() {
     private lateinit var listenJob: Job
-
-    private val net get(): Net {
-        if (kernel.net == null) {
-            log("ns net == null")
-            kernel.initializeNet()
-        }
-        return kernel.net!!
-    }
+    private val net get() = kernel.net!!
 
     @OptIn(DelicateCoroutinesApi::class)
     override fun onCreate() {

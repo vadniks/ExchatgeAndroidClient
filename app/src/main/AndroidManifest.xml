@@ -39,18 +39,8 @@
 
         <service
             android:name=".model.net.NetService"
+            android:stopWithTask="true"
             android:exported="false"/>
-        <!-- android:stopWithTask="true" // on task removal service's onDestroy is called, for future... -->
-
-        <receiver
-            android:name=".model.net.BroadcastReceiver"
-            android:exported="false">
-
-            <intent-filter>
-                <action android:name="android.intent.action.BOOT_COMPLETED"/>
-                <action android:name="org.exchatge.RESTART_SERVICE"/>
-            </intent-filter>
-        </receiver>
 
         <activity
             android:name=".view.Activity"

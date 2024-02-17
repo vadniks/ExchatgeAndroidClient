@@ -37,9 +37,6 @@ private val serverSignPublicKey = byteArrayOf( // TODO: debug only
     71, 215.toByte(), 74, 172.toByte(), 27, 225.toByte(), 26, 249.toByte()
 )
 
-private const val USERNAME = "admin" // TODO: debug only
-private const val PASSWORD = "admin"
-
 class Net(private val initiator: NetInitiator) {
     val running get() = NetService.running
     @Volatile private var socket: Socket? = null
@@ -203,8 +200,7 @@ class Net(private val initiator: NetInitiator) {
 
     fun listen() {
         while (NetService.running && connected) {
-            log("listen $authenticated")
-            if (!authenticated) {} // TODO: can be unauthenticated if service gets restarted from cache, so logging in needs to be performed here again in this case. Also in this case gathered information (userId, token but not coders as it gets cached 'cause it created at object's initialization) gets dropped (GCed)
+            log("listen")
             if (tryReadMessage() == Ternary.NEGATIVE) break
         }
         log("disconnected") // disconnected - logging in is required to reconnect // TODO: handle disconnection
@@ -245,6 +241,7 @@ class Net(private val initiator: NetInitiator) {
                 // TODO: handle usual message
             }
             FLAG_FETCH_MESSAGES -> onNextMessageFetched(message)
+            else -> assert(false)
         }
     }
 
@@ -256,22 +253,24 @@ class Net(private val initiator: NetInitiator) {
         ))
 
         when (message.flag) {
-            FLAG_LOGGED_IN -> {
-                log("log in succeeded")
-
-                assert(message.body != null)
-                authenticated = true
-                userId = message.to
-                token = message.body!!.sliceArray(0 until TOKEN_SIZE)
-
-                initiator.onLogInResult(true)
-            }
+            FLAG_LOGGED_IN -> onLoggedIn(message)
             FLAG_REGISTERED -> log("register succeeded")
             FLAG_FETCH_USERS -> onNextUserInfosBundleFetched(message)
             FLAG_ERROR -> processErrors(message)
             FLAG_FETCH_MESSAGES -> onEmptyMessagesFetchReplyReceived(message)
             FLAG_BROADCAST -> log("broadcast received ${message.body!!}")
         }
+    }
+
+    private fun onLoggedIn(message: NetMessage) {
+        log("log in succeeded")
+
+        assert(message.body != null)
+        authenticated = true
+        userId = message.to
+        token = message.body!!.sliceArray(0 until TOKEN_SIZE)
+
+        initiator.onLogInResult(true)
     }
 
     private fun processErrors(message: NetMessage) {
@@ -327,18 +326,18 @@ class Net(private val initiator: NetInitiator) {
         return credentials
     }
 
-    fun disconnect() = synchronized(lock) {
+    fun disconnect() = synchronized(lock) { // ...and reset, after this the module should be recreated
         assert(running && connected)
         socket!!.close()
         socket = null
     }
 
-    fun logIn(username: String = USERNAME, password: String = PASSWORD) {
+    fun logIn(username: String, password: String) {
         assert(running && connected && !authenticated)
         send(FLAG_LOG_IN, makeCredentials(username, password), TO_SERVER)
     }
 
-    fun register(username: String = USERNAME, password: String = PASSWORD) {
+    fun register(username: String, password: String) {
         assert(running && connected && !authenticated)
         send(FLAG_REGISTER, makeCredentials(username, password), TO_SERVER)
     }
