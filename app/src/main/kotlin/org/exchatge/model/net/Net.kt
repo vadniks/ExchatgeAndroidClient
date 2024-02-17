@@ -55,8 +55,10 @@ class Net(private val initiator: NetInitiator) {
     @Volatile private var token = tokenAnonymous.copyOf()
     @Volatile private var fetchingUsers = false
     @Volatile private var fetchingMessages = false
+    @Volatile private var tracker = Ternary.NEGATIVE // if this tracker is present and it's manipulated like that, the service gets reinitialized with reinitialization of Net class as well. But without this tracker the service isn't reinitialized and just gets unpaused where it was stopped. Weird...
 
     init {
+        log("net init")
         if (!NetService.running)
             initiator.context.startService(Intent(initiator.context, NetService::class.java))!! // TODO: start the service only if the user has logged in
     }
@@ -88,6 +90,7 @@ class Net(private val initiator: NetInitiator) {
         }
 
         initiator.onConnectResult(true)
+        tracker = Ternary.NEUTRAL
     }
 
     private fun initiateSecuredConnection(): Boolean {
@@ -201,12 +204,11 @@ class Net(private val initiator: NetInitiator) {
     // TODO: add an 'exit' button to UI which will close the activity as well as the service to completely shutdown the whole app
 
     fun listen() {
-        var tracker = Ternary.NEGATIVE // if this tracker is present and it's manipulated like that, the service gets reinitialized with reinitialization of Net class as well. But without this tracker the service isn't reinitialized and just gets unpaused where it was stopped. Weird...
         while (NetService.running && connected) {
-            log("listen")
-            if (tracker == Ternary.NEGATIVE) tracker = Ternary.NEUTRAL
-            log("aaa " + tracker.name)
-            if (tryReadMessage().also { tracker = Ternary.POSITIVE } == Ternary.NEGATIVE) break
+            log("listen " + tracker.name)
+            val readResult = tryReadMessage()
+            tracker = Ternary.POSITIVE
+            if (readResult == Ternary.NEGATIVE) break
         }
         log("disconnected") // disconnected - logging in is required to reconnect // TODO: handle disconnection
         // then the execution goes to onDestroy
