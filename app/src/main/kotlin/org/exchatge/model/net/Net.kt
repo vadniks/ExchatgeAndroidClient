@@ -55,7 +55,6 @@ class Net(private val initiator: NetInitiator) {
     @Volatile private var token = tokenAnonymous.copyOf()
     @Volatile private var fetchingUsers = false
     @Volatile private var fetchingMessages = false
-    @Volatile private var tracker = Ternary.NEGATIVE
 
     init {
         log("net init")
@@ -90,7 +89,6 @@ class Net(private val initiator: NetInitiator) {
         }
 
         initiator.onConnectResult(true)
-        tracker = Ternary.NEUTRAL
     }
 
     private fun initiateSecuredConnection(): Boolean {
@@ -204,14 +202,10 @@ class Net(private val initiator: NetInitiator) {
     // TODO: add an 'exit' button to UI which will close the activity as well as the service to completely shutdown the whole app
 
     fun listen() {
-        var tracker2 = Ternary.NEGATIVE // if this tracker is present and it's manipulated like that, the service gets reinitialized with reinitialization of Net class as well. But without this tracker the service isn't reinitialized and just gets unpaused where it was stopped. Weird...
         while (NetService.running && connected) {
-            if (tracker2 == Ternary.NEGATIVE) tracker2 = Ternary.NEUTRAL
-            log("listen " + tracker.name + ' ' + tracker2.name)
-            val readResult = tryReadMessage()
-            tracker = Ternary.POSITIVE
-            tracker2 = Ternary.POSITIVE
-            if (readResult == Ternary.NEGATIVE) break
+            log("listen $authenticated")
+            if (!authenticated) {} // TODO: can be unauthenticated if service gets restarted from cache, so logging in needs to be performed here again in this case. Also in this case gathered information (userId, token but not coders as it gets cached 'cause it created at object's initialization) gets dropped (GCed)
+            if (tryReadMessage() == Ternary.NEGATIVE) break
         }
         log("disconnected") // disconnected - logging in is required to reconnect // TODO: handle disconnection
         // then the execution goes to onDestroy
