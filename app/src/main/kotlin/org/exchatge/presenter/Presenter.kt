@@ -43,6 +43,7 @@ interface Presenter {
     fun onDestroy()
     fun logIn()
     fun register()
+    fun updateUsersList()
     fun logOut()
     fun administrate()
     fun conversation(id: Int, remove: Boolean)
@@ -83,6 +84,7 @@ object PresenterStub : Presenter { // stub to make @Preview work
     override fun onDestroy() {}
     override fun logIn() {}
     override fun register() {}
+    override fun updateUsersList() {}
     override fun logOut() {}
     override fun administrate() {}
     override fun conversation(id: Int, remove: Boolean) {}

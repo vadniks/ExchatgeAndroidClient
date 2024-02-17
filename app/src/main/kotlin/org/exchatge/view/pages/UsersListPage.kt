@@ -32,6 +32,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -91,6 +92,15 @@ fun UsersListPage(pagesShared: PagesShared) = Scaffold(
                 }
             },
             actions = {
+                IconButton(
+                    onClick = pagesShared::updateUsersList,
+                    enabled = pagesShared.controlsEnabled
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Refresh,
+                        contentDescription = stringResource(R.string.update)
+                    )
+                }
                 if (pagesShared.admin) IconButton(
                     onClick = pagesShared::administrate,
                     enabled = pagesShared.controlsEnabled

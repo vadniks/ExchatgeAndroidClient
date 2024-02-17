@@ -123,6 +123,13 @@ class PresenterImpl(private val initiator: PresenterInitiator): Presenter {
 
     override fun register() {}
 
+    override fun updateUsersList() {
+        controlsEnabled = false
+        loading = true
+        users.clear()
+        initiator.scheduleUsersFetch()
+    }
+
     override fun logOut() {}
 
     override fun administrate() {}

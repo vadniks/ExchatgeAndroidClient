@@ -55,4 +55,5 @@
     <string name="loggedInSuccessfully">Logged in successfully</string>
     <string name="failedToLogIn">Failed to log in</string>
     <string name="disconnected">Disconnected</string>
+    <string name="update">Update</string>
 </resources>
