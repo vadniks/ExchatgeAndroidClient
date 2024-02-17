@@ -29,6 +29,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Send
@@ -84,7 +85,7 @@ fun UsersListPage(pagesShared: PagesShared) = Scaffold(
                     enabled = pagesShared.controlsEnabled
                 ) {
                     Icon(
-                        imageVector = Icons.Filled.ExitToApp,
+                        imageVector = Icons.Filled.ArrowBack,
                         contentDescription = stringResource(R.string.logOut)
                     )
                 }
