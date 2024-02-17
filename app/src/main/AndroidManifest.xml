@@ -54,6 +54,7 @@
 
         <activity
             android:name=".view.Activity"
+            android:configChanges="density|fontScale|keyboard|keyboardHidden|layoutDirection|locale|mcc|mnc|navigation|orientation|screenLayout|screenSize|smallestScreenSize|touchscreen|uiMode"
             android:exported="true"
             android:launchMode="singleInstance"
             android:theme="@style/Theme.Exchatge">
