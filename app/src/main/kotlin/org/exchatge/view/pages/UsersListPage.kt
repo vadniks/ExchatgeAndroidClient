@@ -167,7 +167,6 @@ private fun UserInfo(
             textAlign = TextAlign.Center
         )
     },
-
     modifier = Modifier.fillMaxWidth().combinedClickable(
         enabled = pagesShared.controlsEnabled,
         onClick = { pagesShared.conversation(user.id, false) },
