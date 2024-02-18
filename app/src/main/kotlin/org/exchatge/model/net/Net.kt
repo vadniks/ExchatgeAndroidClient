@@ -27,6 +27,8 @@ import org.exchatge.model.log
 import java.net.InetSocketAddress
 import java.net.Socket
 import java.net.SocketTimeoutException
+import java.util.Queue
+import java.util.concurrent.ConcurrentLinkedQueue
 
 private const val SERVER_ADDRESS = "192.168.1.57" // TODO: debug only
 
@@ -45,7 +47,7 @@ class Net(private val initiator: NetInitiator) {
     private val crypto get() = initiator.crypto
     private val encryptedMessageMaxSize = crypto.encryptedSize(MAX_MESSAGE_SIZE)
     private var coders: Crypto.Coders? = null
-    @Volatile private var authenticated = false // reads and writes to this field are atomic and writes are always made visible to other threads - just an atomic flag
+    @Volatile private var authenticated = false // volatile: reads and writes to this field are atomic and writes are always made visible to other threads - just an atomic flag
     @Volatile var userId = FROM_ANONYMOUS; private set
     private val tokenAnonymous = ByteArray(TOKEN_SIZE)
     private val tokenUnsignedValue = ByteArray(TOKEN_UNSIGNED_VALUE_SIZE) { 255.toByte() }
@@ -53,6 +55,10 @@ class Net(private val initiator: NetInitiator) {
     @Volatile private var fetchingUsers = false
     @Volatile private var fetchingMessages = false
     @Volatile private var destroyed = false
+    @Volatile private var settingUpConversation = false
+    @Volatile private var exchangingFile = false
+    private val conversationSetupMessages = ConcurrentLinkedQueue<NetMessage>()
+    @Volatile private var inviteProcessingStartMillis = 0L
 
     init {
         log("net init")
@@ -237,8 +243,12 @@ class Net(private val initiator: NetInitiator) {
         assert(authenticated)
 
         when (message.flag) {
-            FLAG_EXCHANGE_KEYS -> {}
-            FLAG_EXCHANGE_KEYS_DONE, FLAG_EXCHANGE_HEADERS, FLAG_EXCHANGE_HEADERS_DONE -> {}
+            FLAG_EXCHANGE_KEYS, FLAG_EXCHANGE_KEYS_DONE, FLAG_EXCHANGE_HEADERS, FLAG_EXCHANGE_HEADERS_DONE -> {
+                if (message.flag == FLAG_EXCHANGE_KEYS)
+                    processConversationSetUpMessage(message)
+                else
+                    conversationSetupMessages.add(message)
+            }
             FLAG_FILE_ASK -> {}
             FLAG_FILE -> {}
             FLAG_PROCEED -> {
@@ -323,6 +333,16 @@ class Net(private val initiator: NetInitiator) {
         fetchingMessages = false
     }
 
+    private fun processConversationSetUpMessage(message: NetMessage) {
+        assert(running && connected && authenticated && !destroyed && message.body != null && message.flag == FLAG_EXCHANGE_KEYS && message.size == INVITE_ASK)
+        if (settingUpConversation || exchangingFile) return
+
+        settingUpConversation = true
+        inviteProcessingStartMillis = System.currentTimeMillis()
+
+        // TODO: onConversationSetUpInviteReceived(message.from)
+    }
+
     private fun makeCredentials(username: String, password: String): ByteArray {
         assert(username.length in 1..USERNAME_SIZE && password.length in 1..UNHASHED_PASSWORD_SIZE)
         val credentials = ByteArray(USERNAME_SIZE + UNHASHED_PASSWORD_SIZE)
@@ -377,6 +397,159 @@ class Net(private val initiator: NetInitiator) {
         send(FLAG_FETCH_MESSAGES, body, TO_SERVER)
     }
 
+    private fun <T> Queue<T>.waitAndPop(timeout: Int = TIMEOUT): T? {
+        assert(timeout >= 0)
+        val started = System.currentTimeMillis()
+
+        while (System.currentTimeMillis() - started < timeout) {
+            val item = poll()
+            if (item != null)
+                return item
+        }
+
+        return null
+    }
+
+    private fun finishSettingUpConversation() {
+        conversationSetupMessages.clear()
+        settingUpConversation = false
+    }
+
+    fun createConversation(id: Int): Crypto.Coders? { // blocks the caller thread
+        assert(running && connected && authenticated && !destroyed && id >= 0 && !settingUpConversation && !exchangingFile)
+        settingUpConversation = true
+        conversationSetupMessages.clear()
+
+        if (!send(FLAG_EXCHANGE_KEYS, ByteArray(INVITE_ASK), id)) {
+            finishSettingUpConversation()
+            return null
+        }
+
+        var message: NetMessage?
+        if (
+            run { message = conversationSetupMessages.waitAndPop(); message } == null
+            || message!!.flag != FLAG_EXCHANGE_KEYS
+            || message!!.size != Crypto.KEY_SIZE
+            || message!!.body == null
+        ) {
+            finishSettingUpConversation()
+            return null
+        }
+
+        val akaServerPublicKey = ByteArray(Crypto.KEY_SIZE)
+        System.arraycopy(message?.body!!, 0, akaServerPublicKey, 0, Crypto.KEY_SIZE)
+
+        val keys = crypto.exchangeKeys(akaServerPublicKey)
+        if (keys == null) {
+            finishSettingUpConversation()
+            return null
+        }
+
+        if (!send(FLAG_EXCHANGE_KEYS_DONE, crypto.clientPublicKey(keys), id)) {
+            finishSettingUpConversation()
+            return null
+        }
+
+        if (
+            run { message = conversationSetupMessages.waitAndPop(); message } == null
+            || message!!.flag != FLAG_EXCHANGE_HEADERS
+            || message!!.size != Crypto.HEADER_SIZE
+            || message!!.body == null
+        ) {
+            finishSettingUpConversation()
+            return null
+        }
+
+        val akaServerStreamHeader = ByteArray(Crypto.HEADER_SIZE)
+        System.arraycopy(message?.body!!, 0, akaServerStreamHeader, 0, Crypto.HEADER_SIZE)
+
+        val coders = crypto.makeCoders()
+        val akaClientStreamHeader = crypto.initializeCoders(coders, keys, akaServerStreamHeader)
+
+        if (akaClientStreamHeader == null) {
+            finishSettingUpConversation()
+            return null
+        }
+
+        val result = send(FLAG_EXCHANGE_HEADERS_DONE, akaClientStreamHeader, id)
+        finishSettingUpConversation()
+        return if (result) coders else null
+    }
+
+    private fun inviteProcessingTimeoutExceeded() = System.currentTimeMillis() - inviteProcessingStartMillis > TIMEOUT
+
+    fun replyToConversationSetUpInvite(accept: Boolean, fromId: Int): Crypto.Coders? {
+        assert(running && connected && authenticated && !destroyed && fromId >= 0 && settingUpConversation && !exchangingFile)
+        conversationSetupMessages.clear()
+
+        if (inviteProcessingTimeoutExceeded()) {
+            finishSettingUpConversation()
+            return null
+        }
+
+        if (!accept) {
+            finishSettingUpConversation()
+            send(FLAG_EXCHANGE_KEYS, ByteArray(INVITE_DENY), fromId)
+            return null
+        }
+
+        val keys = crypto.makeKeys()
+        val akaServerPublicKey = crypto.generateKeyPairAsServer(keys)
+
+        if (!send(FLAG_EXCHANGE_KEYS, akaServerPublicKey, fromId)) {
+            finishSettingUpConversation()
+            return null
+        }
+
+        var message: NetMessage?
+        if (
+            run { message = conversationSetupMessages.waitAndPop(); message } == null
+            || message!!.flag != FLAG_EXCHANGE_KEYS_DONE
+            || message!!.size != Crypto.KEY_SIZE
+            || message!!.body == null
+        ) {
+            finishSettingUpConversation()
+            return null
+        }
+
+        val akaClientPublicKey = ByteArray(Crypto.KEY_SIZE)
+        System.arraycopy(message?.body!!, 0, akaClientPublicKey, 0, Crypto.KEY_SIZE)
+
+        if (!crypto.exchangeKeysAsServer(keys, akaClientPublicKey)) {
+            finishSettingUpConversation()
+            return null
+        }
+
+        val coders = crypto.makeCoders()
+        val akaServerStreamHeader = crypto.createEncoderAsServer(keys, coders)
+
+        if (akaServerStreamHeader == null) {
+            finishSettingUpConversation()
+            return null
+        }
+
+        if (!send(FLAG_EXCHANGE_HEADERS, akaServerStreamHeader, fromId)) {
+            finishSettingUpConversation()
+            return null
+        }
+
+        if (
+            run { message = conversationSetupMessages.waitAndPop(); message } == null
+            || message!!.flag != FLAG_EXCHANGE_HEADERS_DONE
+            || message!!.size != Crypto.HEADER_SIZE
+            || message!!.body == null
+        ) {
+            finishSettingUpConversation()
+            return null
+        }
+
+        val akaClientStreamHeader = ByteArray(Crypto.HEADER_SIZE)
+        System.arraycopy(message?.body!!, 0, akaClientStreamHeader, 0, Crypto.HEADER_SIZE)
+        finishSettingUpConversation()
+
+        return if (!crypto.createDecoderAsServer(keys, coders, akaClientStreamHeader)) null else coders
+    }
+
     fun onDestroy() {
         log("close")
         assert(!running)
@@ -412,5 +585,8 @@ class Net(private val initiator: NetInitiator) {
         private const val FLAG_FILE_ASK = 0x000000e0
         private const val FLAG_FILE = 0x000000f0
         private const val FLAG_SHUTDOWN = 0x7fffffff
+
+        private const val INVITE_ASK = 1
+        private const val INVITE_DENY = 2
     }
 }
