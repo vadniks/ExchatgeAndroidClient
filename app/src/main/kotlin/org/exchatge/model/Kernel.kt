@@ -148,6 +148,10 @@ class Kernel(val context: Context) {
         }
 
         override fun onNextUserFetched(user: UserInfo, last: Boolean) = presenter.onNextUserFetched(user, last)
+
+        override fun onConversationSetUpInviteReceived(fromId: Int) {
+            net!!.replyToConversationSetUpInvite(true, fromId) // TODO: debug only
+        }
     }
 
     private companion object {

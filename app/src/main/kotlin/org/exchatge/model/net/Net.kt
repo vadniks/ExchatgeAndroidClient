@@ -340,7 +340,7 @@ class Net(private val initiator: NetInitiator) {
         settingUpConversation = true
         inviteProcessingStartMillis = System.currentTimeMillis()
 
-        // TODO: onConversationSetUpInviteReceived(message.from)
+        initiator.onConversationSetUpInviteReceived(message.from)
     }
 
     private fun makeCredentials(username: String, password: String): ByteArray {

@@ -29,4 +29,5 @@ interface NetInitiator {
     fun onNetDestroy()
     fun onLogInResult(successful: Boolean)
     fun onNextUserFetched(user: UserInfo, last: Boolean)
+    fun onConversationSetUpInviteReceived(fromId: Int)
 }
