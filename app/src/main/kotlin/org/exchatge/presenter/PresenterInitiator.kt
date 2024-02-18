@@ -20,13 +20,13 @@ package org.exchatge.presenter
 
 interface PresenterInitiator {
     val currentUserId: Int
-    val loggedIn: Boolean
 
     fun onActivityCreate()
     fun credentialsLengthCorrect(username: String, password: String): Boolean
     fun scheduleLogIn()
     fun scheduleUsersFetch()
     fun admin(id: Int): Boolean
-    fun logOut()
+    fun scheduleLogOut()
+    fun onActivityResume(): Boolean
     fun onActivityDestroy()
 }

@@ -18,14 +18,16 @@
 
 package org.exchatge.model
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.SharedPreferences
-import android.widget.Toast
+import android.provider.Settings.Secure
 import org.exchatge.model.net.Net
 import org.exchatge.model.net.NetInitiator
 import org.exchatge.model.net.UNHASHED_PASSWORD_SIZE
 import org.exchatge.model.net.USERNAME_SIZE
 import org.exchatge.model.net.UserInfo
+import org.exchatge.model.net.bytes
 import org.exchatge.presenter.PresenterImpl
 import org.exchatge.presenter.PresenterInitiator
 
@@ -33,16 +35,22 @@ class Kernel(val context: Context) {
     val crypto = Crypto()
     @Volatile var net: Net? = null; private set
     val presenter = PresenterImpl(PresenterInitiatorImpl())
+    private val sharedPrefs = sharedPreferences(this::class.simpleName!!)
+    private val encryptionKey: ByteArray
+    private val wasLoggedIn get() = sharedPrefs.getString(CREDENTIALS, null) != null
 
     // TODO: add settings to ui to adjust options which will be stored as sharedPreferences
 
     init {
         assert(!initialized)
         initialized = true
-    }
 
-    @Deprecated("use snackbar instead", replaceWith = ReplaceWith("", ""))
-    fun toast(text: String) = Toast.makeText(context, text, Toast.LENGTH_SHORT).show().also { log(text) } // TODO: debug only
+        @SuppressLint("HardwareIds")
+        encryptionKey = crypto.makeKey((
+            Secure.getString(context.contentResolver, Secure.ANDROID_ID).hashCode()
+            xor this::class.qualifiedName!!.hashCode()
+        ).bytes)
+    }
 
     private fun initializeNet() {
         assert(net == null)
@@ -52,18 +60,47 @@ class Kernel(val context: Context) {
     fun sharedPreferences(name: String): SharedPreferences =
         context.getSharedPreferences(name, Context.MODE_PRIVATE)
 
+    private fun credentials(): Pair<String, String>? {
+        val encrypted = sharedPrefs.getString(CREDENTIALS, null) ?: return null
+
+        val decrypted =
+            crypto.decryptSingle(encryptionKey, crypto.hexDecode(encrypted) ?: return null)
+            ?: return null
+
+        return (
+            String(decrypted.sliceArray(0 until USERNAME_SIZE))
+            to String(decrypted.sliceArray(USERNAME_SIZE until USERNAME_SIZE + UNHASHED_PASSWORD_SIZE))
+        )
+    }
+
+    @SuppressLint("ApplySharedPref")
+    private fun setCredentials(credentials: Pair<String, String>?) {
+        if (credentials == null) {
+            sharedPrefs.edit().remove(CREDENTIALS).commit() // TODO: fill with mess before drop
+            return
+        }
+
+        val combined = ByteArray(USERNAME_SIZE + UNHASHED_PASSWORD_SIZE)
+        credentials.first.toByteArray().let { System.arraycopy(it, 0, combined, 0, it.size) }
+        credentials.second.toByteArray().let { System.arraycopy(it, 0, combined, USERNAME_SIZE, it.size) }
+
+        val encrypted = crypto.encryptSingle(encryptionKey, combined)
+        sharedPrefs.edit().putString(CREDENTIALS, crypto.hexEncode(encrypted!!)).commit()
+    }
+
     private inner class PresenterInitiatorImpl : PresenterInitiator {
+        @Volatile private var triedLogIn = false
         override val currentUserId get() = net!!.userId
-        override val loggedIn get() = false
 
         override fun onActivityCreate() {}
 
         override fun credentialsLengthCorrect(username: String, password: String) =
             username.length in 1..USERNAME_SIZE && password.length in 1..UNHASHED_PASSWORD_SIZE
 
-        // TODO: encrypt credentials in place
-
-        override fun scheduleLogIn() = runAsync(1000) { initializeNet() }
+        override fun scheduleLogIn() {
+            triedLogIn = true
+            runAsync(1000) { initializeNet() }
+        }
 
         override fun scheduleUsersFetch() {
             assert(net != null)
@@ -72,7 +109,18 @@ class Kernel(val context: Context) {
 
         override fun admin(id: Int) = id == 0
 
-        override fun logOut() = runAsync { net!!.disconnect() }
+        override fun scheduleLogOut() {
+            setCredentials(null)
+            runAsync { net!!.disconnect() }
+        }
+
+        override fun onActivityResume(): Boolean {
+            log("bbb $wasLoggedIn $triedLogIn ${net == null}")
+            if (!wasLoggedIn || triedLogIn || net != null) return false
+
+            scheduleLogIn()
+            return true
+        }
 
         override fun onActivityDestroy() {}
     }
@@ -82,9 +130,11 @@ class Kernel(val context: Context) {
         override val crypto get() = this@Kernel.crypto
 
         override fun onConnectResult(successful: Boolean) {
-            if (successful)
-                presenter.credentials.let { net!!.logIn(it.first, it.second) }
-            else
+            if (successful) {
+                val (username, password) = credentials() ?: presenter.credentials
+                log("aaa |$username| |$password|")
+                net!!.logIn(username, password)
+            } else
                 presenter.onConnectFail()
         }
 
@@ -93,7 +143,12 @@ class Kernel(val context: Context) {
             presenter.onDisconnected()
         }
 
-        override fun onLogInResult(successful: Boolean) = presenter.onLoginResult(successful)
+        override fun onLogInResult(successful: Boolean) {
+            if (successful) { if (!wasLoggedIn) setCredentials(presenter.credentials) }
+            else { if (wasLoggedIn) setCredentials(null) }
+
+            presenter.onLoginResult(successful)
+        }
 
         override fun onNextUserFetched(user: UserInfo, last: Boolean) = presenter.onNextUserFetched(user, last)
     }
@@ -101,5 +156,7 @@ class Kernel(val context: Context) {
     private companion object {
         @JvmStatic
         private var initialized = false
+
+        private const val CREDENTIALS = "credentials"
     }
 }

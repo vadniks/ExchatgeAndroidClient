@@ -61,6 +61,7 @@ class PresenterImpl(private val initiator: PresenterInitiator): Presenter {
         { override fun handleOnBackPressed() = this@PresenterImpl.handleOnBackPressed() })
 
         initiator.onActivityCreate()
+        setUiLock(true)
     }
 
     private fun handleOnBackPressed() {
@@ -69,7 +70,7 @@ class PresenterImpl(private val initiator: PresenterInitiator): Presenter {
             Pages.CONVERSATION -> currentPage = Pages.USERS_LIST
             Pages.USERS_LIST -> {
                 setUiLock(true)
-                initiator.logOut()
+                initiator.scheduleLogOut()
             }
             Pages.LOG_IN_REGISTER -> view!!.finish()
         }
@@ -80,11 +81,7 @@ class PresenterImpl(private val initiator: PresenterInitiator): Presenter {
         loading = lock
     }
 
-    override fun onResume() {
-        if (!initiator.loggedIn) return
-        currentPage = Pages.USERS_LIST
-        updateUsersList()
-    }
+    override fun onResume() = setUiLock(initiator.onActivityResume())
 
     override fun onDestroy() {
         view = null
@@ -112,6 +109,7 @@ class PresenterImpl(private val initiator: PresenterInitiator): Presenter {
         view!!.snackbar(view!!.string(if (successful) R.string.loggedInSuccessfully else R.string.failedToLogIn))
 
         if (successful) {
+            username = ""; password = "" // TODO: fill with mess before drop
             users.clear()
             currentPage = Pages.USERS_LIST
             initiator.scheduleUsersFetch()
