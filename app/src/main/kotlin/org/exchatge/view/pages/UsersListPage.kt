@@ -136,27 +136,29 @@ private fun UserInfo(
 ) = ListItem(
     leadingContent = {
         Text(
-            text = user.id.toString(),
-            fontSize = 16.sp,
-            fontStyle = FontStyle.Italic,
-            color = MaterialTheme.colorScheme.secondary
+            text = stringResource(if (user.online) R.string.online else R.string.offline),
+            fontSize = 14.sp,
+            color = MaterialTheme.colorScheme.secondary,
+            modifier = Modifier.fillMaxWidth(.15f)
         )
     },
     headlineContent = {
         Text(
             text = user.name,
             fontSize = 16.sp,
-            fontWeight = if (!user.conversationExists) FontWeight.Normal else FontWeight.Bold
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.fillMaxWidth(.5f)
         )
     },
-    supportingContent = {
+    trailingContent = {
         Text(
-            text = stringResource(if (user.online) R.string.online else R.string.offline),
+            text = stringResource(if (user.conversationExists) R.string.continueConversation else R.string.startConversation),
             fontSize = 14.sp,
-            fontWeight = if (user.online) FontWeight.Bold else FontWeight.Normal,
-            color = MaterialTheme.colorScheme.secondary
+            color = MaterialTheme.colorScheme.secondary,
+            modifier = Modifier.fillMaxWidth(.35f)
         )
     },
+
     modifier = Modifier.fillMaxWidth().combinedClickable(
         enabled = pagesShared.controlsEnabled,
         onClick = { pagesShared.conversation(user.id, false) },

@@ -65,16 +65,16 @@ private class StubPropertyDelegate<T : Any>(private val klass: KClass<T>) {
     operator fun setValue(thisRef: Any?, property: KProperty<*>, value: T) {}
 }
 
-object PresenterStub : Presenter { // stub to make @Preview work
+object PresenterStub : Presenter { // stub to make @Preview work; can be used to adjust the preview (set values to see how things change)
     private val stringStub = StubPropertyDelegate(String::class)
 
     override val view = ViewStub
-    override val currentPage get() = Pages.LOG_IN_REGISTER
+    override val currentPage get() = Pages.USERS_LIST
     override val controlsEnabled = true
     override val loading = true
     override var username by stringStub
     override var password by stringStub
-    override val users: List<User> = emptyList()
+    override val users: List<User> = listOf(User(0, "a", false, false), User(1, "b", true, true))
     override val currentUser = ""
     override val admin = false
     override val opponentUsername = ""
