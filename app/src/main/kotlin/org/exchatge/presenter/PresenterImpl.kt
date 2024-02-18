@@ -63,14 +63,21 @@ class PresenterImpl(private val initiator: PresenterInitiator): Presenter {
         initiator.onActivityCreate()
     }
 
-    private fun handleOnBackPressed() = when (currentPage) {
-        Pages.CONVERSATION -> currentPage = Pages.USERS_LIST
-        Pages.USERS_LIST -> {
-            controlsEnabled = false // TODO: extract these to separate function
-            loading = true
-            initiator.logOut()
+    private fun handleOnBackPressed() {
+        if (!controlsEnabled) return
+        when (currentPage) {
+            Pages.CONVERSATION -> currentPage = Pages.USERS_LIST
+            Pages.USERS_LIST -> {
+                setUiLock(true)
+                initiator.logOut()
+            }
+            Pages.LOG_IN_REGISTER -> view!!.finish()
         }
-        Pages.LOG_IN_REGISTER -> view!!.finish()
+    }
+
+    private fun setUiLock(lock: Boolean) {
+        controlsEnabled = !lock
+        loading = lock
     }
 
     override fun onResume() {
@@ -90,16 +97,14 @@ class PresenterImpl(private val initiator: PresenterInitiator): Presenter {
             return
         }
 
-        controlsEnabled = false
-        loading = true
+        setUiLock(true)
         initiator.scheduleLogIn()
     }
 
     fun onConnectFail() {
         if (!activityRunning) return
         view!!.snackbar(view!!.string(R.string.failedToConnect))
-        loading = false
-        controlsEnabled = true
+        setUiLock(false)
     }
 
     fun onLoginResult(successful: Boolean) {
@@ -110,10 +115,8 @@ class PresenterImpl(private val initiator: PresenterInitiator): Presenter {
             users.clear()
             currentPage = Pages.USERS_LIST
             initiator.scheduleUsersFetch()
-        } else {
-            loading = false
-            controlsEnabled = true
-        }
+        } else
+            setUiLock(false)
     }
 
     fun onNextUserFetched(userInfo: UserInfo, last: Boolean) {
@@ -128,8 +131,7 @@ class PresenterImpl(private val initiator: PresenterInitiator): Presenter {
         }
 
         if (!last) return
-        loading = false
-        controlsEnabled = true
+        setUiLock(false)
     }
 
     fun onErrorReceived() {
@@ -138,19 +140,16 @@ class PresenterImpl(private val initiator: PresenterInitiator): Presenter {
 
     fun onDisconnected() {
         if (!activityRunning) return
+
         currentPage = Pages.LOG_IN_REGISTER
-
-        loading = false
-        controlsEnabled = true
-
+        setUiLock(false)
         view!!.snackbar(view!!.string(R.string.disconnected))
     }
 
     override fun register() {}
 
     override fun updateUsersList() {
-        controlsEnabled = false
-        loading = true
+        setUiLock(true)
         users.clear()
         initiator.scheduleUsersFetch()
     }
