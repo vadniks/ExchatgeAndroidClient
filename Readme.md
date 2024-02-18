@@ -8,10 +8,11 @@ _______ _     _ _______ _     _ _______ _______  ______ _______
 ```
 
 This is an android port of the [desktop client for linux systems](https://github.com/vadniks/ExchatgeDesktopClient).
+[The server](https://github.com/vadniks/ExchatgeServer).
 
-## Project is currently in the `concept stage`
+## Project is currently under active development
 
-## Screenshots
+## Concept screenshots
 
 ![A](screenshots/a.png "A")
 ![B](screenshots/b.png "B")
