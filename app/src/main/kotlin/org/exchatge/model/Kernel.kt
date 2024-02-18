@@ -147,11 +147,19 @@ class Kernel(val context: Context) {
             presenter.onLogInResult(successful)
         }
 
-        override fun onNextUserFetched(user: UserInfo, last: Boolean) = presenter.onNextUserFetched(user, last)
+        override fun onNextUserFetched(user: UserInfo, last: Boolean) = presenter.onNextUserFetched(user, last).also {
+            // TODO: debug only
+            if (!last) return@also
+            runAsync(5000) {
+                log("k onuf")
+                val r = net!!.createConversation(1)
+                log("k onuf $r")
+            }
+        }
 
         override fun onConversationSetUpInviteReceived(fromId: Int) = runAsync {
             log("k ocsuir $fromId")
-            val r = net!!.replyToConversationSetUpInvite(true, fromId) // TODO: debug only
+            val r = net!!.replyToConversationSetUpInvite(false, fromId) // TODO: debug only
             log("k ocsuir $r")
         }
     }
