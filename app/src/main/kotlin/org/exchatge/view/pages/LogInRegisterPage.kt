@@ -44,6 +44,8 @@ import org.exchatge.view.PagesShared
 
 private val paddingModifier = Modifier.padding(2.5f.dp)
 
+// TODO: about dialog
+
 @Composable
 fun LogInRegisterPage(pagesShared: PagesShared) = Scaffold(
     snackbarHost = { SnackbarHost(pagesShared.snackbarHostState) }

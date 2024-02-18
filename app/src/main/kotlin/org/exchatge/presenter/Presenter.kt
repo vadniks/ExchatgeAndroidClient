@@ -69,7 +69,7 @@ object PresenterStub : Presenter { // stub to make @Preview work; can be used to
     private val stringStub = StubPropertyDelegate(String::class)
 
     override val view = ViewStub
-    override val currentPage get() = Pages.USERS_LIST
+    override val currentPage get() = Pages.LOG_IN_REGISTER
     override val controlsEnabled = true
     override val loading = true
     override var username by stringStub
