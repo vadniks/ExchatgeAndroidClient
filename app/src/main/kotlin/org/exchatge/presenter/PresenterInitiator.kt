@@ -27,5 +27,6 @@ interface PresenterInitiator {
     fun scheduleLogIn()
     fun scheduleUsersFetch()
     fun admin(id: Int): Boolean
+    fun logOut()
     fun onActivityDestroy()
 }

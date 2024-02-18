@@ -72,6 +72,8 @@ class Kernel(val context: Context) {
 
         override fun admin(id: Int) = id == 0
 
+        override fun logOut() = runAsync { net!!.disconnect() }
+
         override fun onActivityDestroy() {}
     }
 

@@ -82,7 +82,7 @@ fun UsersListPage(pagesShared: PagesShared) = Scaffold(
             colors = topAppBarColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
             navigationIcon = {
                 IconButton(
-                    onClick = pagesShared::logOut,
+                    onClick = pagesShared::returnFromPage,
                     enabled = pagesShared.controlsEnabled
                 ) {
                     Icon(

@@ -65,7 +65,11 @@ class PresenterImpl(private val initiator: PresenterInitiator): Presenter {
 
     private fun handleOnBackPressed() = when (currentPage) {
         Pages.CONVERSATION -> currentPage = Pages.USERS_LIST
-        Pages.USERS_LIST -> currentPage = Pages.LOG_IN_REGISTER // TODO: log out - disconnect
+        Pages.USERS_LIST -> {
+            controlsEnabled = false // TODO: extract these to separate function
+            loading = true
+            initiator.logOut()
+        }
         Pages.LOG_IN_REGISTER -> view!!.finish()
     }
 
@@ -135,6 +139,10 @@ class PresenterImpl(private val initiator: PresenterInitiator): Presenter {
     fun onDisconnected() {
         if (!activityRunning) return
         currentPage = Pages.LOG_IN_REGISTER
+
+        loading = false
+        controlsEnabled = true
+
         view!!.snackbar(view!!.string(R.string.disconnected))
     }
 
@@ -147,13 +155,11 @@ class PresenterImpl(private val initiator: PresenterInitiator): Presenter {
         initiator.scheduleUsersFetch()
     }
 
-    override fun logOut() {}
-
     override fun administrate() {}
 
     override fun conversation(id: Int, remove: Boolean) {}
 
-    override fun returnFromPage() {}
+    override fun returnFromPage() = handleOnBackPressed()
 
     override fun fileChoose() {}
 

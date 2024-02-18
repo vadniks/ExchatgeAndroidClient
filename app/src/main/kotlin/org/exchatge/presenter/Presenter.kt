@@ -45,7 +45,6 @@ interface Presenter {
     fun logIn()
     fun register()
     fun updateUsersList()
-    fun logOut()
     fun administrate()
     fun conversation(id: Int, remove: Boolean)
     fun returnFromPage()
@@ -87,7 +86,6 @@ object PresenterStub : Presenter { // stub to make @Preview work
     override fun logIn() {}
     override fun register() {}
     override fun updateUsersList() {}
-    override fun logOut() {}
     override fun administrate() {}
     override fun conversation(id: Int, remove: Boolean) {}
     override fun returnFromPage() {}
