@@ -22,6 +22,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.SharedPreferences
 import android.provider.Settings.Secure
+import androidx.annotation.VisibleForTesting
 import org.exchatge.model.net.Net
 import org.exchatge.model.net.NetInitiator
 import org.exchatge.model.net.UNHASHED_PASSWORD_SIZE
@@ -60,9 +61,8 @@ class Kernel(val context: Context) {
     fun sharedPreferences(name: String): SharedPreferences =
         context.getSharedPreferences(name, Context.MODE_PRIVATE)
 
-    private fun credentials(): Pair<String, String>? {
-        val encrypted = sharedPrefs.getString(CREDENTIALS, null) ?: return null
-
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    fun decryptCredentials(encrypted: String): Pair<String, String>? {
         val decrypted =
             crypto.decryptSingle(encryptionKey, crypto.hexDecode(encrypted) ?: return null)
             ?: return null
@@ -73,6 +73,18 @@ class Kernel(val context: Context) {
         )
     }
 
+    private fun credentials() = sharedPrefs.getString(CREDENTIALS, null).let { if (it != null) decryptCredentials(it) else null }
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    fun encryptCredentials(credentials: Pair<String, String>): String {
+        val combined = ByteArray(USERNAME_SIZE + UNHASHED_PASSWORD_SIZE)
+        credentials.first.toByteArray().let { System.arraycopy(it, 0, combined, 0, it.size) }
+        credentials.second.toByteArray().let { System.arraycopy(it, 0, combined, USERNAME_SIZE, it.size) }
+
+        val encrypted = crypto.encryptSingle(encryptionKey, combined)
+        return crypto.hexEncode(encrypted!!)
+    }
+
     @SuppressLint("ApplySharedPref")
     private fun setCredentials(credentials: Pair<String, String>?) {
         if (credentials == null) {
@@ -80,12 +92,7 @@ class Kernel(val context: Context) {
             return
         }
 
-        val combined = ByteArray(USERNAME_SIZE + UNHASHED_PASSWORD_SIZE)
-        credentials.first.toByteArray().let { System.arraycopy(it, 0, combined, 0, it.size) }
-        credentials.second.toByteArray().let { System.arraycopy(it, 0, combined, USERNAME_SIZE, it.size) }
-
-        val encrypted = crypto.encryptSingle(encryptionKey, combined)
-        sharedPrefs.edit().putString(CREDENTIALS, crypto.hexEncode(encrypted!!)).commit()
+        sharedPrefs.edit().putString(CREDENTIALS, encryptCredentials(credentials)).commit()
     }
 
     private inner class PresenterInitiatorImpl : PresenterInitiator {
