@@ -30,6 +30,7 @@ fun log(message: String) = Log.d(null, message)
 val Context.kernel get() = (applicationContext as App).kernel
 fun runInMain(action: () -> Unit) = Dispatchers.Main.dispatch(EmptyCoroutineContext) { action() }
 fun runAsync(delay: Long = 0, action: () -> Unit) = Dispatchers.Default.dispatch(EmptyCoroutineContext) { Thread.sleep(delay); action() }
+infix fun Int.untilSize(size: Int): IntRange { assert(size >= 0); return this until this + size } // TODO: replace all those
 
 class Reference<T>(var referenced: T)
 enum class Ternary { POSITIVE, NEUTRAL, NEGATIVE } // true, else, false
