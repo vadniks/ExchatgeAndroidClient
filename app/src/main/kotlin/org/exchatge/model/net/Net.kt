@@ -478,6 +478,8 @@ class Net(private val initiator: NetInitiator) {
 
     private fun inviteProcessingTimeoutExceeded() = System.currentTimeMillis() - inviteProcessingStartMillis > TIMEOUT
 
+// JNI DETECTED ERROR IN APPLICATION: Still holding a locked object on JNI end
+
     fun replyToConversationSetUpInvite(accept: Boolean, fromId: Int): Crypto.Coders? {
         assert(running && connected && authenticated && !destroyed && fromId >= 0 && settingUpConversation && !exchangingFile)
         conversationSetupMessages.clear()
@@ -562,7 +564,7 @@ class Net(private val initiator: NetInitiator) {
     }
 
     private companion object {
-        private const val TIMEOUT = 5000
+        private const val TIMEOUT = 10000
 
         private const val FROM_ANONYMOUS = 0xffffffff.toInt()
         private const val FROM_SERVER = 0x7fffffff
