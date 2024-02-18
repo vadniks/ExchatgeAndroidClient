@@ -104,7 +104,7 @@ class PresenterImpl(private val initiator: PresenterInitiator): Presenter {
         setUiLock(false)
     }
 
-    fun onLoginResult(successful: Boolean) {
+    fun onLogInResult(successful: Boolean) {
         if (!activityRunning) return
         view!!.snackbar(view!!.string(if (successful) R.string.loggedInSuccessfully else R.string.failedToLogIn))
 

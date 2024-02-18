@@ -86,14 +86,9 @@ class Kernel(val context: Context) {
     }
 
     @SuppressLint("ApplySharedPref")
-    private fun setCredentials(credentials: Pair<String, String>?) {
-        if (credentials == null) {
-            sharedPrefs.edit().remove(CREDENTIALS).commit() // TODO: fill with mess before drop
-            return
-        }
-
-        sharedPrefs.edit().putString(CREDENTIALS, encryptCredentials(credentials)).commit()
-    }
+    private fun setCredentials(credentials: Pair<String, String>?) = sharedPrefs.edit().apply {
+        if (credentials == null) remove(CREDENTIALS) else putString(CREDENTIALS, encryptCredentials(credentials))
+    }.commit() // TODO: fill with mess before drop
 
     private inner class PresenterInitiatorImpl : PresenterInitiator {
         @Volatile private var triedLogIn = false
@@ -116,9 +111,9 @@ class Kernel(val context: Context) {
 
         override fun admin(id: Int) = id == 0
 
-        override fun scheduleLogOut() {
+        override fun scheduleLogOut() = runAsync {
             setCredentials(null)
-            runAsync { net!!.disconnect() }
+            net!!.disconnect()
         }
 
         override fun onActivityResume() =
@@ -149,7 +144,7 @@ class Kernel(val context: Context) {
             if (successful) { if (!wasLoggedIn) setCredentials(presenter.credentials) }
             else { if (wasLoggedIn) setCredentials(null) }
 
-            presenter.onLoginResult(successful)
+            presenter.onLogInResult(successful)
         }
 
         override fun onNextUserFetched(user: UserInfo, last: Boolean) = presenter.onNextUserFetched(user, last)

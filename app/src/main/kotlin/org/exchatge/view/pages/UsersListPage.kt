@@ -68,6 +68,7 @@ import androidx.compose.ui.unit.sp
 import org.exchatge.R
 import org.exchatge.view.PagesShared
 import org.exchatge.view.User
+import kotlin.math.min
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -144,7 +145,7 @@ private fun UserInfo(
     leadingContent = {
         Box(modifier = Modifier.fillMaxWidth(.05f)) {
             Box(modifier = Modifier
-                .size((LocalConfiguration.current.screenHeightDp * .02f).dp)
+                .size((LocalConfiguration.current.let { min(it.screenWidthDp, it.screenHeightDp) } * .02f).dp)
                 .clip(CircleShape)
                 .background(if (user.online) Color.Green else Color.Transparent)
                 .border(.01.dp, Color.Gray, CircleShape)) {}
