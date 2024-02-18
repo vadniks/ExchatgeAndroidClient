@@ -478,7 +478,7 @@ class Net(private val initiator: NetInitiator) {
 
     private fun inviteProcessingTimeoutExceeded() = System.currentTimeMillis() - inviteProcessingStartMillis > TIMEOUT
 
-    fun replyToConversationSetUpInvite(accept: Boolean, fromId: Int): Crypto.Coders? {
+    fun replyToConversationSetUpInvite(accept: Boolean, fromId: Int): Crypto.Coders? { // blocks the caller thread
         assert(running && connected && authenticated && !destroyed && fromId >= 0 && settingUpConversation && !exchangingFile)
         conversationSetupMessages.clear()
 
