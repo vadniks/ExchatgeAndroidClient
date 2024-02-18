@@ -114,13 +114,9 @@ class Kernel(val context: Context) {
             runAsync { net!!.disconnect() }
         }
 
-        override fun onActivityResume(): Boolean {
-            log("bbb $wasLoggedIn $triedLogIn ${net == null}")
-            if (!wasLoggedIn || triedLogIn || net != null) return false
-
-            scheduleLogIn()
-            return true
-        }
+        override fun onActivityResume() =
+            if (!wasLoggedIn || triedLogIn || net != null) false
+            else { scheduleLogIn(); true }
 
         override fun onActivityDestroy() {}
     }
@@ -132,7 +128,6 @@ class Kernel(val context: Context) {
         override fun onConnectResult(successful: Boolean) {
             if (successful) {
                 val (username, password) = credentials() ?: presenter.credentials
-                log("aaa |$username| |$password|")
                 net!!.logIn(username, password)
             } else
                 presenter.onConnectFail()
