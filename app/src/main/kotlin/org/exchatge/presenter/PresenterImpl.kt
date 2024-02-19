@@ -167,8 +167,7 @@ class PresenterImpl(private val initiator: PresenterInitiator): Presenter {
     fun showConversationSetUpDialog(requestedByHost: Boolean, opponentId: Int, opponentName: String) =
         this::conversationSetupDialogParameters.set(ConversationSetupDialogParameters(
             requestedByHost, opponentId, opponentName,
-            { initiator.onConversationSetupDialogAction(true) },
-            { initiator.onConversationSetupDialogAction(false) }
+            initiator::onConversationSetupDialogAction,
         ))
 
     fun hideConversationSetupDialog() = this::conversationSetupDialogParameters.set(null)

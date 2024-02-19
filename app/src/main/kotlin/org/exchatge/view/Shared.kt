@@ -32,23 +32,22 @@ data class ConversationSetupDialogParameters(
     val requestedByHost: Boolean,
     val opponentId: Int,
     val opponentName: String,
-    val onConfirm: () -> Unit,
-    val onDismiss: () -> Unit
+    val onAction: (Boolean) -> Unit // proceed - true, dismiss - false
 )
 
 @Composable
 fun ConversationSetupDialog(parameters: ConversationSetupDialogParameters) = AlertDialog(
-    onDismissRequest = { parameters.onDismiss() },
+    onDismissRequest = { parameters.onAction(false) },
     confirmButton = {
         Text(
             text = stringResource(R.string.proceed),
-            modifier = Modifier.clickable { parameters.onConfirm() }
+            modifier = Modifier.clickable { parameters.onAction(true) }
         )
     },
     dismissButton = {
         Text(
             text = stringResource(R.string.cancel),
-            modifier = Modifier.clickable { parameters.onDismiss() }
+            modifier = Modifier.clickable { parameters.onAction(false) }
         )
     },
     title = {
