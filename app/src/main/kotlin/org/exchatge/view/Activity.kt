@@ -87,7 +87,7 @@ fun Content(
 ) = ExchatgeTheme(
     darkTheme = if (presenter is PresenterStub) true else isSystemInDarkTheme()
 ) {
-    val pagesSharedImpl = remember { // to generate impl only once
+    val pagesShared = remember { // to generate impl only once
         val xSnackbarHostState = SnackbarHostState()
         presenter.view!!.setShowSnackbarImpl(xSnackbarHostState::showSnackbar)
 
@@ -101,10 +101,10 @@ fun Content(
         color = MaterialTheme.colorScheme.background
     ) {
         when (presenter.currentPage) {
-            Pages.LOG_IN_REGISTER -> LogInRegisterPage(pagesSharedImpl)
-            Pages.USERS_LIST -> UsersListPage(pagesSharedImpl)
-            Pages.CONVERSATION -> ConversationPage(pagesSharedImpl)
+            Pages.LOG_IN_REGISTER -> LogInRegisterPage(pagesShared)
+            Pages.USERS_LIST -> UsersListPage(pagesShared)
+            Pages.CONVERSATION -> ConversationPage(pagesShared)
         }
-        pagesSharedImpl.conversationSetupDialogParameters.let { if (it != null) ConversationSetupDialog(it) }
+        pagesShared.conversationSetupDialogParameters.let { if (it != null) ConversationSetupDialog(it) }
     }
 }
