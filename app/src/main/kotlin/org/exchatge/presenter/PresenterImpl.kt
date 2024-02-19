@@ -29,6 +29,7 @@ import org.exchatge.model.kernel
 import org.exchatge.model.net.UserInfo
 import org.exchatge.model.runInMain
 import org.exchatge.view.Activity
+import org.exchatge.view.ConversationSetupDialogParameters
 import org.exchatge.view.User
 import org.exchatge.view.View
 import org.exchatge.view.pages.Pages
@@ -40,14 +41,15 @@ class PresenterImpl(private val initiator: PresenterInitiator): Presenter {
     override var currentPage by SynchronizedMutableState(Pages.LOG_IN_REGISTER, this)
     override var controlsEnabled by SynchronizedMutableState(true, this)
     override var loading by SynchronizedMutableState(false, this)
-    override var username by mutableStateOf("")
+    override var username by mutableStateOf("") // TODO: synchronize ui string fields too?
     override var password by mutableStateOf("")
     override val users = mutableStateListOf<User>()
+    val credentials get() = username to password
     override var currentUser by mutableStateOf("")
     override var admin by mutableStateOf(false)
     override var opponentUsername = ""
     override var currentConversationMessage by mutableStateOf("")
-    val credentials get() = username to password
+    override var conversationSetupDialogParameters by SynchronizedMutableState<ConversationSetupDialogParameters?>(null, this)
 
     init {
         assert(!initialized)
@@ -161,6 +163,11 @@ class PresenterImpl(private val initiator: PresenterInitiator): Presenter {
     override fun fileChoose() {}
 
     override fun sendMessage() {}
+
+    fun showConversationSetUpDialog(requestedByHost: Boolean, opponentId: Int, opponentName: String)
+    { conversationSetupDialogParameters = ConversationSetupDialogParameters(requestedByHost, opponentId, opponentName) }
+
+    fun hideConversationSetupDialog() { conversationSetupDialogParameters = null }
 
     private class SynchronizedMutableState<T>(initial: T, private val lock: Any) {
         private val delegate = mutableStateOf(initial)

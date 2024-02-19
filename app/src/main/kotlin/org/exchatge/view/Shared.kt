@@ -26,8 +26,10 @@ import org.exchatge.R
 
 data class User(val id: Int, val name: String, val online: Boolean, val conversationExists: Boolean)
 
+data class ConversationSetupDialogParameters(val requestedByHost: Boolean, val opponentId: Int, val opponentName: String)
+
 @Composable
-fun ConversationSetupDialog(requestedByHost: Boolean, opponentId: Int, opponentName: String) = AlertDialog(
+fun ConversationSetupDialog(parameters: ConversationSetupDialogParameters) = AlertDialog(
     onDismissRequest = {},
     confirmButton = {
         Text(stringResource(R.string.proceed))
@@ -39,8 +41,8 @@ fun ConversationSetupDialog(requestedByHost: Boolean, opponentId: Int, opponentN
         Text(stringResource(R.string.startConversation))
     },
     text = {
-        val prefix = stringResource(if (requestedByHost) R.string.sendConversationSetupRequestTo else R.string.conversationSetupRequestReceivedFrom)
-        Text("$prefix $opponentName (${stringResource(R.string.id)} $opponentId)")
+        val prefix = stringResource(if (parameters.requestedByHost) R.string.sendConversationSetupRequestTo else R.string.conversationSetupRequestReceivedFrom)
+        Text("$prefix ${parameters.opponentName} (${stringResource(R.string.id)} ${parameters.opponentId})")
     },
 )
 

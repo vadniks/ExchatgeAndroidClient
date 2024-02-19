@@ -18,6 +18,7 @@
 
 package org.exchatge.view
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedCallback
@@ -78,16 +79,19 @@ class Activity : ComponentActivity(), View {
     }
 }
 
+@SuppressLint("RememberReturnType")
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun Content(
     presenter: Presenter = PresenterStub // gets replaced at runtime as in preview mode other modules and the activity itself are NOT even instantiated so stubs are needed
 ) = ExchatgeTheme(darkTheme = if (presenter is PresenterStub) true else isSystemInDarkTheme()) {
     val xSnackbarHostState = remember { SnackbarHostState() }
-    presenter.view!!.setShowSnackbarImpl(xSnackbarHostState::showSnackbar)
+    remember { presenter.view!!.setShowSnackbarImpl(xSnackbarHostState::showSnackbar) }
 
-    val pagesSharedImpl = object : PagesShared, Presenter by presenter { // complex dependency injection
-        override val snackbarHostState = xSnackbarHostState
+    val pagesSharedImpl = remember { // to generate impl only once
+        object : PagesShared, Presenter by presenter { // complex dependency injection
+            override val snackbarHostState = xSnackbarHostState
+        }
     }
 
     Surface(
@@ -99,5 +103,6 @@ fun Content(
             Pages.USERS_LIST -> UsersListPage(pagesSharedImpl)
             Pages.CONVERSATION -> ConversationPage(pagesSharedImpl)
         }
+        ConversationSetupDialog(pagesSharedImpl.conversationSetupDialogParameters ?: return@Surface)
     }
 }
