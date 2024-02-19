@@ -156,7 +156,7 @@ class Kernel(val context: Context) {
             if (!last) return@also
             runAsync(5000) {
                 log("k onuf")
-                presenter.showConversationSetUpDialog(true, 1, "a")
+                presenter.showConversationSetUpDialog(false, 1, "user1")
 //                val r = net!!.createConversation(1)
 //                log("k onuf $r")
             }

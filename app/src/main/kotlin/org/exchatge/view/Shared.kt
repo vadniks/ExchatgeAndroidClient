@@ -28,6 +28,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.window.Popup
 import org.exchatge.R
 
@@ -67,8 +72,19 @@ fun ConversationSetupDialog(parameters: ConversationSetupDialogParameters) = Pop
             Text(stringResource(R.string.startConversation))
         },
         text = {
-            val prefix = stringResource(if (parameters.requestedByHost) R.string.sendConversationSetupRequestTo else R.string.conversationSetupRequestReceivedFrom)
-            Text("$prefix ${parameters.opponentName} (${stringResource(R.string.id)} ${parameters.opponentId})")
+            Text(
+                text = buildAnnotatedString {
+                    append(stringResource(
+                        if (parameters.requestedByHost) R.string.sendConversationSetupRequestTo
+                        else R.string.conversationSetupRequestReceivedFrom
+                    ))
+                    append(' ')
+                    withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append(parameters.opponentName) }
+                    append(' ')
+                    append("(${stringResource(R.string.id)} ${parameters.opponentId})")
+                },
+                textAlign = TextAlign.Justify
+            )
         }
     )
 }
