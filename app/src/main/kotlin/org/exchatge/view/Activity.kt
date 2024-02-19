@@ -62,7 +62,7 @@ class Activity : ComponentActivity(), View {
 
     override fun snackbar(text: String) {
         assert(running)
-        lifecycleScope.launch { showSnackbarImpl(text) }
+        lifecycleScope.launch { showSnackbarImpl(text) } // TODO: LaunchedEffect
     }
 
     override fun string(id: Int) = resources.getString(id)
