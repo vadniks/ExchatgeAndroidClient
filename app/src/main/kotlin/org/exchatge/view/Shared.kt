@@ -18,24 +18,38 @@
 
 package org.exchatge.view
 
+import androidx.compose.foundation.clickable
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import org.exchatge.R
 
 data class User(val id: Int, val name: String, val online: Boolean, val conversationExists: Boolean)
 
-data class ConversationSetupDialogParameters(val requestedByHost: Boolean, val opponentId: Int, val opponentName: String)
+data class ConversationSetupDialogParameters(
+    val requestedByHost: Boolean,
+    val opponentId: Int,
+    val opponentName: String,
+    val onConfirm: () -> Unit,
+    val onDismiss: () -> Unit
+)
 
 @Composable
 fun ConversationSetupDialog(parameters: ConversationSetupDialogParameters) = AlertDialog(
-    onDismissRequest = {},
+    onDismissRequest = { parameters.onDismiss() },
     confirmButton = {
-        Text(stringResource(R.string.proceed))
+        Text(
+            text = stringResource(R.string.proceed),
+            modifier = Modifier.clickable { parameters.onConfirm() }
+        )
     },
     dismissButton = {
-        Text(stringResource(R.string.cancel))
+        Text(
+            text = stringResource(R.string.cancel),
+            modifier = Modifier.clickable { parameters.onDismiss() }
+        )
     },
     title = {
         Text(stringResource(R.string.startConversation))
@@ -43,7 +57,7 @@ fun ConversationSetupDialog(parameters: ConversationSetupDialogParameters) = Ale
     text = {
         val prefix = stringResource(if (parameters.requestedByHost) R.string.sendConversationSetupRequestTo else R.string.conversationSetupRequestReceivedFrom)
         Text("$prefix ${parameters.opponentName} (${stringResource(R.string.id)} ${parameters.opponentId})")
-    },
+    }
 )
 
 @Composable

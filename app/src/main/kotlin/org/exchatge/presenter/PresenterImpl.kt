@@ -164,10 +164,14 @@ class PresenterImpl(private val initiator: PresenterInitiator): Presenter {
 
     override fun sendMessage() {}
 
-    fun showConversationSetUpDialog(requestedByHost: Boolean, opponentId: Int, opponentName: String)
-    { conversationSetupDialogParameters = ConversationSetupDialogParameters(requestedByHost, opponentId, opponentName) }
+    fun showConversationSetUpDialog(requestedByHost: Boolean, opponentId: Int, opponentName: String) =
+        this::conversationSetupDialogParameters.set(ConversationSetupDialogParameters(
+            requestedByHost, opponentId, opponentName,
+            { initiator.onConversationSetupDialogAction(true) },
+            { initiator.onConversationSetupDialogAction(false) }
+        ))
 
-    fun hideConversationSetupDialog() { conversationSetupDialogParameters = null }
+    fun hideConversationSetupDialog() = this::conversationSetupDialogParameters.set(null)
 
     private class SynchronizedMutableState<T>(initial: T, private val lock: Any) {
         private val delegate = mutableStateOf(initial)

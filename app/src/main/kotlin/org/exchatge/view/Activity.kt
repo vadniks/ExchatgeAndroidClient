@@ -67,6 +67,8 @@ class Activity : ComponentActivity(), View {
 
     override fun string(id: Int) = resources.getString(id)
 
+    override fun launchInLifecycleScope(action: suspend () -> Unit) { lifecycleScope.launch { action() } }
+
     override fun onResume() {
         super.onResume()
         presenter.onResume()
@@ -103,6 +105,6 @@ fun Content(
             Pages.USERS_LIST -> UsersListPage(pagesSharedImpl)
             Pages.CONVERSATION -> ConversationPage(pagesSharedImpl)
         }
-        ConversationSetupDialog(pagesSharedImpl.conversationSetupDialogParameters ?: return@Surface)
+        pagesSharedImpl.conversationSetupDialogParameters.let { if (it != null) ConversationSetupDialog(it) }
     }
 }

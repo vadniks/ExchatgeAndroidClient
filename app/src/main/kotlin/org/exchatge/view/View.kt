@@ -26,6 +26,7 @@ interface View {
     fun setShowSnackbarImpl(impl: suspend (String) -> Unit)
     fun snackbar(text: String)
     fun string(id: Int): String
+    fun launchInLifecycleScope(action: suspend () -> Unit)
 }
 
 object ViewStub : View { // stub to make @Preview work
@@ -34,4 +35,5 @@ object ViewStub : View { // stub to make @Preview work
     override fun setShowSnackbarImpl(impl: suspend (String) -> Unit) {}
     override fun snackbar(text: String) {}
     override fun string(id: Int) = ""
+    override fun launchInLifecycleScope(action: suspend () -> Unit) {}
 }

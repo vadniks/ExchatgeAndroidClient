@@ -116,6 +116,10 @@ class Kernel(val context: Context) {
             net!!.disconnect()
         }
 
+        override fun onConversationSetupDialogAction(accepted: Boolean) {
+            if (!accepted) presenter.hideConversationSetupDialog()
+        }
+
         override fun onActivityResume() =
             if (!wasLoggedIn || triedLogIn || net != null) false
             else { scheduleLogIn(); true }
@@ -152,15 +156,16 @@ class Kernel(val context: Context) {
             if (!last) return@also
             runAsync(5000) {
                 log("k onuf")
-                val r = net!!.createConversation(1)
-                log("k onuf $r")
+                presenter.showConversationSetUpDialog(true, 1, "a")
+//                val r = net!!.createConversation(1)
+//                log("k onuf $r")
             }
         }
 
         override fun onConversationSetUpInviteReceived(fromId: Int) = runAsync {
             log("k ocsuir $fromId")
-            val r = net!!.replyToConversationSetUpInvite(false, fromId) // TODO: debug only
-            log("k ocsuir $r")
+//            val r = net!!.replyToConversationSetUpInvite(false, fromId) // TODO: debug only
+//            log("k ocsuir $r")
         }
     }
 
