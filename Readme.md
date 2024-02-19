@@ -7,6 +7,8 @@ _______ _     _ _______ _     _ _______ _______  ______ _______
 |______ _/   \_ |_____  |     | |     |    |    |_____| |______
 ```
 
+![Icon](app/src/main/res/mipmap/exchatge_icon.png "Icon")
+
 This is an android port of the [desktop client for linux systems](https://github.com/vadniks/ExchatgeDesktopClient). \
 [The server](https://github.com/vadniks/ExchatgeServer).
 
