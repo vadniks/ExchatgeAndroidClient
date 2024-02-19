@@ -18,7 +18,6 @@
 
 package org.exchatge.view
 
-import android.annotation.SuppressLint
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedCallback
@@ -81,7 +80,6 @@ class Activity : ComponentActivity(), View {
     }
 }
 
-@SuppressLint("RememberReturnType")
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun Content(
