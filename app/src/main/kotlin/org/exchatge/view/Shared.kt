@@ -18,15 +18,27 @@
 
 package org.exchatge.view
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.window.Popup
 import org.exchatge.R
 
 data class User(val id: Int, val name: String, val online: Boolean, val conversationExists: Boolean)
+
+@Composable
+private fun PopupOverlay(content: @Composable () -> Unit) = Popup {
+    Box(modifier = Modifier.fillMaxSize().background(Color.Transparent.copy(alpha = .25f))) {
+        content()
+    }
+}
 
 data class ConversationSetupDialogParameters(
     val requestedByHost: Boolean,
@@ -36,28 +48,30 @@ data class ConversationSetupDialogParameters(
 )
 
 @Composable
-fun ConversationSetupDialog(parameters: ConversationSetupDialogParameters) = AlertDialog(
-    onDismissRequest = { parameters.onAction(false) },
-    confirmButton = {
-        Text(
-            text = stringResource(R.string.proceed),
-            modifier = Modifier.clickable { parameters.onAction(true) }
-        )
-    },
-    dismissButton = {
-        Text(
-            text = stringResource(R.string.cancel),
-            modifier = Modifier.clickable { parameters.onAction(false) }
-        )
-    },
-    title = {
-        Text(stringResource(R.string.startConversation))
-    },
-    text = {
-        val prefix = stringResource(if (parameters.requestedByHost) R.string.sendConversationSetupRequestTo else R.string.conversationSetupRequestReceivedFrom)
-        Text("$prefix ${parameters.opponentName} (${stringResource(R.string.id)} ${parameters.opponentId})")
-    }
-)
+fun ConversationSetupDialog(parameters: ConversationSetupDialogParameters) = PopupOverlay { // TODO: move in separate file (Dialogs.kt)
+    AlertDialog(
+        onDismissRequest = { parameters.onAction(false) },
+        confirmButton = {
+            Text(
+                text = stringResource(R.string.proceed),
+                modifier = Modifier.clickable { parameters.onAction(true) }
+            )
+        },
+        dismissButton = {
+            Text(
+                text = stringResource(R.string.cancel),
+                modifier = Modifier.clickable { parameters.onAction(false) }
+            )
+        },
+        title = {
+            Text(stringResource(R.string.startConversation))
+        },
+        text = {
+            val prefix = stringResource(if (parameters.requestedByHost) R.string.sendConversationSetupRequestTo else R.string.conversationSetupRequestReceivedFrom)
+            Text("$prefix ${parameters.opponentName} (${stringResource(R.string.id)} ${parameters.opponentId})")
+        }
+    )
+}
 
 @Composable
 fun FileExchangeDialog(
