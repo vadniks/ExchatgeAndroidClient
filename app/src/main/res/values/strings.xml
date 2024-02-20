@@ -59,4 +59,5 @@
     <string name="conversationSetup">Conversation setup</string>
     <string name="succeeded">succeeded</string>
     <string name="failed">failed</string>
+    <string name="opponentIsOffline">Opponent is offline</string>
 </resources>

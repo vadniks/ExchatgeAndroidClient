@@ -24,7 +24,7 @@ import android.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlin.coroutines.EmptyCoroutineContext
 
-@Suppress("UnusedReceiverParameter") val Any.unit get() = Unit
+@Suppress("UnusedReceiverParameter") val Any?.unit get() = Unit
 
 fun assert(condition: Boolean) { if (!condition) throw IllegalStateException() }
 fun assertNotMainThread() = assert(Looper.getMainLooper().thread !== Thread.currentThread())

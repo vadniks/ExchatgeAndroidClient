@@ -28,6 +28,7 @@ import org.exchatge.R
 import org.exchatge.model.kernel
 import org.exchatge.model.net.UserInfo
 import org.exchatge.model.runInMain
+import org.exchatge.model.unit
 import org.exchatge.view.Activity
 import org.exchatge.view.ConversationSetupDialogParameters
 import org.exchatge.view.User
@@ -180,6 +181,9 @@ class PresenterImpl(private val initiator: PresenterInitiator): Presenter {
             + view!!.string(if (result ?: return) R.string.succeeded else R.string.failed)
         )
     }
+
+    fun notifyUserOpponentIsOffline() =
+        if (activityRunning) view!!.snackbar(view!!.string(R.string.opponentIsOffline)).unit else Unit
 
     private class SynchronizedMutableState<T>(initial: T, private val lock: Any) {
         private val delegate = mutableStateOf(initial)

@@ -142,13 +142,23 @@ class Kernel(val context: Context) {
                     else net!!.createConversation(opponentId)
 
                 // TODO: use coders
+                // TODO: update users list & messages
                 presenter.onSettingUpConversation(coders != null)
             }
         }
 
-        override fun onConversationRequested(id: Int, remove: Boolean) =
-            if (!remove) presenter.showConversationSetUpDialog(true, id, String(findUser(id)!!.name))
-            else log("remove conversation #$id") // TODO
+        override fun onConversationRequested(id: Int, remove: Boolean) {
+            if (remove) {
+                log("remove conversation #$id") // TODO
+                return
+            }
+
+            val user = findUser(id)!!
+            if (user.connected) // TODO: rename to online
+                presenter.showConversationSetUpDialog(true, id, String(user.name))
+            else
+                presenter.notifyUserOpponentIsOffline()
+        }
 
         override fun onActivityResume() =
             if (!wasLoggedIn || triedLogIn || net != null) false
