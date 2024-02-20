@@ -18,6 +18,7 @@
 
 package org.exchatge.view.pages
 
+import android.content.res.Configuration
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -25,6 +26,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Scaffold
@@ -34,6 +36,7 @@ import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -43,6 +46,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.exchatge.R
 import org.exchatge.view.PagesShared
+import kotlin.math.min
 
 private val paddingModifier = Modifier.padding(2.5f.dp)
 
@@ -64,8 +68,11 @@ fun LogInRegisterPage(pagesShared: PagesShared) = Scaffold(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Image(
-                painter = painterResource(R.mipmap.exchatge_icon),
-                contentDescription = stringResource(R.string.appName)
+                painter = painterResource(R.drawable.exchatge_icon),
+                contentDescription = stringResource(R.string.appName),
+                modifier = Modifier.size((LocalConfiguration.current.let {
+                    min(it.screenWidthDp, it.screenHeightDp) * (if (it.orientation == Configuration.ORIENTATION_PORTRAIT) .25f else .2f)
+                }).dp)
             )
             Text(
                 stringResource(R.string.appName),

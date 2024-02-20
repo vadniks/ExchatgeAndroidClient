@@ -29,9 +29,9 @@
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
-        android:icon="@mipmap/exchatge_icon"
+        android:icon="@drawable/exchatge_icon"
         android:label="@string/appName"
-        android:roundIcon="@mipmap/exchatge_icon"
+        android:roundIcon="@drawable/exchatge_icon"
         android:supportsRtl="true"
         android:theme="@style/Theme.Exchatge"
         tools:targetApi="34">
