@@ -31,6 +31,7 @@ import org.exchatge.model.net.UserInfo
 import org.exchatge.model.net.bytes
 import org.exchatge.presenter.PresenterImpl
 import org.exchatge.presenter.PresenterInitiator
+import java.util.Collections
 
 class Kernel(val context: Context) {
     val crypto = Crypto()
@@ -39,6 +40,9 @@ class Kernel(val context: Context) {
     private val sharedPrefs = sharedPreferences(this::class.simpleName!!)
     private val encryptionKey: ByteArray
     private val wasLoggedIn get() = sharedPrefs.getString(CREDENTIALS, null) != null
+    private val users = ArrayList<UserInfo>()
+    private val lock = this
+    @Volatile private var inviteSenderId = 0
 
     // TODO: add settings to ui to adjust options which will be stored as sharedPreferences
 
@@ -101,12 +105,12 @@ class Kernel(val context: Context) {
 
         override fun scheduleLogIn() {
             triedLogIn = true
-            runAsync(1000) { initializeNet() }
+            runAsync(1000, this@Kernel::initializeNet)
         }
 
         override fun scheduleUsersFetch() {
             assert(net != null)
-            runAsync { net!!.fetchUsers() }
+            runAsync(action = net!!::fetchUsers)
         }
 
         override fun admin(id: Int) = id == 0
@@ -117,7 +121,13 @@ class Kernel(val context: Context) {
         }
 
         override fun onConversationSetupDialogAction(accepted: Boolean) {
-            if (!accepted) presenter.hideConversationSetupDialog()
+            presenter.onReplyToConversationSetup(null)
+            presenter.hideConversationSetupDialog()
+
+            runAsync {
+                val coders = net!!.replyToConversationSetUpInvite(accepted, inviteSenderId)
+                presenter.onReplyToConversationSetup(coders != null)
+            }
         }
 
         override fun onActivityResume() =
@@ -131,7 +141,7 @@ class Kernel(val context: Context) {
         override val context get() = this@Kernel.context
         override val crypto get() = this@Kernel.crypto
 
-        override fun onConnectResult(successful: Boolean) {
+        override fun onConnectResult(successful: Boolean) = runAsync {
             if (successful) {
                 val (username, password) = credentials() ?: presenter.credentials
                 net!!.logIn(username, password)
@@ -141,31 +151,45 @@ class Kernel(val context: Context) {
 
         override fun onNetDestroy() {
             net = null
-            presenter.onDisconnected()
+            runAsync(action = presenter::onDisconnected)
         }
 
         override fun onLogInResult(successful: Boolean) {
             if (successful) { if (!wasLoggedIn) setCredentials(presenter.credentials) }
             else { if (wasLoggedIn) setCredentials(null) }
 
-            presenter.onLogInResult(successful)
+            runAsync { presenter.onLogInResult(successful) }
         }
 
-        override fun onNextUserFetched(user: UserInfo, last: Boolean) = presenter.onNextUserFetched(user, last).also {
-            // TODO: debug only
-            if (!last) return@also
-            runAsync(5000) {
-                log("k onuf")
-                presenter.showConversationSetUpDialog(false, 1, "user1")
-//                val r = net!!.createConversation(1)
-//                log("k onuf $r")
+        override fun onNextUserFetched(user: UserInfo, last: Boolean) = runAsync {
+            synchronized(lock) {
+                if (user.id == 0) users.clear() // first
+                users.add(user)
             }
+            presenter.onNextUserFetched(user, last)
         }
 
         override fun onConversationSetUpInviteReceived(fromId: Int) = runAsync {
-            log("k ocsuir $fromId")
-//            val r = net!!.replyToConversationSetUpInvite(false, fromId) // TODO: debug only
-//            log("k ocsuir $r")
+            val user = synchronized(lock) {
+                log(users)
+
+                val index = Collections.binarySearch(users as List<Any>, fromId) { user, xFromId ->
+                    user as UserInfo
+                    xFromId as Int
+
+                    when {
+                        user.id < xFromId -> -1
+                        user.id > xFromId -> 1
+                        else -> 0
+                    }
+                }
+
+                assert(index >= 0)
+                users[index]
+            }
+
+            inviteSenderId = fromId
+            presenter.showConversationSetUpDialog(false, fromId, String(user.name))
         }
     }
 

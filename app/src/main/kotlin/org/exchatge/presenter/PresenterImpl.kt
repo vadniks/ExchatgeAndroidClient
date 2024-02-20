@@ -172,6 +172,12 @@ class PresenterImpl(private val initiator: PresenterInitiator): Presenter {
 
     fun hideConversationSetupDialog() = this::conversationSetupDialogParameters.set(null)
 
+    fun onReplyToConversationSetup(result: Boolean? = null) {
+        if (!activityRunning) return
+        setUiLock(result == null)
+        view!!.snackbar("Conversation set up " + if (result ?: return) "succeeded" else "failed") // TODO: extract string
+    }
+
     private class SynchronizedMutableState<T>(initial: T, private val lock: Any) {
         private val delegate = mutableStateOf(initial)
 
