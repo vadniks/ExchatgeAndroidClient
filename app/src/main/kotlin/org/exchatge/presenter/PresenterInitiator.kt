@@ -27,7 +27,8 @@ interface PresenterInitiator {
     fun scheduleUsersFetch()
     fun admin(id: Int): Boolean
     fun scheduleLogOut()
-    fun onConversationSetupDialogAction(accepted: Boolean)
+    fun onConversationSetupDialogAction(accepted: Boolean, requestedByHost: Boolean, opponentId: Int)
+    fun onConversationRequested(id: Int, remove: Boolean)
     fun onActivityResume(): Boolean
     fun onActivityDestroy()
 }

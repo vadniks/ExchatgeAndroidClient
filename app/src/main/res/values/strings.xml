@@ -56,4 +56,7 @@
     <string name="failedToLogIn">Failed to log in</string>
     <string name="disconnected">Disconnected</string>
     <string name="update">Update</string>
+    <string name="conversationSetup">Conversation setup</string>
+    <string name="succeeded">succeeded</string>
+    <string name="failed">failed</string>
 </resources>

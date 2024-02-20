@@ -43,7 +43,6 @@ class Kernel(val context: Context) {
     private val wasLoggedIn get() = sharedPrefs.getString(CREDENTIALS, null) != null
     private val users = ArrayList<UserInfo>()
     private val lock = this
-    @Volatile private var inviteSenderId = 0
 
     // TODO: add settings to ui to adjust options which will be stored as sharedPreferences
 
@@ -95,6 +94,17 @@ class Kernel(val context: Context) {
         if (credentials == null) remove(CREDENTIALS) else putString(CREDENTIALS, encryptCredentials(credentials))
     }.commit() // TODO: fill with mess before drop
 
+    private fun findUser(id: Int) = synchronized(lock) {
+        val index = Collections.binarySearch(users as List<Any>, id) { user, xId ->
+            user as UserInfo
+            xId as Int
+            // https://en.cppreference.com/w/c/algorithm/bsearch see example section
+            (user.id > xId).byte - (user.id < xId).byte
+        }
+
+        if (index >= 0) users[index] else null
+    }
+
     private inner class PresenterInitiatorImpl : PresenterInitiator {
         @Volatile private var triedLogIn = false
         override val currentUserId get() = net!!.userId
@@ -121,15 +131,27 @@ class Kernel(val context: Context) {
             net!!.disconnect()
         }
 
-        override fun onConversationSetupDialogAction(accepted: Boolean) {
-            presenter.onReplyToConversationSetup(null)
+        override fun onConversationSetupDialogAction(accepted: Boolean, requestedByHost: Boolean, opponentId: Int) {
+            if (requestedByHost && !accepted) {
+                presenter.hideConversationSetupDialog()
+                return
+            }
+
+            presenter.onSettingUpConversation(null)
             presenter.hideConversationSetupDialog()
 
             runAsync {
-                val coders = net!!.replyToConversationSetUpInvite(accepted, inviteSenderId)
-                presenter.onReplyToConversationSetup(coders != null)
+                val coders =
+                    if (!requestedByHost) net!!.replyToConversationSetUpInvite(accepted, opponentId)
+                    else net!!.createConversation(opponentId)
+
+                // TODO: use coders
+                presenter.onSettingUpConversation(coders != null)
             }
         }
+
+        override fun onConversationRequested(id: Int, remove: Boolean) =
+            presenter.showConversationSetUpDialog(true, id, String(findUser(id)!!.name))
 
         override fun onActivityResume() =
             if (!wasLoggedIn || triedLogIn || net != null) false
@@ -176,22 +198,7 @@ class Kernel(val context: Context) {
         }
 
         override fun onConversationSetUpInviteReceived(fromId: Int) = runAsync {
-            val user = synchronized(lock) {
-                log(users)
-
-                val index = Collections.binarySearch(users as List<Any>, fromId) { user, xFromId ->
-                    user as UserInfo
-                    xFromId as Int
-                    // https://en.cppreference.com/w/c/algorithm/bsearch see example section
-                    (user.id > xFromId).byte - (user.id < xFromId).byte
-                }
-
-                assert(index >= 0)
-                users[index]
-            }
-
-            inviteSenderId = fromId
-            presenter.showConversationSetUpDialog(false, fromId, String(user.name))
+            presenter.showConversationSetUpDialog(false, fromId, String(findUser(fromId)!!.name))
         }
     }
 

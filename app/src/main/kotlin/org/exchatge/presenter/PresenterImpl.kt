@@ -156,7 +156,7 @@ class PresenterImpl(private val initiator: PresenterInitiator): Presenter {
 
     override fun administrate() {}
 
-    override fun conversation(id: Int, remove: Boolean) {}
+    override fun conversation(id: Int, remove: Boolean) = initiator.onConversationRequested(id, remove)
 
     override fun returnFromPage() = handleOnBackPressed()
 
@@ -166,16 +166,19 @@ class PresenterImpl(private val initiator: PresenterInitiator): Presenter {
 
     fun showConversationSetUpDialog(requestedByHost: Boolean, opponentId: Int, opponentName: String) =
         this::conversationSetupDialogParameters.set(ConversationSetupDialogParameters(
-            requestedByHost, opponentId, opponentName,
-            initiator::onConversationSetupDialogAction,
-        ))
+            requestedByHost, opponentId, opponentName
+        ) { initiator.onConversationSetupDialogAction(it, requestedByHost, opponentId) })
 
     fun hideConversationSetupDialog() = this::conversationSetupDialogParameters.set(null)
 
-    fun onReplyToConversationSetup(result: Boolean? = null) {
+    fun onSettingUpConversation(result: Boolean? = null) {
         if (!activityRunning) return
         setUiLock(result == null)
-        view!!.snackbar("Conversation set up " + if (result ?: return) "succeeded" else "failed") // TODO: extract string
+
+        view!!.snackbar(
+            view!!.string(R.string.conversationSetup) + ' '
+            + view!!.string(if (result ?: return) R.string.succeeded else R.string.failed)
+        )
     }
 
     private class SynchronizedMutableState<T>(initial: T, private val lock: Any) {
