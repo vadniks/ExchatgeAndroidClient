@@ -40,9 +40,7 @@ data class User(val id: Int, val name: String, val online: Boolean, val conversa
 
 @Composable
 private fun PopupOverlay(content: @Composable () -> Unit) = Popup {
-    Box(modifier = Modifier.fillMaxSize().background(Color.Transparent.copy(alpha = .25f))) {
-        content()
-    }
+    Box(modifier = Modifier.fillMaxSize().background(Color.Transparent.copy(alpha = .25f))) { content() }
 }
 
 data class ConversationSetupDialogParameters(
