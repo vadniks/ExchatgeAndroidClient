@@ -97,7 +97,7 @@ class Kernel(val context: Context) {
     private fun findUser(id: Int) = synchronized(lock) {
         val index = Collections.binarySearch(users as List<Any>, id) { user, xId ->
             user as UserInfo
-            xId as Int
+            xId as Int // 'cause I just can!
             // https://en.cppreference.com/w/c/algorithm/bsearch see example section
             (user.id > xId).byte - (user.id < xId).byte
         }
