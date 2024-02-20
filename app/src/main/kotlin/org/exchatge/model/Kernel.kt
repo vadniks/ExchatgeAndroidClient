@@ -132,13 +132,9 @@ class Kernel(val context: Context) {
         }
 
         override fun onConversationSetupDialogAction(accepted: Boolean, requestedByHost: Boolean, opponentId: Int) {
-            if (requestedByHost && !accepted) {
-                presenter.hideConversationSetupDialog()
-                return
-            }
-
-            presenter.onSettingUpConversation(null)
             presenter.hideConversationSetupDialog()
+            if (requestedByHost && !accepted) return
+            presenter.onSettingUpConversation(null)
 
             runAsync {
                 val coders =
@@ -151,7 +147,8 @@ class Kernel(val context: Context) {
         }
 
         override fun onConversationRequested(id: Int, remove: Boolean) =
-            presenter.showConversationSetUpDialog(true, id, String(findUser(id)!!.name))
+            if (!remove) presenter.showConversationSetUpDialog(true, id, String(findUser(id)!!.name))
+            else log("remove conversation #$id") // TODO
 
         override fun onActivityResume() =
             if (!wasLoggedIn || triedLogIn || net != null) false

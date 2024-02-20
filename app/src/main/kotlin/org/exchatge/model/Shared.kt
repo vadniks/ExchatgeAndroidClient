@@ -24,9 +24,11 @@ import android.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlin.coroutines.EmptyCoroutineContext
 
+@Suppress("UnusedReceiverParameter") val Any.unit get() = Unit
+
 fun assert(condition: Boolean) { if (!condition) throw IllegalStateException() }
 fun assertNotMainThread() = assert(Looper.getMainLooper().thread !== Thread.currentThread())
-fun log(vararg messages: Any?) = Log.d(null, messages.let { var s = ""; for (i in it) s += "$i "; s })
+fun log(vararg messages: Any?) = Log.d(null, messages.let { var s = ""; for (i in it) s += "$i "; s }).unit
 val Context.kernel get() = (applicationContext as App).kernel
 fun runInMain(action: () -> Unit) = Dispatchers.Main.dispatch(EmptyCoroutineContext) { action() }
 fun runAsync(delay: Long = 0, action: () -> Unit) = Dispatchers.Default.dispatch(EmptyCoroutineContext) { Thread.sleep(delay); action() }
