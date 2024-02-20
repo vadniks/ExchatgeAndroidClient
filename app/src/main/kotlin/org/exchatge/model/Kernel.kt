@@ -28,6 +28,7 @@ import org.exchatge.model.net.NetInitiator
 import org.exchatge.model.net.UNHASHED_PASSWORD_SIZE
 import org.exchatge.model.net.USERNAME_SIZE
 import org.exchatge.model.net.UserInfo
+import org.exchatge.model.net.byte
 import org.exchatge.model.net.bytes
 import org.exchatge.presenter.PresenterImpl
 import org.exchatge.presenter.PresenterInitiator
@@ -163,9 +164,14 @@ class Kernel(val context: Context) {
 
         override fun onNextUserFetched(user: UserInfo, last: Boolean) = runAsync {
             synchronized(lock) {
-                if (user.id == 0) users.clear() // first
+                if (user.id == 0) { // first
+                    assert(!last)
+                    users.clear()
+                }
+
                 users.add(user)
             }
+
             presenter.onNextUserFetched(user, last)
         }
 
@@ -176,12 +182,8 @@ class Kernel(val context: Context) {
                 val index = Collections.binarySearch(users as List<Any>, fromId) { user, xFromId ->
                     user as UserInfo
                     xFromId as Int
-
-                    when {
-                        user.id < xFromId -> -1
-                        user.id > xFromId -> 1
-                        else -> 0
-                    }
+                    // https://en.cppreference.com/w/c/algorithm/bsearch see example section
+                    (user.id > xFromId).byte - (user.id < xFromId).byte
                 }
 
                 assert(index >= 0)
