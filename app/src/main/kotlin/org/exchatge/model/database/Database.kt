@@ -28,29 +28,15 @@ import org.exchatge.model.log
 
 @androidx.room.Database(version = 1, entities = [Conversation::class, Message::class])
 abstract class Database : RoomDatabase() {
-    abstract val conversationDao: ConversationDao
-    abstract val messageDao: MessageDao
+    protected abstract val conversationDaoImpl: ConversationDao
+    protected abstract val messageDaoImpl: MessageDao
     private lateinit var encryptionKey: ByteArray
     private lateinit var crypto: Crypto
 
-    override fun init(configuration: DatabaseConfiguration) {
-        super.init(configuration)
-
-        for (i in conversationDao.javaClass.superclass.declaredFields) i.apply {
-            when {
-                name.contains(conversationDao::encrypt.name) -> {
-                    isAccessible = true
-                    set(conversationDao, this@Database::encrypt)
-                    isAccessible = false
-                }
-                name.contains(conversationDao::decrypt.name) -> {
-                    isAccessible = true
-                    set(conversationDao, this@Database::decrypt)
-                    isAccessible = false
-                }
-            }
-        }
-    }
+    val conversationDao by lazy { object : ConversationDao by conversationDaoImpl {
+        override fun add(conversation: Conversation) = conversationDaoImpl.add(conversation.copy(coders = encrypt(conversation.coders)!!))
+        override fun getCoders(user: Int): ByteArray? = decrypt(conversationDaoImpl.getCoders(user)!!)
+    } }
 
     fun postInit(encryptionKey: ByteArray, crypto: Crypto): Database {
         this.encryptionKey = encryptionKey
