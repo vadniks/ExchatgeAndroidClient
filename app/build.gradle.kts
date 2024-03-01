@@ -1,3 +1,4 @@
+import org.gradle.kotlin.dsl.support.kotlinCompilerOptions
 
 plugins {
     id("com.android.application")
@@ -40,6 +41,7 @@ android {
     }
     kotlinOptions {
         jvmTarget = "1.8"
+        freeCompilerArgs += "-Xjvm-default=all"
     }
     buildFeatures {
         compose = true

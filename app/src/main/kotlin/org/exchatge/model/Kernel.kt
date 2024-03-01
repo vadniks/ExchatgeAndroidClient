@@ -23,6 +23,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.provider.Settings.Secure
 import androidx.annotation.VisibleForTesting
+import org.exchatge.model.database.Database
 import org.exchatge.model.net.Net
 import org.exchatge.model.net.NetInitiator
 import org.exchatge.model.net.UNHASHED_PASSWORD_SIZE
@@ -43,6 +44,7 @@ class Kernel(val context: Context) {
     private val wasLoggedIn get() = sharedPrefs.getString(CREDENTIALS, null) != null
     private val users = ArrayList<UserInfo>()
     private val lock = this
+    @Volatile var database = null as Database?; private set
 
     // TODO: add settings to ui to adjust options which will be stored as sharedPreferences
 
@@ -180,13 +182,22 @@ class Kernel(val context: Context) {
         }
 
         override fun onNetDestroy() {
+            database?.close()
+            database = null
+            log("ond db close")
             net = null
             runAsync(action = presenter::onDisconnected)
         }
 
         override fun onLogInResult(successful: Boolean) {
-            if (successful) { if (!wasLoggedIn) setCredentials(presenter.credentials) }
-            else { if (wasLoggedIn) setCredentials(null) }
+            if (successful) {
+                if (!wasLoggedIn) setCredentials(presenter.credentials)
+
+                assert(database == null)
+                database = Database.init(context).postInit(encryptionKey.copyOf(), this@Kernel.crypto)
+            } else {
+                if (wasLoggedIn) setCredentials(null)
+            }
 
             runAsync { presenter.onLogInResult(successful) }
         }

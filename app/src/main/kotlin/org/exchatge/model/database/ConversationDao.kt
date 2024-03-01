@@ -19,8 +19,34 @@
 package org.exchatge.model.database
 
 import androidx.room.Dao
+import androidx.room.Insert
+import androidx.room.Query
+import org.exchatge.model.database.Conversation.Companion.CODERS
+import org.exchatge.model.database.Conversation.Companion.CONVERSATION
+import org.exchatge.model.database.Conversation.Companion.TIMESTAMP
+import org.exchatge.model.database.Conversation.Companion.USER
 
 @Dao
-interface ConversationDao {
+abstract class ConversationDao {
+    val encrypt: (ByteArray) -> ByteArray? = { null } // injected in runtime
+    val decrypt: (ByteArray) -> ByteArray? = { null }
 
+    @Query("select exists(select 1 from $CONVERSATION where $USER = :$USER limit 1)")
+    abstract fun exists(user: Int): Boolean
+
+    @Insert
+    protected abstract fun add0(conversation: Conversation)
+
+    fun add(conversation: Conversation) = add0(conversation.copy(coders = encrypt(conversation.coders)!!))
+
+    @Query("select $CODERS from $CONVERSATION where $USER = :$USER")
+    protected abstract fun getCoders0(user: Int): ByteArray?
+
+    fun getCoders(user: Int) = decrypt(getCoders0(user)!!)
+
+    @Query("select $TIMESTAMP from $CONVERSATION where $USER = :$USER")
+    abstract fun getTimestamp(user: Int): Long?
+
+    @Query("delete from $CONVERSATION where $USER = :$USER")
+    abstract fun remove(user: Int)
 }

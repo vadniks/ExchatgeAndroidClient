@@ -22,7 +22,7 @@ import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
 
-@Entity(indices = [Index(value = ["user"], unique = true)])
+@Entity(indices = [Index(value = [Conversation.USER], unique = true)])
 data class Conversation(
     @PrimaryKey val user: Int,
     val coders: ByteArray,
@@ -47,5 +47,12 @@ data class Conversation(
         result = 31 * result + coders.contentHashCode()
         result = 31 * result + timestamp.hashCode()
         return result
+    }
+
+    companion object {
+        const val CONVERSATION = "conversation"
+        const val USER = "user"
+        const val CODERS = "coders"
+        const val TIMESTAMP = "timestamp"
     }
 }
