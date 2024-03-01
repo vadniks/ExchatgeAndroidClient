@@ -19,12 +19,10 @@
 package org.exchatge.model.database
 
 import android.content.Context
-import androidx.room.DatabaseConfiguration
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import org.exchatge.model.Crypto
 import org.exchatge.model.assert
-import org.exchatge.model.log
 
 @androidx.room.Database(version = 1, entities = [Conversation::class, Message::class])
 abstract class Database : RoomDatabase() {
