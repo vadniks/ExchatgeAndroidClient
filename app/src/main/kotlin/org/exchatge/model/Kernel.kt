@@ -41,7 +41,7 @@ class Kernel(val context: Context) {
     private val sharedPrefs = sharedPreferences(this::class.simpleName!!)
     private val encryptionKey: ByteArray
     private val wasLoggedIn get() = sharedPrefs.getString(CREDENTIALS, null) != null
-    private val users = ArrayList<UserInfo>() // TODO: replace with Vector as it's synchronized
+    private val users = ArrayList<UserInfo>()
     private val lock = this
 
     // TODO: add settings to ui to adjust options which will be stored as sharedPreferences
