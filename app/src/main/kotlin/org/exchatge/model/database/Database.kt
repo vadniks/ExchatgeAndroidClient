@@ -35,7 +35,12 @@ abstract class Database : RoomDatabase() {
 
     val conversationDao by lazy { object : ConversationDao by conversationDaoImpl {
         override fun add(conversation: Conversation) = conversationDaoImpl.add(conversation.copy(coders = encrypt(conversation.coders)!!))
-        override fun getCoders(user: Int): ByteArray? = decrypt(conversationDaoImpl.getCoders(user)!!)
+        override fun getCoders(user: Int) = decrypt(conversationDaoImpl.getCoders(user)!!)
+    } }
+
+    val messagesDao by lazy { object : MessageDao by messageDaoImpl {
+        override fun add(message: Message) = messageDaoImpl.add(message.copy(text = encrypt(message.text)!!))
+        override fun getSeveral(conversation: Int) = messageDaoImpl.getSeveral(conversation).map { it.copy(text = decrypt(it.text)!!) }
     } }
 
     fun postInit(encryptionKey: ByteArray, crypto: Crypto): Database {

@@ -23,12 +23,13 @@ import androidx.room.ForeignKey
 import androidx.room.Index
 
 @Entity(
-    primaryKeys = ["timestamp", "conversation", "from"],
-    indices = [Index(value = ["timestamp", "conversation", "from"], unique = true)],
+    tableName = Message.MESSAGES,
+    primaryKeys = [Message.TIMESTAMP, Message.CONVERSATION, Message.FROM],
+    indices = [Index(value = [Message.TIMESTAMP, Message.CONVERSATION, Message.FROM], unique = true)],
     foreignKeys = [ForeignKey(
         entity = Conversation::class,
-        parentColumns = ["user"],
-        childColumns = ["conversation"],
+        parentColumns = [Conversation.USER],
+        childColumns = [Message.CONVERSATION],
         onDelete = ForeignKey.CASCADE,
         onUpdate = ForeignKey.CASCADE,
     )]
@@ -60,5 +61,14 @@ data class Message(
         result = 31 * result + from
         result = 31 * result + text.contentHashCode()
         return result
+    }
+
+    companion object {
+        const val MESSAGE = "message"
+        const val MESSAGES = "messages"
+        const val TIMESTAMP = "timestamp"
+        const val CONVERSATION = "conversation"
+        const val FROM = "from"
+        const val TEXT = "text"
     }
 }

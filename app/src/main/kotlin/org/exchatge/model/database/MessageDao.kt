@@ -19,8 +19,24 @@
 package org.exchatge.model.database
 
 import androidx.room.Dao
+import androidx.room.Insert
+import androidx.room.Query
+import org.exchatge.model.database.Message.Companion.CONVERSATION
+import org.exchatge.model.database.Message.Companion.MESSAGES
+import org.exchatge.model.database.Message.Companion.TIMESTAMP
 
 @Dao
 interface MessageDao {
 
+    @Insert
+    fun add(message: Message)
+
+    @Query("select * from $MESSAGES where $CONVERSATION = :$CONVERSATION order by $TIMESTAMP desc")
+    fun getSeveral(conversation: Int): List<Message>
+
+    @Query("delete from $MESSAGES where $CONVERSATION = :$CONVERSATION")
+    fun removeSeveral(conversation: Int)
+
+    @Query("select $TIMESTAMP from $MESSAGES where $CONVERSATION = :$CONVERSATION order by $TIMESTAMP desc limit 1")
+    fun getMostRecentMessageTimestamp(conversation: Int): Long
 }

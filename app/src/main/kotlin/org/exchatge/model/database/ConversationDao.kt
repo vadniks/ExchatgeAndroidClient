@@ -22,25 +22,25 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
 import org.exchatge.model.database.Conversation.Companion.CODERS
-import org.exchatge.model.database.Conversation.Companion.CONVERSATION
+import org.exchatge.model.database.Conversation.Companion.CONVERSATIONS
 import org.exchatge.model.database.Conversation.Companion.TIMESTAMP
 import org.exchatge.model.database.Conversation.Companion.USER
 
 @Dao
 interface ConversationDao {
 
-    @Query("select exists(select 1 from $CONVERSATION where $USER = :$USER limit 1)")
+    @Query("select exists(select 1 from $CONVERSATIONS where $USER = :$USER limit 1)")
     fun exists(user: Int): Boolean
 
     @Insert
     fun add(conversation: Conversation)
 
-    @Query("select $CODERS from $CONVERSATION where $USER = :$USER")
+    @Query("select $CODERS from $CONVERSATIONS where $USER = :$USER")
     fun getCoders(user: Int): ByteArray?
 
-    @Query("select $TIMESTAMP from $CONVERSATION where $USER = :$USER")
+    @Query("select $TIMESTAMP from $CONVERSATIONS where $USER = :$USER")
     fun getTimestamp(user: Int): Long?
 
-    @Query("delete from $CONVERSATION where $USER = :$USER")
+    @Query("delete from $CONVERSATIONS where $USER = :$USER")
     fun remove(user: Int)
 }
