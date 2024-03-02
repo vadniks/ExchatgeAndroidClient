@@ -27,6 +27,7 @@ import androidx.compose.runtime.setValue
 import org.exchatge.R
 import org.exchatge.model.kernel
 import org.exchatge.model.net.UserInfo
+import org.exchatge.model.runAsync
 import org.exchatge.model.unit
 import org.exchatge.view.Activity
 import org.exchatge.view.ConversationMessage
@@ -212,6 +213,17 @@ class PresenterImpl(private val initiator: PresenterInitiator): Presenter {
         currentPage = Pages.CONVERSATION
         opponentUsername = username
         opponentId = id
+
+        setUiLock(true)
+        runAsync {
+            for (i in initiator.loadSavedMessages(id))
+                messages.add(ConversationMessage(
+                    i.timestamp,
+                    if (i.from == initiator.currentUserId) null else initiator.username(i.from),
+                    String(i.text)
+                ))
+            setUiLock(false)
+        }
     }
 
     private class SynchronizedMutableState<T>(initial: T, private val lock: Any) {

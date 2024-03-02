@@ -18,6 +18,8 @@
 
 package org.exchatge.presenter
 
+import org.exchatge.model.database.Message
+
 interface PresenterInitiator {
     val currentUserId: Int
     val maxMessagePlainPayloadSize: Int
@@ -31,6 +33,8 @@ interface PresenterInitiator {
     fun onConversationSetupDialogAction(accepted: Boolean, requestedByHost: Boolean, opponentId: Int)
     fun onConversationRequested(id: Int, remove: Boolean)
     fun sendMessage(to: Int, text: String, millis: Long)
+    fun loadSavedMessages(conversation: Int): List<Message>
+    fun username(id: Int): String?
     fun onActivityResume(): Boolean
     fun onActivityDestroy()
 }

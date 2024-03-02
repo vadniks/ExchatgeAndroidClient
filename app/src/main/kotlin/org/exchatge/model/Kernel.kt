@@ -202,6 +202,10 @@ class Kernel(val context: Context) {
             net!!.send(encrypted, to)
         }
 
+        override fun loadSavedMessages(conversation: Int) = database!!.messagesDao.getSeveral(conversation)
+
+        override fun username(id: Int) = findUser(id)?.name?.let { String(it) }
+
         override fun onActivityResume() =
             if (!wasLoggedIn || triedLogIn || net != null) false
             else { scheduleLogIn(); true }
