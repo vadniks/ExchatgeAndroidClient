@@ -23,6 +23,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.provider.Settings.Secure
 import androidx.annotation.VisibleForTesting
+import org.exchatge.model.database.Conversation
 import org.exchatge.model.database.Database
 import org.exchatge.model.net.Net
 import org.exchatge.model.net.NetInitiator
@@ -143,15 +144,20 @@ class Kernel(val context: Context) {
                     if (!requestedByHost) net!!.replyToConversationSetUpInvite(accepted, opponentId)
                     else net!!.createConversation(opponentId)
 
-                // TODO: use coders
-                // TODO: update users list & messages
+                if (coders != null)
+                    database!!.conversationDao.add(Conversation(opponentId, crypto.exportCoders(coders)))
+
                 presenter.onSettingUpConversation(coders != null)
             }
         }
 
         override fun onConversationRequested(id: Int, remove: Boolean) {
             if (remove) {
-                log("remove conversation #$id") // TODO
+                presenter.removeConversation(false)
+                runAsync {
+                    database!!.conversationDao.remove(id)
+                    presenter.removeConversation(true)
+                }
                 return
             }
 
@@ -194,7 +200,7 @@ class Kernel(val context: Context) {
                 if (!wasLoggedIn) setCredentials(presenter.credentials)
 
                 assert(database == null)
-                database = Database.init(context).postInit(encryptionKey.copyOf(), this@Kernel.crypto)
+                database = Database.init(context, encryptionKey.copyOf(), this@Kernel.crypto)
             } else {
                 if (wasLoggedIn) setCredentials(null)
             }
@@ -212,7 +218,7 @@ class Kernel(val context: Context) {
                 users.add(user)
             }
 
-            presenter.onNextUserFetched(user, last)
+            presenter.onNextUserFetched(user, database!!.conversationDao.exists(user.id), last)
         }
 
         override fun onConversationSetUpInviteReceived(fromId: Int) = runAsync {

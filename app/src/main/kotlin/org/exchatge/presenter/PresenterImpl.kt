@@ -119,12 +119,12 @@ class PresenterImpl(private val initiator: PresenterInitiator): Presenter {
             setUiLock(false)
     }
 
-    fun onNextUserFetched(userInfo: UserInfo, last: Boolean) {
+    fun onNextUserFetched(userInfo: UserInfo, conversationExists: Boolean, last: Boolean) {
         if (userInfo.id == initiator.currentUserId) {
             currentUser = String(userInfo.name) // TODO: trim trailing zeroes
             admin = initiator.admin(userInfo.id)
         } else
-            users.add(User(userInfo.id, String(userInfo.name), userInfo.connected, false))
+            users.add(User(userInfo.id, String(userInfo.name), userInfo.connected, conversationExists))
 
         if (!last) return
         setUiLock(false)
@@ -175,10 +175,17 @@ class PresenterImpl(private val initiator: PresenterInitiator): Presenter {
             view!!.string(R.string.conversationSetup) + ' '
             + view!!.string(if (result ?: return) R.string.succeeded else R.string.failed)
         )
+
+        if (result == true) updateUsersList()
     }
 
     fun notifyUserOpponentIsOffline() =
         if (activityRunning) view!!.snackbar(view!!.string(R.string.opponentIsOffline)).unit else Unit
+
+    fun removeConversation(done: Boolean) {
+        setUiLock(!done)
+        if (done) updateUsersList()
+    }
 
     private class SynchronizedMutableState<T>(initial: T, private val lock: Any) {
         private val delegate = mutableStateOf(initial)

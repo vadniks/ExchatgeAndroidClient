@@ -29,7 +29,7 @@ import androidx.room.PrimaryKey
 data class Conversation(
     @PrimaryKey val user: Int,
     val coders: ByteArray,
-    val timestamp: Long
+    val timestamp: Long = System.currentTimeMillis()
 ) {
 
     override fun equals(other: Any?): Boolean {

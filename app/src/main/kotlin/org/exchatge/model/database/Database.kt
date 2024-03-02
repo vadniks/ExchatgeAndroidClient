@@ -41,7 +41,7 @@ abstract class Database : RoomDatabase() {
         override fun getSeveral(conversation: Int) = messageDaoImpl.getSeveral(conversation).map { it.copy(text = decrypt(it.text)!!) }
     } }
 
-    fun postInit(encryptionKey: ByteArray, crypto: Crypto): Database {
+    private fun postInit(encryptionKey: ByteArray, crypto: Crypto): Database {
         this.encryptionKey = encryptionKey
         this.crypto = crypto
         return this
@@ -61,7 +61,7 @@ abstract class Database : RoomDatabase() {
         private var initialized = false
 
         @JvmStatic
-        fun init(context: Context): Database {
+        fun init(context: Context, encryptionKey: ByteArray, crypto: Crypto): Database {
             assert(!initialized)
             initialized = true
 
@@ -69,6 +69,7 @@ abstract class Database : RoomDatabase() {
                 .databaseBuilder(context, Database::class.java, Database::class.simpleName)
                 .setJournalMode(JournalMode.TRUNCATE)
                 .build()
+                .postInit(encryptionKey, crypto)
         }
     }
 }
