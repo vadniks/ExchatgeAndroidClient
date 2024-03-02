@@ -20,6 +20,7 @@ package org.exchatge.presenter
 
 interface PresenterInitiator {
     val currentUserId: Int
+    val maxMessagePlainPayloadSize: Int
 
     fun onActivityCreate()
     fun credentialsLengthCorrect(username: String, password: String): Boolean
@@ -29,6 +30,7 @@ interface PresenterInitiator {
     fun scheduleLogOut()
     fun onConversationSetupDialogAction(accepted: Boolean, requestedByHost: Boolean, opponentId: Int)
     fun onConversationRequested(id: Int, remove: Boolean)
+    fun sendMessage(to: Int, text: String)
     fun onActivityResume(): Boolean
     fun onActivityDestroy()
 }

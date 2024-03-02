@@ -111,7 +111,13 @@ fun ConversationPage(pagesShared: PagesShared) = Scaffold(
         Row(modifier = Modifier.fillMaxSize().padding(5.dp)) {
             TextField(
                 value = pagesShared.currentConversationMessage,
-                onValueChange = { pagesShared.currentConversationMessage = it },
+                onValueChange = {
+                    pagesShared.currentConversationMessage = // TODO: rename this to maxMessageSize and hide formula (... - 1) inside the presenterImpl
+                        if (it.length >= pagesShared.maxMessagePlainPayloadSize - 1)
+                            it.slice(0 until pagesShared.maxMessagePlainPayloadSize - 1)
+                        else
+                            it
+                },
                 label = { Text(stringResource(R.string.message)) },
                 singleLine = false,
                 modifier = Modifier.fillMaxSize(),

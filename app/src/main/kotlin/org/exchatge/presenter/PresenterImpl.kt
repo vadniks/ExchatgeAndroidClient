@@ -48,10 +48,12 @@ class PresenterImpl(private val initiator: PresenterInitiator): Presenter {
     val credentials get() = username to password
     override var currentUser by SynchronizedMutableState("", this)
     override var admin by SynchronizedMutableState(false, this)
-    override var opponentUsername = ""
+    override var opponentUsername by SynchronizedMutableState("", this)
     override var currentConversationMessage by mutableStateOf("")
     override var conversationSetupDialogParameters by SynchronizedMutableState<ConversationSetupDialogParameters?>(null, this)
     private val messages = SynchronizedMutableStateList<ConversationMessage>(this)
+    @Volatile private var opponentId = 0
+    override val maxMessagePlainPayloadSize = initiator.maxMessagePlainPayloadSize
 
     init {
         assert(!initialized)
@@ -167,7 +169,11 @@ class PresenterImpl(private val initiator: PresenterInitiator): Presenter {
 
     override fun fileChoose() {}
 
-    override fun sendMessage() {}
+    override fun sendMessage() {
+        messages.add(0, /*TODO: ctm twice*/ConversationMessage(System.currentTimeMillis(), null, currentConversationMessage))
+        initiator.sendMessage(opponentId, currentConversationMessage)
+        currentConversationMessage = ""
+    }
 
     fun showConversationSetUpDialog(requestedByHost: Boolean, opponentId: Int, opponentName: String) =
         this::conversationSetupDialogParameters.set(ConversationSetupDialogParameters(
@@ -202,8 +208,10 @@ class PresenterImpl(private val initiator: PresenterInitiator): Presenter {
             view!!.snackbar(view!!.string(R.string.conversationDoesntExist))
     }
 
-    fun showConversation(id: Int) {
+    fun showConversation(id: Int, username: String) {
         currentPage = Pages.CONVERSATION
+        opponentUsername = username
+        opponentId = id
     }
 
     private class SynchronizedMutableState<T>(initial: T, private val lock: Any) {

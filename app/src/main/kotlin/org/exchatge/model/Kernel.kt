@@ -26,6 +26,7 @@ import androidx.annotation.VisibleForTesting
 import org.exchatge.model.database.Conversation
 import org.exchatge.model.database.Database
 import org.exchatge.model.database.Message
+import org.exchatge.model.net.MAX_MESSAGE_BODY_SIZE
 import org.exchatge.model.net.Net
 import org.exchatge.model.net.NetInitiator
 import org.exchatge.model.net.UNHASHED_PASSWORD_SIZE
@@ -47,6 +48,7 @@ class Kernel(val context: Context) {
     private val users = ArrayList<UserInfo>()
     private val lock = this
     @Volatile var database = null as Database?; private set
+    private val maxUnencryptedMessageBodySize get() = MAX_MESSAGE_BODY_SIZE - crypto.encryptedSize(0) // strange bug occurs without get()
 
     // TODO: add settings to ui to adjust options which will be stored as sharedPreferences
 
@@ -112,6 +114,7 @@ class Kernel(val context: Context) {
     private inner class PresenterInitiatorImpl : PresenterInitiator {
         @Volatile private var triedLogIn = false
         override val currentUserId get() = net!!.userId
+        override val maxMessagePlainPayloadSize = (maxUnencryptedMessageBodySize / Crypto.PADDING_BLOCK_SIZE) * Crypto.PADDING_BLOCK_SIZE
 
         override fun onActivityCreate() {}
 
@@ -174,16 +177,29 @@ class Kernel(val context: Context) {
                 return@runAsync
             }
 
+            val user = findUser(id)!!
+            val username = String(user.name)
+
             if (conversationExists) {
-                presenter.showConversation(id)
+                presenter.showConversation(id, username)
                 return@runAsync
             }
 
-            val user = findUser(id)!!
             if (user.connected) // TODO: rename to online
-                presenter.showConversationSetUpDialog(true, id, String(user.name))
+                presenter.showConversationSetUpDialog(true, id, username)
             else
                 presenter.notifyUserOpponentIsOffline()
+        }
+
+        override fun sendMessage(to: Int, text: String) = runAsync {
+            val bytes = text.toByteArray()
+            database!!.messagesDao.add(Message(System.currentTimeMillis(), to, currentUserId, bytes))
+
+            val padded = crypto.addPadding(bytes)
+            assert(crypto.encryptedSize(padded.size) <= MAX_MESSAGE_BODY_SIZE)
+
+            val encrypted = crypto.encrypt(crypto.recreateCoders(database!!.conversationDao.getCoders(to)!!), padded)!!
+            net!!.send(encrypted, to)
         }
 
         override fun onActivityResume() =
@@ -244,7 +260,9 @@ class Kernel(val context: Context) {
         }
 
         override fun onMessageReceived(timestamp: Long, from: Int, body: ByteArray) = runAsync {
+            assert(body.size - crypto.encryptedSize(0) in 1..maxUnencryptedMessageBodySize)
             val coders = crypto.recreateCoders(database!!.conversationDao.getCoders(from) ?: return@runAsync)
+
             val padded = crypto.decrypt(coders, body)!!
             val message = crypto.removePadding(padded)!!
 

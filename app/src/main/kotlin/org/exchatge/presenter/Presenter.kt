@@ -40,6 +40,7 @@ interface Presenter {
     val opponentUsername: String
     var currentConversationMessage: String
     val conversationSetupDialogParameters: ConversationSetupDialogParameters?
+    val maxMessagePlainPayloadSize: Int
 
     fun onCreate(view: View, savedInstanceState: Bundle?) // TODO: handle config changes and process kill (save activity's state)
     fun onResume()
@@ -83,6 +84,7 @@ object PresenterStub : Presenter { // stub to make @Preview work; can be used to
     override val opponentUsername = ""
     override var currentConversationMessage by stringStub
     override val conversationSetupDialogParameters: ConversationSetupDialogParameters? = null
+    override val maxMessagePlainPayloadSize = 0
 
     override fun onCreate(view: View, savedInstanceState: Bundle?) {}
     override fun onResume() {}
