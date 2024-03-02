@@ -185,12 +185,15 @@ class PresenterImpl(private val initiator: PresenterInitiator): Presenter {
         if (activityRunning) view!!.snackbar(view!!.string(R.string.opponentIsOffline)).unit else Unit
 
     fun removeConversation(done: Boolean?) {
+        if (!activityRunning) return
         setUiLock(done == null)
-        if (done == true) updateUsersList()
-    }
 
-    fun notifyUserConversationDoesntExist() =
-        if (activityRunning) view!!.snackbar(view!!.string(R.string.conversationDoesntExist)).unit else Unit
+        if (done == true) {
+            updateUsersList()
+            view!!.snackbar(view!!.string(R.string.conversationWasDeleted))
+        } else
+            view!!.snackbar(view!!.string(R.string.conversationDoesntExist))
+    }
 
     fun showConversation(id: Int) {
         currentPage = Pages.CONVERSATION

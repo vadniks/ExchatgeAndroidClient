@@ -161,10 +161,8 @@ class Kernel(val context: Context) {
                 database!!.conversationDao.remove(id)
                 database!!.messagesDao.removeSeveral(id)
                 presenter.removeConversation(true)
-            } else {
-                presenter.notifyUserConversationDoesntExist()
+            } else
                 presenter.removeConversation(false)
-            }
         }
 
         override fun onConversationRequested(id: Int, remove: Boolean) = runAsync {
