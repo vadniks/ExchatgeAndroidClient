@@ -43,7 +43,7 @@ class PresenterImpl(private val initiator: PresenterInitiator): Presenter {
     override var loading by SynchronizedMutableState(false, this)
     override var username by mutableStateOf("") // TODO: synchronize ui string fields too?
     override var password by mutableStateOf("")
-    override val users = SynchronizedMutableStateList<User>(this) as MutableList<User>
+    private val users = SynchronizedMutableStateList<User>(this) as MutableList<User>
     val credentials get() = username to password
     override var currentUser by SynchronizedMutableState("", this)
     override var admin by SynchronizedMutableState(false, this)
@@ -151,6 +151,8 @@ class PresenterImpl(private val initiator: PresenterInitiator): Presenter {
     }
 
     override fun administrate() {}
+
+    override fun usersForEach(action: (User) -> Unit) = synchronized(this) { for (i in users) action(i) }
 
     override fun conversation(id: Int, remove: Boolean) = initiator.onConversationRequested(id, remove)
 

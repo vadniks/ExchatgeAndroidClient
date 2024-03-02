@@ -125,9 +125,9 @@ fun UsersListPage(pagesShared: PagesShared) = Scaffold(
     Column(modifier = Modifier.padding(top = paddingValues.calculateTopPadding())) {
         if (pagesShared.loading) LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
         LazyColumn(modifier = Modifier.fillMaxSize()) {
-            for (i in pagesShared.users) item {
-                UserInfo(pagesShared, i)
-            }
+            pagesShared.usersForEach { item {
+                UserInfo(pagesShared, it)
+            } }
         }
     }
 

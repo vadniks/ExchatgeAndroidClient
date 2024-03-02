@@ -156,6 +156,7 @@ class Kernel(val context: Context) {
                 presenter.removeConversation(false)
                 runAsync {
                     database!!.conversationDao.remove(id)
+                    database!!.messagesDao.removeSeveral(id)
                     presenter.removeConversation(true)
                 }
                 return

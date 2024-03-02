@@ -34,7 +34,6 @@ interface Presenter {
     val loading: Boolean
     var username: String
     var password: String
-    val users: List<User>
     val currentUser: String
     val admin: Boolean
     val opponentUsername: String
@@ -47,6 +46,7 @@ interface Presenter {
     fun logIn()
     fun register()
     fun updateUsersList()
+    fun usersForEach(action: (User) -> Unit)
     fun administrate()
     fun conversation(id: Int, remove: Boolean)
     fun returnFromPage()
@@ -76,7 +76,6 @@ object PresenterStub : Presenter { // stub to make @Preview work; can be used to
     override val loading = true
     override var username by stringStub
     override var password by stringStub
-    override val users: List<User> = listOf(User(0, "a", false, false), User(1, "b", true, true))
     override val currentUser = ""
     override val admin = false
     override val opponentUsername = ""
@@ -89,6 +88,7 @@ object PresenterStub : Presenter { // stub to make @Preview work; can be used to
     override fun logIn() {}
     override fun register() {}
     override fun updateUsersList() {}
+    override fun usersForEach(action: (User) -> Unit) {}
     override fun administrate() {}
     override fun conversation(id: Int, remove: Boolean) {}
     override fun returnFromPage() {}
