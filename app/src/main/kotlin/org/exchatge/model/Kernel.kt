@@ -248,8 +248,6 @@ class Kernel(val context: Context) {
             val padded = crypto.decrypt(coders, body)!!
             val message = crypto.removePadding(padded)!!
 
-            log("!", body.size, padded.size, message.size, "|$message|")
-
             database!!.messagesDao.add(Message(timestamp, from, from, message))
             val user = findUser(from)
             presenter.onMessageReceived(timestamp, if (user!!.id == net!!.userId) null else String(user.name), String(message))

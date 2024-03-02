@@ -26,7 +26,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import org.exchatge.R
 import org.exchatge.model.kernel
-import org.exchatge.model.log
 import org.exchatge.model.net.UserInfo
 import org.exchatge.model.unit
 import org.exchatge.view.Activity
@@ -134,7 +133,7 @@ class PresenterImpl(private val initiator: PresenterInitiator): Presenter {
     }
 
     fun onMessageReceived(timestamp: Long, from: String?, text: String) =
-        messages.add(ConversationMessage(timestamp, from, text)).also { log(timestamp, from, text) }
+        messages.add(0, ConversationMessage(timestamp, from, text))
 
     fun onErrorReceived() {
         if (!activityRunning) return
