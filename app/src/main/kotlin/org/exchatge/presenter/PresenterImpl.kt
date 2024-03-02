@@ -184,10 +184,13 @@ class PresenterImpl(private val initiator: PresenterInitiator): Presenter {
     fun notifyUserOpponentIsOffline() =
         if (activityRunning) view!!.snackbar(view!!.string(R.string.opponentIsOffline)).unit else Unit
 
-    fun removeConversation(done: Boolean) {
-        setUiLock(!done)
-        if (done) updateUsersList()
+    fun removeConversation(done: Boolean?) {
+        setUiLock(done == null)
+        if (done == true) updateUsersList()
     }
+
+    fun notifyUserConversationDoesntExist() =
+        if (activityRunning) view!!.snackbar(view!!.string(R.string.conversationDoesntExist)).unit else Unit
 
     private class SynchronizedMutableState<T>(initial: T, private val lock: Any) {
         private val delegate = mutableStateOf(initial)

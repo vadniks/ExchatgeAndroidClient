@@ -151,14 +151,24 @@ class Kernel(val context: Context) {
             }
         }
 
-        override fun onConversationRequested(id: Int, remove: Boolean) {
-            if (remove) {
-                presenter.removeConversation(false)
-                runAsync {
+        private fun removeConversation(id: Int) {
+            presenter.removeConversation(null)
+
+            runAsync {
+                if (database!!.conversationDao.exists(id)) {
                     database!!.conversationDao.remove(id)
                     database!!.messagesDao.removeSeveral(id)
                     presenter.removeConversation(true)
+                } else {
+                    presenter.notifyUserConversationDoesntExist()
+                    presenter.removeConversation(false)
                 }
+            }
+        }
+
+        override fun onConversationRequested(id: Int, remove: Boolean) {
+            if (remove) {
+                removeConversation(id)
                 return
             }
 

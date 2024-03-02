@@ -60,4 +60,5 @@
     <string name="succeeded">succeeded</string>
     <string name="failed">failed</string>
     <string name="opponentIsOffline">Opponent is offline</string>
+    <string name="conversationDoesntExist">Conversation doesn\'t exist</string>
 </resources>
