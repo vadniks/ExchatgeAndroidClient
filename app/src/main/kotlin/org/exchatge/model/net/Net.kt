@@ -253,7 +253,8 @@ class Net(private val initiator: NetInitiator) {
             FLAG_FILE -> {}
             FLAG_PROCEED -> {
                 assert(message.body != null)
-                // TODO: handle usual message
+                if (!fetchingUsers && !fetchingMessages /*&& !ignoreUsualMessages*/) // TODO
+                    initiator.onMessageReceived(message.timestamp, message.from, message.body!!)
             }
             FLAG_FETCH_MESSAGES -> onNextMessageFetched(message)
             else -> assert(false)

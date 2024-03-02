@@ -38,6 +38,8 @@ import org.exchatge.R
 
 data class User(val id: Int, val name: String, val online: Boolean, val conversationExists: Boolean)
 
+data class ConversationMessage(val timestamp: Long, val from: String?, val text: String)
+
 @Composable
 private fun PopupOverlay(content: @Composable () -> Unit) = Popup {
     Box(modifier = Modifier.fillMaxSize().background(Color.Transparent.copy(alpha = .25f))) { content() }

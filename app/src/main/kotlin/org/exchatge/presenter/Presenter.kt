@@ -19,6 +19,7 @@
 package org.exchatge.presenter
 
 import android.os.Bundle
+import org.exchatge.view.ConversationMessage
 import org.exchatge.view.ConversationSetupDialogParameters
 import org.exchatge.view.User
 import org.exchatge.view.View
@@ -49,6 +50,7 @@ interface Presenter {
     fun usersForEach(action: (User) -> Unit)
     fun administrate()
     fun conversation(id: Int, remove: Boolean)
+    fun messagesForEach(action: (ConversationMessage) -> Unit)
     fun returnFromPage()
     fun fileChoose()
     fun sendMessage()
@@ -91,6 +93,7 @@ object PresenterStub : Presenter { // stub to make @Preview work; can be used to
     override fun usersForEach(action: (User) -> Unit) {}
     override fun administrate() {}
     override fun conversation(id: Int, remove: Boolean) {}
+    override fun messagesForEach(action: (ConversationMessage) -> Unit) {}
     override fun returnFromPage() {}
     override fun fileChoose() {}
     override fun sendMessage() {}

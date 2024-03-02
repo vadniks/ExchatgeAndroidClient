@@ -25,6 +25,7 @@ import android.provider.Settings.Secure
 import androidx.annotation.VisibleForTesting
 import org.exchatge.model.database.Conversation
 import org.exchatge.model.database.Database
+import org.exchatge.model.database.Message
 import org.exchatge.model.net.Net
 import org.exchatge.model.net.NetInitiator
 import org.exchatge.model.net.UNHASHED_PASSWORD_SIZE
@@ -240,6 +241,18 @@ class Kernel(val context: Context) {
 
         override fun onConversationSetUpInviteReceived(fromId: Int) = runAsync {
             presenter.showConversationSetUpDialog(false, fromId, String(findUser(fromId)!!.name))
+        }
+
+        override fun onMessageReceived(timestamp: Long, from: Int, body: ByteArray) = runAsync {
+            val coders = crypto.recreateCoders(database!!.conversationDao.getCoders(from) ?: return@runAsync)
+            val padded = crypto.decrypt(coders, body)!!
+            val message = crypto.removePadding(padded)!!
+
+            log("!", body.size, padded.size, message.size, "|$message|")
+
+            database!!.messagesDao.add(Message(timestamp, from, from, message))
+            val user = findUser(from)
+            presenter.onMessageReceived(timestamp, if (user!!.id == net!!.userId) null else String(user.name), String(message))
         }
     }
 

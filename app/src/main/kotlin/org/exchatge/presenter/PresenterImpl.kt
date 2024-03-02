@@ -26,9 +26,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import org.exchatge.R
 import org.exchatge.model.kernel
+import org.exchatge.model.log
 import org.exchatge.model.net.UserInfo
 import org.exchatge.model.unit
 import org.exchatge.view.Activity
+import org.exchatge.view.ConversationMessage
 import org.exchatge.view.ConversationSetupDialogParameters
 import org.exchatge.view.User
 import org.exchatge.view.View
@@ -50,6 +52,7 @@ class PresenterImpl(private val initiator: PresenterInitiator): Presenter {
     override var opponentUsername = ""
     override var currentConversationMessage by mutableStateOf("")
     override var conversationSetupDialogParameters by SynchronizedMutableState<ConversationSetupDialogParameters?>(null, this)
+    private val messages = SynchronizedMutableStateList<ConversationMessage>(this)
 
     init {
         assert(!initialized)
@@ -130,6 +133,9 @@ class PresenterImpl(private val initiator: PresenterInitiator): Presenter {
         setUiLock(false)
     }
 
+    fun onMessageReceived(timestamp: Long, from: String?, text: String) =
+        messages.add(ConversationMessage(timestamp, from, text)).also { log(timestamp, from, text) }
+
     fun onErrorReceived() {
         if (!activityRunning) return
     }
@@ -155,6 +161,8 @@ class PresenterImpl(private val initiator: PresenterInitiator): Presenter {
     override fun usersForEach(action: (User) -> Unit) = synchronized(this) { for (i in users) action(i) }
 
     override fun conversation(id: Int, remove: Boolean) = initiator.onConversationRequested(id, remove)
+
+    override fun messagesForEach(action: (ConversationMessage) -> Unit) = synchronized(this) { for (i in messages) action(i) }
 
     override fun returnFromPage() = handleOnBackPressed()
 

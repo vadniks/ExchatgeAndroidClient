@@ -51,6 +51,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.exchatge.R
+import org.exchatge.view.ConversationMessage
 import org.exchatge.view.PagesShared
 import java.text.SimpleDateFormat
 
@@ -101,8 +102,10 @@ fun ConversationPage(pagesShared: PagesShared) = Scaffold(
         LazyColumn(
             modifier = Modifier.fillMaxHeight(.9f).fillMaxWidth()
         ) {
-            items(10) { // TODO: debug only
-                Message(System.currentTimeMillis(), if (it % 2 == 0) "User$it" else null, "Text$it")
+            pagesShared.messagesForEach {
+                item {
+                    Message(it)
+                }
             }
         }
         Row(modifier = Modifier.fillMaxSize().padding(5.dp)) {
@@ -131,28 +134,28 @@ fun ConversationPage(pagesShared: PagesShared) = Scaffold(
 
 @SuppressLint("SimpleDateFormat")
 @Composable
-private fun Message(timestamp: Long, from: String?, text: String) = Box(
-    contentAlignment = if (from != null) Alignment.CenterStart else Alignment.CenterEnd,
+private fun Message(message: ConversationMessage) = Box(
+    contentAlignment = if (message.from != null) Alignment.CenterStart else Alignment.CenterEnd,
     modifier = Modifier.fillMaxWidth().padding(5.dp)
 ) {
     Column(
         modifier = Modifier.fillMaxWidth(.48f),
-        horizontalAlignment = if (from != null) Alignment.Start else Alignment.End
+        horizontalAlignment = if (message.from != null) Alignment.Start else Alignment.End
     ) {
         Text(
-            text = text,
+            text = message.text,
             textAlign = TextAlign.Justify
         )
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
-                text = SimpleDateFormat("HH:mm:ss MMM-dd-yyyy").format(timestamp),
+                text = SimpleDateFormat("HH:mm:ss MMM-dd-yyyy").format(message.timestamp),
                 fontSize = 12.sp,
                 fontStyle = FontStyle.Italic,
                 color = MaterialTheme.colorScheme.secondary,
                 modifier = Modifier.padding(end = 5.dp)
             )
             Text(
-                text = from ?: stringResource(R.string.you),
+                text = message.from ?: stringResource(R.string.you),
                 fontSize = 14.sp,
                 color = MaterialTheme.colorScheme.secondary,
                 modifier = Modifier.padding(start = 5.dp)
