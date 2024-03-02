@@ -53,7 +53,7 @@ class PresenterImpl(private val initiator: PresenterInitiator): Presenter {
     override var conversationSetupDialogParameters by SynchronizedMutableState<ConversationSetupDialogParameters?>(null, this)
     private val messages = SynchronizedMutableStateList<ConversationMessage>(this)
     @Volatile private var opponentId = 0
-    override val maxMessagePlainPayloadSize = initiator.maxMessagePlainPayloadSize
+    override val maxMessageTextSize get() = initiator.maxMessagePlainPayloadSize - 1
 
     init {
         assert(!initialized)
@@ -170,8 +170,9 @@ class PresenterImpl(private val initiator: PresenterInitiator): Presenter {
     override fun fileChoose() {}
 
     override fun sendMessage() {
-        messages.add(0, /*TODO: ctm twice*/ConversationMessage(System.currentTimeMillis(), null, currentConversationMessage))
-        initiator.sendMessage(opponentId, currentConversationMessage)
+        val millis = System.currentTimeMillis()
+        messages.add(0, ConversationMessage(millis, null, currentConversationMessage))
+        initiator.sendMessage(opponentId, currentConversationMessage, millis)
         currentConversationMessage = ""
     }
 

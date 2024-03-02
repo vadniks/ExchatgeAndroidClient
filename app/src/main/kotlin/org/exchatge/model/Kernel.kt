@@ -48,7 +48,7 @@ class Kernel(val context: Context) {
     private val users = ArrayList<UserInfo>()
     private val lock = this
     @Volatile var database = null as Database?; private set
-    private val maxUnencryptedMessageBodySize get() = MAX_MESSAGE_BODY_SIZE - crypto.encryptedSize(0) // strange bug occurs without get()
+    private val maxUnencryptedMessageBodySize get() = MAX_MESSAGE_BODY_SIZE - crypto.encryptedSize(0) // strange bug occurs without get() - runtime value becomes zero regardless of assigned value
 
     // TODO: add settings to ui to adjust options which will be stored as sharedPreferences
 
@@ -114,7 +114,7 @@ class Kernel(val context: Context) {
     private inner class PresenterInitiatorImpl : PresenterInitiator {
         @Volatile private var triedLogIn = false
         override val currentUserId get() = net!!.userId
-        override val maxMessagePlainPayloadSize = (maxUnencryptedMessageBodySize / Crypto.PADDING_BLOCK_SIZE) * Crypto.PADDING_BLOCK_SIZE
+        override val maxMessagePlainPayloadSize get() = (maxUnencryptedMessageBodySize / Crypto.PADDING_BLOCK_SIZE) * Crypto.PADDING_BLOCK_SIZE
 
         override fun onActivityCreate() {}
 
@@ -191,9 +191,9 @@ class Kernel(val context: Context) {
                 presenter.notifyUserOpponentIsOffline()
         }
 
-        override fun sendMessage(to: Int, text: String) = runAsync {
+        override fun sendMessage(to: Int, text: String, millis: Long) = runAsync {
             val bytes = text.toByteArray()
-            database!!.messagesDao.add(Message(System.currentTimeMillis(), to, currentUserId, bytes))
+            database!!.messagesDao.add(Message(millis, to, currentUserId, bytes))
 
             val padded = crypto.addPadding(bytes)
             assert(crypto.encryptedSize(padded.size) <= MAX_MESSAGE_BODY_SIZE)

@@ -30,7 +30,7 @@ interface PresenterInitiator {
     fun scheduleLogOut()
     fun onConversationSetupDialogAction(accepted: Boolean, requestedByHost: Boolean, opponentId: Int)
     fun onConversationRequested(id: Int, remove: Boolean)
-    fun sendMessage(to: Int, text: String)
+    fun sendMessage(to: Int, text: String, millis: Long)
     fun onActivityResume(): Boolean
     fun onActivityDestroy()
 }
