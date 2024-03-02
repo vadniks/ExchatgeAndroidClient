@@ -141,7 +141,7 @@ private fun UserInfo(
     leadingContent = {
         Box(modifier = Modifier.fillMaxWidth(.05f)) {
             Box(modifier = Modifier
-                .size((LocalConfiguration.current.let { min(it.screenWidthDp, it.screenHeightDp) } * .02f).dp)
+                .size((LocalConfiguration.current.let { min(it.screenWidthDp, it.screenHeightDp) } * .04f).dp)
                 .clip(CircleShape)
                 .background(if (user.online) Color.Green else Color.Transparent)
                 .border(.01.dp, Color.Gray, CircleShape)) {}
