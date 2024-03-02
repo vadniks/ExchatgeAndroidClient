@@ -221,7 +221,7 @@ class PresenterImpl(private val initiator: PresenterInitiator): Presenter {
             for (i in initiator.loadSavedMessages(id))
                 messages.add(ConversationMessage(
                     i.timestamp,
-                    if (i.from == initiator.currentUserId) null else initiator.username(i.from),
+                    if (i.from == initiator.currentUserId) null else initiator.username(i.from)!!,
                     String(i.text)
                 ))
 
