@@ -177,7 +177,7 @@ class Kernel(val context: Context) {
                 return@runAsync
             }
 
-            val user = findUser(id)!!
+            val user = findUser(id) ?: return@runAsync
             val username = String(user.name)
 
             if (conversationExists) {

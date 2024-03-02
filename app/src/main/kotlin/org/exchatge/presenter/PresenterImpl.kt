@@ -216,6 +216,7 @@ class PresenterImpl(private val initiator: PresenterInitiator): Presenter {
 
         setUiLock(true)
         runAsync {
+            messages.clear()
             for (i in initiator.loadSavedMessages(id))
                 messages.add(ConversationMessage(
                     i.timestamp,
