@@ -192,6 +192,10 @@ class PresenterImpl(private val initiator: PresenterInitiator): Presenter {
     fun notifyUserConversationDoesntExist() =
         if (activityRunning) view!!.snackbar(view!!.string(R.string.conversationDoesntExist)).unit else Unit
 
+    fun showConversation(id: Int) {
+        currentPage = Pages.CONVERSATION
+    }
+
     private class SynchronizedMutableState<T>(initial: T, private val lock: Any) {
         private val delegate = mutableStateOf(initial)
 

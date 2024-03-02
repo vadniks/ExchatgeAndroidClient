@@ -144,6 +144,9 @@ class Kernel(val context: Context) {
                     if (!requestedByHost) net!!.replyToConversationSetUpInvite(accepted, opponentId)
                     else net!!.createConversation(opponentId)
 
+                if (database!!.conversationDao.exists(opponentId))
+                    database!!.conversationDao.remove(opponentId)
+
                 if (coders != null)
                     database!!.conversationDao.add(Conversation(opponentId, crypto.exportCoders(coders)))
 
@@ -151,25 +154,30 @@ class Kernel(val context: Context) {
             }
         }
 
-        private fun removeConversation(id: Int) {
+        private fun removeConversation(id: Int, conversationExists: Boolean) {
             presenter.removeConversation(null)
 
-            runAsync {
-                if (database!!.conversationDao.exists(id)) {
-                    database!!.conversationDao.remove(id)
-                    database!!.messagesDao.removeSeveral(id)
-                    presenter.removeConversation(true)
-                } else {
-                    presenter.notifyUserConversationDoesntExist()
-                    presenter.removeConversation(false)
-                }
+            if (conversationExists) {
+                database!!.conversationDao.remove(id)
+                database!!.messagesDao.removeSeveral(id)
+                presenter.removeConversation(true)
+            } else {
+                presenter.notifyUserConversationDoesntExist()
+                presenter.removeConversation(false)
             }
         }
 
-        override fun onConversationRequested(id: Int, remove: Boolean) {
+        override fun onConversationRequested(id: Int, remove: Boolean) = runAsync {
+            val conversationExists = database!!.conversationDao.exists(id)
+
             if (remove) {
-                removeConversation(id)
-                return
+                removeConversation(id, conversationExists)
+                return@runAsync
+            }
+
+            if (conversationExists) {
+                presenter.showConversation(id)
+                return@runAsync
             }
 
             val user = findUser(id)!!
