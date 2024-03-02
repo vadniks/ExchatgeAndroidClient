@@ -169,10 +169,9 @@ class PresenterImpl(private val initiator: PresenterInitiator): Presenter {
 
     override fun fileChoose() {}
 
-    override fun sendMessage() {
-        val millis = System.currentTimeMillis()
-        messages.add(0, ConversationMessage(millis, null, currentConversationMessage))
-        initiator.sendMessage(opponentId, currentConversationMessage, millis)
+    override fun sendMessage() = System.currentTimeMillis().let {
+        messages.add(0, ConversationMessage(it, null, currentConversationMessage))
+        initiator.sendMessage(opponentId, currentConversationMessage, it)
         currentConversationMessage = ""
     }
 
