@@ -19,3 +19,13 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+-dontobfuscate
+-verbose
+-android
+#-dontwarn *
+
+-dontwarn com.google.errorprone.annotations.MustBeClosed
+-ignorewarnings
+
+-keep class com.sun.jna.** { *; }
