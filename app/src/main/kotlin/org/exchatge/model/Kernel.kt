@@ -284,7 +284,7 @@ class Kernel(val context: Context) {
         }
 
         override fun onNextUserFetched(user: UserInfo, last: Boolean) = runAsync { // TODO: test with large amount of users
-            val conversationExists = database!!.conversationDao.exists(user.id)
+            val conversationExists = database!!.conversationDao.exists(user.id) // TODO: instead of getting users one by one, get all users in a bundle, this would eliminate thread race problem
 
             synchronized(lock) {
                 if (user.id == 0) { // first
@@ -297,6 +297,7 @@ class Kernel(val context: Context) {
                 }
 
                 users.add(user)
+                log("aaa", user)
 
                 if (conversationExists)
                     userIdsToFetchMessagesFrom.add(user.id)
@@ -314,6 +315,7 @@ class Kernel(val context: Context) {
         }
 
         override fun onConversationSetUpInviteReceived(fromId: Int) = runAsync {
+            synchronized(lock) { log(users) } // TODO: replace arrayList with vector
             presenter.showConversationSetUpDialog(false, fromId, String(findUser(fromId)!!.name))
         }
 

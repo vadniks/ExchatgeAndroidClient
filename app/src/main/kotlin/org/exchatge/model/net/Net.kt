@@ -321,6 +321,8 @@ class Net(private val initiator: NetInitiator) {
                 last && i == message.size - USER_INFO_SIZE
             )
 
+        // TODO: initiator.onUsersFetched(__all_users__)
+
         if (!last) return
         log("users fetched")
         fetchingUsers = false
