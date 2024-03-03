@@ -37,6 +37,7 @@ import org.exchatge.model.net.bytes
 import org.exchatge.presenter.PresenterImpl
 import org.exchatge.presenter.PresenterInitiator
 import java.util.Collections
+import java.util.LinkedList
 
 class Kernel(val context: Context) {
     val crypto = Crypto()
@@ -50,6 +51,8 @@ class Kernel(val context: Context) {
     @Volatile var database = null as Database?; private set
     private val maxUnencryptedMessageBodySize get() = MAX_MESSAGE_BODY_SIZE - crypto.encryptedSize(0) // strange bug occurs without get() - runtime value becomes zero regardless of assigned value
     @Volatile private var registrationPending = false
+    private val userIdsToFetchMessagesFrom = LinkedList<Int>()
+    @Volatile private var missingMessagesFetchers = 0
 
     // TODO: add settings to ui to adjust options which will be stored as sharedPreferences
 
@@ -270,17 +273,44 @@ class Kernel(val context: Context) {
 
         override fun onRegisterResult(successful: Boolean) = presenter.onRegisterResult(successful)
 
+        private fun fetchMissingMessagesFromUser(id: Int) {
+            missingMessagesFetchers++
+
+            val timestamp = database!!.messagesDao.getMostRecentMessageTimestamp(id)
+            val minimalPossibleTimestamp = database!!.conversationDao.getTimestamp(id)!! + 1
+
+            assert(timestamp < System.currentTimeMillis())
+            net!!.fetchMessages(id, if (timestamp < minimalPossibleTimestamp) minimalPossibleTimestamp else timestamp)
+        }
+
         override fun onNextUserFetched(user: UserInfo, last: Boolean) = runAsync { // TODO: test with large amount of users
+            val conversationExists = database!!.conversationDao.exists(user.id)
+
             synchronized(lock) {
                 if (user.id == 0) { // first
                     assert(!last)
                     users.clear()
+
+                    assert(missingMessagesFetchers == 0)
+                    userIdsToFetchMessagesFrom.clear()
+                    net!!.ignoreUsualMessages = true
                 }
 
                 users.add(user)
+
+                if (conversationExists)
+                    userIdsToFetchMessagesFrom.add(user.id)
             }
 
-            presenter.onNextUserFetched(user, database!!.conversationDao.exists(user.id), last)
+            presenter.onNextUserFetched(user, conversationExists, last)
+            if (!last) return@runAsync
+
+            val nextIdToFetchMessagesFrom = synchronized(lock) { userIdsToFetchMessagesFrom.poll() }
+            if (nextIdToFetchMessagesFrom == null) {
+                net!!.ignoreUsualMessages = false
+                presenter.onMessagesFetched(true)
+            } else
+                fetchMissingMessagesFromUser(nextIdToFetchMessagesFrom)
         }
 
         override fun onConversationSetUpInviteReceived(fromId: Int) = runAsync {
@@ -300,6 +330,28 @@ class Kernel(val context: Context) {
         }
 
         override fun onBroadcastReceived(body: ByteArray) = presenter.onBroadcastReceived(String(body))
+
+        override fun onNextMessageFetched(from: Int, timestamp: Long, body: ByteArray?, last: Boolean) = runAsync {
+            assert(body != null && body.isNotEmpty() || body == null)
+            if ((body?.size ?: 0) > 0) onMessageReceived(timestamp, from, body!!)
+
+            assert(missingMessagesFetchers > 0)
+            if (!last) return@runAsync
+
+            missingMessagesFetchers--
+            assert(missingMessagesFetchers >= 0)
+
+            val nextIdToFetchMessagesFrom = synchronized(lock) { userIdsToFetchMessagesFrom.poll() }
+            if (nextIdToFetchMessagesFrom != null)
+                runAsync { fetchMissingMessagesFromUser(nextIdToFetchMessagesFrom) }
+
+            assert(missingMessagesFetchers == synchronized(lock) { userIdsToFetchMessagesFrom.size })
+            if (missingMessagesFetchers > 0) return@runAsync
+
+            userIdsToFetchMessagesFrom.clear()
+            net!!.ignoreUsualMessages = false
+            presenter.onMessagesFetched(false)
+        }
     }
 
     private companion object {

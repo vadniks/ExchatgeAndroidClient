@@ -134,7 +134,11 @@ class PresenterImpl(private val initiator: PresenterInitiator): Presenter {
         } else
             users.add(User(userInfo.id, String(userInfo.name), userInfo.connected, conversationExists))
 
-        if (!last) return
+//        if (!last) return
+//        setUiLock(false)
+    }
+
+    fun onMessagesFetched(empty: Boolean) {
         setUiLock(false)
     }
 

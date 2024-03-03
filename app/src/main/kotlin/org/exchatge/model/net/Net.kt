@@ -59,6 +59,7 @@ class Net(private val initiator: NetInitiator) {
     @Volatile private var exchangingFile = false
     private val conversationSetupMessages = ConcurrentLinkedQueue<NetMessage>()
     @Volatile private var inviteProcessingStartMillis = 0L
+    @Volatile var ignoreUsualMessages = false
 
     init {
         log("net init")
@@ -252,7 +253,7 @@ class Net(private val initiator: NetInitiator) {
             FLAG_FILE -> {}
             FLAG_PROCEED -> {
                 assert(message.body != null)
-                if (!fetchingUsers && !fetchingMessages /*&& !ignoreUsualMessages*/) // TODO
+                if (!fetchingUsers && !fetchingMessages && !ignoreUsualMessages)
                     initiator.onMessageReceived(message.timestamp, message.from, message.body!!)
             }
             FLAG_FETCH_MESSAGES -> onNextMessageFetched(message)
@@ -329,13 +330,15 @@ class Net(private val initiator: NetInitiator) {
         assert(running && connected && authenticated && !destroyed && fetchingMessages && message.body != null)
         val last = message.index == message.count - 1
 
-        log("next message fetched $message") // TODO: handle
+//        log("next message fetched $message")
+        initiator.onNextMessageFetched(message.from, message.timestamp, message.body, last)
         if (last) fetchingMessages = false
     }
 
     private fun onEmptyMessagesFetchReplyReceived(message: NetMessage) {
         assert(running && connected && authenticated && !destroyed && message.body != null && message.count == 1)
-        log("empty messages fetch reply $message " + message.body!!.sliceArray(1 + 8 until 1 + 8 + 4).int) // TODO: handle
+        initiator.onNextMessageFetched(message.body!!.sliceArray(1 + 8 until 1 + 8 + 4).int, message.timestamp, null, true)
+//        log("empty messages fetch reply $message " + message.body!!.sliceArray(1 + 8 until 1 + 8 + 4).int)
         fetchingMessages = false
     }
 

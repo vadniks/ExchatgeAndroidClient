@@ -33,4 +33,5 @@ interface NetInitiator {
     fun onConversationSetUpInviteReceived(fromId: Int)
     fun onMessageReceived(timestamp: Long, from: Int, body: ByteArray)
     fun onBroadcastReceived(body: ByteArray)
+    fun onNextMessageFetched(from: Int, timestamp: Long, body: ByteArray?, last: Boolean)
 }
