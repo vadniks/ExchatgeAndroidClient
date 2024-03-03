@@ -274,7 +274,10 @@ class Net(private val initiator: NetInitiator) {
             FLAG_FETCH_USERS -> onNextUserInfosBundleFetched(message)
             FLAG_ERROR -> processErrors(message)
             FLAG_FETCH_MESSAGES -> onEmptyMessagesFetchReplyReceived(message)
-            FLAG_BROADCAST -> log("broadcast received ${message.body!!}")
+            FLAG_BROADCAST -> {
+                assert(message.size > 0)
+                initiator.onBroadcastReceived(message.body!!)
+            }
         }
     }
 

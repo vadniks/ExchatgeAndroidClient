@@ -274,6 +274,8 @@ class Kernel(val context: Context) {
             val user = findUser(from)
             presenter.onMessageReceived(timestamp, if (user!!.id == net!!.userId) null else String(user.name), String(message))
         }
+
+        override fun onBroadcastReceived(body: ByteArray) = presenter.onBroadcastReceived(String(body))
     }
 
     private companion object {

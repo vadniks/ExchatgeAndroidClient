@@ -229,6 +229,8 @@ class PresenterImpl(private val initiator: PresenterInitiator): Presenter {
         }
     }
 
+    fun onBroadcastReceived(text: String) = if (activityRunning) view!!.snackbar(text) else Unit
+
     private class SynchronizedMutableState<T>(initial: T, private val lock: Any) {
         private val delegate = mutableStateOf(initial)
         operator fun getValue(thisRef: Any?, property: KProperty<*>): T = synchronized(lock) { delegate.getValue(thisRef, property) }

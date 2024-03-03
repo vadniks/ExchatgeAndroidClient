@@ -35,4 +35,4 @@ fun runAsync(delay: Long = 0, action: () -> Unit) = Dispatchers.Default.dispatch
 infix fun Int.untilSize(size: Int): IntRange { assert(size >= 0); return this until this + size } // TODO: replace all those
 
 class Reference<T>(var referenced: T)
-enum class Ternary { POSITIVE, NEUTRAL, NEGATIVE } // true, else, false
+enum class Ternary(val value: Boolean?) { POSITIVE(true), NEUTRAL(null), NEGATIVE(false) }
