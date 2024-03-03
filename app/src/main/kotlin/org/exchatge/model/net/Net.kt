@@ -233,7 +233,6 @@ class Net(private val initiator: NetInitiator) {
 
     private fun processMessage(message: NetMessage) {
         assert(running && connected && !destroyed)
-        log("message: $message")
 
         if (message.from == FROM_SERVER) {
             processMessageFromServer(message)

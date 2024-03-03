@@ -255,7 +255,7 @@ class Kernel(val context: Context) {
             runAsync(action = presenter::onDisconnected)
         }
 
-        override fun onLogInResult(successful: Boolean) {
+        override fun onLogInResult(successful: Boolean) = runAsync {
             if (successful) {
                 if (!wasLoggedIn) setCredentials(presenter.credentials)
 
@@ -265,7 +265,7 @@ class Kernel(val context: Context) {
                 if (wasLoggedIn) setCredentials(null)
             }
 
-            runAsync { presenter.onLogInResult(successful) }
+            presenter.onLogInResult(successful)
         }
 
         override fun onRegisterResult(successful: Boolean) = presenter.onRegisterResult(successful)
