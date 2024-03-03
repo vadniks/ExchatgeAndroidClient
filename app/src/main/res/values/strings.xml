@@ -63,4 +63,6 @@
     <string name="conversationDoesntExist">Conversation doesn\'t exist</string>
     <string name="conversationWasDeleted">Conversation was deleted</string>
     <string name="timestampFormat">HH:mm:ss MMM-dd-yyyy</string>
+    <string name="registrationSucceeded">Registration succeeded</string>
+    <string name="registrationFailed">Registration failed</string>
 </resources>

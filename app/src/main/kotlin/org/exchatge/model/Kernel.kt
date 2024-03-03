@@ -49,6 +49,7 @@ class Kernel(val context: Context) {
     private val lock = this
     @Volatile var database = null as Database?; private set
     private val maxUnencryptedMessageBodySize get() = MAX_MESSAGE_BODY_SIZE - crypto.encryptedSize(0) // strange bug occurs without get() - runtime value becomes zero regardless of assigned value
+    @Volatile private var registrationPending = false
 
     // TODO: add settings to ui to adjust options which will be stored as sharedPreferences
 
@@ -124,6 +125,13 @@ class Kernel(val context: Context) {
 
         override fun scheduleLogIn() {
             triedLogIn = true
+            assert(net == null)
+            runAsync(1000, this@Kernel::initializeNet)
+        }
+
+        override fun scheduleRegister() = runAsync {
+            registrationPending = true
+            assert(net == null)
             runAsync(1000, this@Kernel::initializeNet)
         }
 
@@ -228,7 +236,13 @@ class Kernel(val context: Context) {
         override fun onConnectResult(successful: Boolean) = runAsync {
             if (successful) {
                 val (username, password) = credentials() ?: presenter.credentials
-                net!!.logIn(username, password)
+
+                if (!registrationPending)
+                    net!!.logIn(username, password)
+                else
+                    net!!.register(username, password)
+
+                registrationPending = false
             } else
                 presenter.onConnectFail()
         }
@@ -254,7 +268,9 @@ class Kernel(val context: Context) {
             runAsync { presenter.onLogInResult(successful) }
         }
 
-        override fun onNextUserFetched(user: UserInfo, last: Boolean) = runAsync {
+        override fun onRegisterResult(successful: Boolean) = presenter.onRegisterResult(successful)
+
+        override fun onNextUserFetched(user: UserInfo, last: Boolean) = runAsync { // TODO: test with large amount of users
             synchronized(lock) {
                 if (user.id == 0) { // first
                     assert(!last)

@@ -270,7 +270,10 @@ class Net(private val initiator: NetInitiator) {
 
         when (message.flag) {
             FLAG_LOGGED_IN -> onLoggedIn(message)
-            FLAG_REGISTERED -> log("register succeeded")
+            FLAG_REGISTERED -> {
+                assert(running && connected && !destroyed && !authenticated)
+                initiator.onRegisterResult(true)
+            }
             FLAG_FETCH_USERS -> onNextUserInfosBundleFetched(message)
             FLAG_ERROR -> processErrors(message)
             FLAG_FETCH_MESSAGES -> onEmptyMessagesFetchReplyReceived(message)
@@ -301,7 +304,7 @@ class Net(private val initiator: NetInitiator) {
                 initiator.onLogInResult(false)
                 disconnect()
             }
-            FLAG_REGISTER -> log("register failed")
+            FLAG_REGISTER -> initiator.onRegisterResult(false)
             FLAG_FETCH_MESSAGES -> log("fetch messages failed")
             else -> log("error $flag received")
         }

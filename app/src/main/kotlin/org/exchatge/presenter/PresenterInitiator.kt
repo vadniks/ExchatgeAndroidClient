@@ -28,6 +28,7 @@ interface PresenterInitiator {
     fun onActivityCreate()
     fun credentialsLengthCorrect(username: String, password: String): Boolean
     fun scheduleLogIn()
+    fun scheduleRegister()
     fun scheduleUsersFetch()
     fun admin(id: Int): Boolean
     fun scheduleLogOut()

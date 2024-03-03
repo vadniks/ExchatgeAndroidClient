@@ -153,7 +153,16 @@ class PresenterImpl(private val initiator: PresenterInitiator): Presenter {
         view!!.snackbar(view!!.string(R.string.disconnected))
     }
 
-    override fun register() {}
+    override fun register() {
+        setUiLock(true)
+        initiator.scheduleRegister()
+    }
+
+    fun onRegisterResult(successful: Boolean) {
+        if (!activityRunning) return
+        setUiLock(false)
+        view!!.snackbar(view!!.string(if (successful) R.string.registrationSucceeded else R.string.registrationFailed))
+    }
 
     override fun updateUsersList() {
         setUiLock(true)
