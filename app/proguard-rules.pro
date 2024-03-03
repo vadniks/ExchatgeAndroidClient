@@ -29,6 +29,5 @@
 -ignorewarnings
 
 -keep class com.sun.jna.** { *; }
--keep class java.awt.** { *; }
 
 # clean & rebuild if problems occur
