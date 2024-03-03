@@ -231,12 +231,8 @@ class PresenterImpl(private val initiator: PresenterInitiator): Presenter {
 
     private class SynchronizedMutableState<T>(initial: T, private val lock: Any) {
         private val delegate = mutableStateOf(initial)
-
-        operator fun getValue(thisRef: Any?, property: KProperty<*>): T =
-            synchronized(lock) { delegate.getValue(thisRef, property) }
-
-        operator fun setValue(thisRef: Any?, property: KProperty<*>, value: T) =
-            synchronized(lock) { delegate.setValue(thisRef, property, value) }
+        operator fun getValue(thisRef: Any?, property: KProperty<*>): T = synchronized(lock) { delegate.getValue(thisRef, property) }
+        operator fun setValue(thisRef: Any?, property: KProperty<*>, value: T) = synchronized(lock) { delegate.setValue(thisRef, property, value) }
     }
 
     private class SynchronizedMutableStateList<T>(private val lock: Any): MutableList<T> {
