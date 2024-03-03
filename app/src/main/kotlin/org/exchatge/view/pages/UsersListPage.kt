@@ -195,11 +195,8 @@ private fun AdminActionsBottomSheet(pagesShared: PagesShared) {
             TextField(
                 value = pagesShared.broadcastMessage,
                 onValueChange = {
-                    pagesShared.broadcastMessage = // TODO: move this logic to presenter
-                        if (it.length >= pagesShared.maxBroadcastMessageSize)
-                            it.slice(0 until pagesShared.maxBroadcastMessageSize)
-                        else
-                            it
+                    if (it.length <= pagesShared.maxBroadcastMessageSize)
+                        pagesShared.broadcastMessage = it
                 },
                 label = {
                     Text(stringResource(R.string.broadcastMessage))
