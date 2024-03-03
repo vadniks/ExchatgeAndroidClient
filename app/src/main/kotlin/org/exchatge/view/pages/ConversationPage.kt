@@ -165,7 +165,7 @@ private fun Message(message: ConversationMessage) = Box(
             )
             Spacer(modifier = Modifier.fillMaxWidth().height(5.dp))
             Text(
-                text = SimpleDateFormat("HH:mm:ss MMM-dd-yyyy").format(message.timestamp),
+                text = SimpleDateFormat(stringResource(R.string.timestampFormat)).format(message.timestamp),
                 fontSize = 12.sp,
                 fontStyle = FontStyle.Italic,
                 color = MaterialTheme.colorScheme.secondary,

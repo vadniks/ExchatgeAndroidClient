@@ -62,4 +62,5 @@
     <string name="opponentIsOffline">Opponent is offline</string>
     <string name="conversationDoesntExist">Conversation doesn\'t exist</string>
     <string name="conversationWasDeleted">Conversation was deleted</string>
+    <string name="timestampFormat">HH:mm:ss MMM-dd-yyyy</string>
 </resources>
