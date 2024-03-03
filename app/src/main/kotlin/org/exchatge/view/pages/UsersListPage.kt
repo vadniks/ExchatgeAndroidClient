@@ -110,7 +110,7 @@ fun UsersListPage(pagesShared: PagesShared) = Scaffold(
                     )
                 }
                 if (pagesShared.admin) IconButton(
-                    onClick = pagesShared::administrate,
+                    onClick = { pagesShared.administrate(false) },
                     enabled = pagesShared.controlsEnabled
                 ) {
                     Icon(
@@ -131,6 +131,7 @@ fun UsersListPage(pagesShared: PagesShared) = Scaffold(
                 }
             }
         }
+        if (pagesShared.showAdministrativeActions) AdminActionsBottomSheet(pagesShared)
     }
 }
 
@@ -175,11 +176,11 @@ private fun UserInfo(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun AdminActionsBottomSheet() {
+private fun AdminActionsBottomSheet(pagesShared: PagesShared) {
     val state = rememberModalBottomSheetState()
 
     ModalBottomSheet(
-        onDismissRequest = {},
+        onDismissRequest = { pagesShared.administrate(true) },
         sheetState = state
     ) {
         Column(
@@ -187,13 +188,19 @@ private fun AdminActionsBottomSheet() {
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Button(onClick = {}) {
+            Button(onClick = pagesShared::shutdownServer) {
                 Text(stringResource(R.string.shutdownServer))
             }
             Spacer(modifier = Modifier.padding(5.dp))
             TextField(
-                value = "",
-                onValueChange = { _: String -> },
+                value = pagesShared.broadcastMessage,
+                onValueChange = {
+                    pagesShared.broadcastMessage = // TODO: move this logic to presenter
+                        if (it.length >= pagesShared.maxBroadcastMessageSize)
+                            it.slice(0 until pagesShared.maxBroadcastMessageSize)
+                        else
+                            it
+                },
                 label = {
                     Text(stringResource(R.string.broadcastMessage))
                 },
@@ -205,7 +212,7 @@ private fun AdminActionsBottomSheet() {
                     )
                 },
                 trailingIcon = {
-                    IconButton(onClick = {}) {
+                    IconButton(onClick = pagesShared::sendBroadcast) {
                         Icon(
                             imageVector = Icons.Filled.Send,
                             contentDescription = stringResource(R.string.send)

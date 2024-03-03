@@ -115,6 +115,7 @@ class Kernel(val context: Context) {
         @Volatile private var triedLogIn = false
         override val currentUserId get() = net!!.userId
         override val maxMessagePlainPayloadSize get() = (maxUnencryptedMessageBodySize / Crypto.PADDING_BLOCK_SIZE) * Crypto.PADDING_BLOCK_SIZE
+        override val maxBroadcastMessageSize get() = 64
 
         override fun onActivityCreate() {}
 
@@ -158,6 +159,12 @@ class Kernel(val context: Context) {
             }
         }
 
+        override fun shutdownServer() = runAsync { net!!.shutdownServer() }
+
+        override fun sendBroadcast(text: String) = runAsync {
+            net!!.sendBroadcast(text.toByteArray().also { assert(it.size in 1 .. maxBroadcastMessageSize) })
+        }
+
         private fun removeConversation(id: Int, conversationExists: Boolean) {
             presenter.removeConversation(null)
 
@@ -193,6 +200,7 @@ class Kernel(val context: Context) {
 
         override fun sendMessage(to: Int, text: String, millis: Long) = runAsync {
             val bytes = text.toByteArray()
+            assert(bytes.isNotEmpty())
             database!!.messagesDao.add(Message(millis, to, currentUserId, bytes))
 
             val padded = crypto.addPadding(bytes)

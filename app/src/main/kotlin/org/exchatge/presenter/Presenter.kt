@@ -37,9 +37,12 @@ interface Presenter {
     var password: String
     val currentUser: String
     val admin: Boolean
+    var broadcastMessage: String
+    val maxBroadcastMessageSize: Int
     val opponentUsername: String
     var currentConversationMessage: String
     val conversationSetupDialogParameters: ConversationSetupDialogParameters?
+    val showAdministrativeActions: Boolean
     val maxMessageTextSize: Int
 
     fun onCreate(view: View, savedInstanceState: Bundle?) // TODO: handle config changes and process kill (save activity's state)
@@ -49,7 +52,9 @@ interface Presenter {
     fun register()
     fun updateUsersList()
     fun usersForEach(action: (User) -> Unit)
-    fun administrate()
+    fun administrate(done: Boolean)
+    fun shutdownServer()
+    fun sendBroadcast()
     fun conversation(id: Int, remove: Boolean)
     fun messagesForEach(action: (ConversationMessage) -> Unit)
     fun returnFromPage()
@@ -81,9 +86,12 @@ object PresenterStub : Presenter { // stub to make @Preview work; can be used to
     override var password by stringStub
     override val currentUser = ""
     override val admin = false
+    override var broadcastMessage by stringStub
+    override val maxBroadcastMessageSize = 0
     override val opponentUsername = ""
     override var currentConversationMessage by stringStub
     override val conversationSetupDialogParameters: ConversationSetupDialogParameters? = null
+    override val showAdministrativeActions = false
     override val maxMessageTextSize = 0
 
     override fun onCreate(view: View, savedInstanceState: Bundle?) {}
@@ -93,7 +101,9 @@ object PresenterStub : Presenter { // stub to make @Preview work; can be used to
     override fun register() {}
     override fun updateUsersList() {}
     override fun usersForEach(action: (User) -> Unit) {}
-    override fun administrate() {}
+    override fun administrate(done: Boolean) {}
+    override fun shutdownServer() {}
+    override fun sendBroadcast() {}
     override fun conversation(id: Int, remove: Boolean) {}
     override fun messagesForEach(action: (ConversationMessage) -> Unit) {}
     override fun returnFromPage() {}

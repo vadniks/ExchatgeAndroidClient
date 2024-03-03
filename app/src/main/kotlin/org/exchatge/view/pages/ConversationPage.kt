@@ -123,7 +123,7 @@ fun ConversationPage(pagesShared: PagesShared) = Scaffold(
                 value = pagesShared.currentConversationMessage,
                 onValueChange = {
                     pagesShared.currentConversationMessage =
-                        (if (it.length >= pagesShared.maxMessageTextSize)
+                        (if (it.length >= pagesShared.maxMessageTextSize) // TODO: move this logic to presenter
                             it.slice(0 until pagesShared.maxMessageTextSize)
                         else
                             it).replace('\n', ' ') // 'cause the desktop client can't process new lines - additional logic to handle them isn't yet implemented

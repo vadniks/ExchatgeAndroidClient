@@ -23,6 +23,7 @@ import org.exchatge.model.database.Message
 interface PresenterInitiator {
     val currentUserId: Int
     val maxMessagePlainPayloadSize: Int
+    val maxBroadcastMessageSize: Int
 
     fun onActivityCreate()
     fun credentialsLengthCorrect(username: String, password: String): Boolean
@@ -31,6 +32,8 @@ interface PresenterInitiator {
     fun admin(id: Int): Boolean
     fun scheduleLogOut()
     fun onConversationSetupDialogAction(accepted: Boolean, requestedByHost: Boolean, opponentId: Int)
+    fun shutdownServer()
+    fun sendBroadcast(text: String)
     fun onConversationRequested(id: Int, remove: Boolean)
     fun sendMessage(to: Int, text: String, millis: Long)
     fun loadSavedMessages(conversation: Int): List<Message>

@@ -49,9 +49,12 @@ class PresenterImpl(private val initiator: PresenterInitiator): Presenter {
     val credentials get() = username to password
     override var currentUser by SynchronizedMutableState("", this)
     override var admin by SynchronizedMutableState(false, this)
+    override var broadcastMessage by mutableStateOf("")
+    override val maxBroadcastMessageSize = initiator.maxBroadcastMessageSize - 1
     override var opponentUsername by SynchronizedMutableState("", this)
     override var currentConversationMessage by mutableStateOf("")
     override var conversationSetupDialogParameters by SynchronizedMutableState<ConversationSetupDialogParameters?>(null, this)
+    override var showAdministrativeActions by SynchronizedMutableState(false, this)
     private val messages = SynchronizedMutableStateList<ConversationMessage>(this)
     @Volatile private var opponentId = 0
     override val maxMessageTextSize get() = initiator.maxMessagePlainPayloadSize - 1
@@ -158,7 +161,15 @@ class PresenterImpl(private val initiator: PresenterInitiator): Presenter {
         initiator.scheduleUsersFetch()
     }
 
-    override fun administrate() {}
+    override fun administrate(done: Boolean) = this::showAdministrativeActions.set(!done)
+
+    override fun shutdownServer() = initiator.shutdownServer()
+
+    override fun sendBroadcast() {
+        if (broadcastMessage.isEmpty()) return
+        initiator.sendBroadcast(broadcastMessage)
+        broadcastMessage = ""
+    }
 
     override fun usersForEach(action: (User) -> Unit) = synchronized(this) { for (i in users) action(i) }
 
@@ -171,6 +182,8 @@ class PresenterImpl(private val initiator: PresenterInitiator): Presenter {
     override fun fileChoose() {}
 
     override fun sendMessage() = System.currentTimeMillis().let {
+        if (currentConversationMessage.isEmpty()) return@let
+
         messages.add(0, ConversationMessage(it, null, currentConversationMessage))
         initiator.sendMessage(opponentId, currentConversationMessage, it)
         currentConversationMessage = ""
