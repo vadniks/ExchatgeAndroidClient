@@ -21,10 +21,10 @@ package org.exchatge.view.pages
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -34,7 +34,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Send
@@ -159,19 +162,28 @@ private fun UserInfo(
         )
     },
     trailingContent = {
-        Text(
-            text = stringResource(if (user.conversationExists) R.string.continueConversation else R.string.startConversation),
-            fontSize = 14.sp,
-            color = MaterialTheme.colorScheme.secondary,
-            modifier = Modifier.fillMaxWidth(.35f),
-            textAlign = TextAlign.Center
-        )
+        Row(horizontalArrangement = Arrangement.Center) {
+            IconButton(
+                onClick = { pagesShared.conversation(user.id, false) },
+                enabled = pagesShared.controlsEnabled
+            ) {
+                Icon(
+                    imageVector = if (user.conversationExists) Icons.Filled.Edit else Icons.Filled.Add,
+                    contentDescription = stringResource(if (user.conversationExists) R.string.continueConversation else R.string.startConversation)
+                )
+            }
+            if (user.conversationExists) IconButton(
+                onClick = { pagesShared.conversation(user.id, true) },
+                enabled = pagesShared.controlsEnabled
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Delete,
+                    contentDescription = stringResource(R.string.deleteConversation)
+                )
+            }
+        }
     },
-    modifier = Modifier.fillMaxWidth().combinedClickable(
-        enabled = pagesShared.controlsEnabled,
-        onClick = { pagesShared.conversation(user.id, false) },
-        onLongClick = { pagesShared.conversation(user.id, true) }
-    )
+    modifier = Modifier.fillMaxWidth()
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
