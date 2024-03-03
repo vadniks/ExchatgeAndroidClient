@@ -36,3 +36,4 @@ infix fun Int.untilSize(size: Int): IntRange { assert(size >= 0); return this un
 
 class Reference<T>(var referenced: T)
 enum class Ternary(val value: Boolean?) { POSITIVE(true), NEUTRAL(null), NEGATIVE(false) }
+val Boolean?.ternary get() = when (this) { true -> Ternary.POSITIVE; null -> Ternary.NEUTRAL; false -> Ternary.NEGATIVE }
