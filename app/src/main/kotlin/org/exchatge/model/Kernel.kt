@@ -192,10 +192,8 @@ class Kernel(val context: Context) {
                 presenter.removeConversation(false)
         }
 
-        override fun onConversationRequested(id: Int, remove: Boolean) { log("xxx 1"); runAsync {
-            log("xxx 2")
+        override fun onConversationRequested(id: Int, remove: Boolean) = runAsync {
             val conversationExists = database!!.conversationDao.exists(id)
-            log("xxx 3")
 
             if (remove) {
                 removeConversation(id, conversationExists)
@@ -214,7 +212,7 @@ class Kernel(val context: Context) {
                 presenter.showConversationSetUpDialog(true, id, username)
             else
                 presenter.notifyUserOpponentIsOffline()
-        } }
+        }
 
         override fun sendMessage(to: Int, text: String, millis: Long) = runAsync {
             val bytes = text.toByteArray()
