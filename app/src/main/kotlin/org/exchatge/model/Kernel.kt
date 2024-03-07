@@ -65,6 +65,16 @@ class Kernel(val context: Context) {
         assert(!initialized)
         initialized = true
 
+        println( // Figlet
+            """
+                       _______ _      _ _______ _     _ _______ _______  ______ _______            
+                       |______  \\___/  |       |_____| |_____|    |    |  ____ |______           
+                       |______ _/   \\_ |_____  |     | |     |    |    |_____| |______           
+            Exchatge (Client) Copyright (C) 2023-2024  Vadim Nikolaev (https://github.com/vadniks)
+                               This program comes with ABSOLUTELY NO WARRANTY;                    
+            This is free software, and you are welcome to redistribute it under certain conditions""".trimIndent(),
+        )
+
         @SuppressLint("HardwareIds")
         encryptionKey = crypto.makeKey((
             Secure.getString(context.contentResolver, Secure.ANDROID_ID).hashCode()
