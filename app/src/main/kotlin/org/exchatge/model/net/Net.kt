@@ -24,11 +24,15 @@ import org.exchatge.model.Reference
 import org.exchatge.model.Ternary
 import org.exchatge.model.assert
 import org.exchatge.model.log
+import org.exchatge.model.readLocked
+import org.exchatge.model.writeLocked
 import java.net.InetSocketAddress
 import java.net.Socket
 import java.net.SocketTimeoutException
 import java.util.Queue
 import java.util.concurrent.ConcurrentLinkedQueue
+import java.util.concurrent.locks.ReadWriteLock
+import java.util.concurrent.locks.ReentrantReadWriteLock
 
 private const val SERVER_ADDRESS = "192.168.1.57" // TODO: debug only
 
@@ -42,8 +46,8 @@ private val serverSignPublicKey = byteArrayOf( // TODO: debug only
 class Net(private val initiator: NetInitiator) {
     val running get() = NetService.running
     @Volatile private var socket: Socket? = null
-    private val lock = this
-    val connected get() = synchronized(lock) { socket != null && !socket!!.isClosed && socket!!.isConnected }
+    private val rwLock = ReentrantReadWriteLock()
+    val connected get() = rwLock.readLocked { socket != null && !socket!!.isClosed && socket!!.isConnected }
     private val crypto get() = initiator.crypto
     private val encryptedMessageMaxSize = crypto.encryptedSize(MAX_MESSAGE_SIZE)
     private var coders: Crypto.Coders? = null
@@ -72,7 +76,7 @@ class Net(private val initiator: NetInitiator) {
     fun onPostCreate() {
         assert(!destroyed)
 
-        synchronized(lock) {
+        rwLock.writeLocked {
             socket =
                 try { Socket().apply { connect(InetSocketAddress(SERVER_ADDRESS, 8080), /*TODO: extract constant*/1000 * 60 * 60) } }
                 catch (_: Exception) { null } // unable to connect
@@ -83,7 +87,7 @@ class Net(private val initiator: NetInitiator) {
             initiator.onConnectResult(false)
             return
         }
-        synchronized(lock) { socket!!.soTimeout = 500 } // delay between socket read tries (while (open) { delay(500); tryRead() })
+        rwLock.writeLocked { socket!!.soTimeout = 500 } // delay between socket read tries (while (open) { delay(500); tryRead() }) // TODO: extract constant
 
         val ready = initiateSecuredConnection()
         log("ready = $ready") // if (!ready) // error while connecting
@@ -136,7 +140,7 @@ class Net(private val initiator: NetInitiator) {
 
     private fun read(buffer: ByteArray) =
         try {
-            if (synchronized(lock) { socket!!.getInputStream().read(buffer) } == buffer.size)
+            if (rwLock.writeLocked { socket!!.getInputStream().read(buffer) } == buffer.size)
                 Ternary.POSITIVE
             else
                 Ternary.NEGATIVE // disconnected
@@ -145,7 +149,7 @@ class Net(private val initiator: NetInitiator) {
         catch (_: Exception) { Ternary.NEGATIVE } // error - disconnect
 
     private fun write(buffer: ByteArray) =
-        try { synchronized(lock) { socket!!.getOutputStream().write(buffer) }; true }
+        try { rwLock.writeLocked { socket!!.getOutputStream().write(buffer) }; true }
         catch (_: Exception) { false }
 
     private fun receive(disconnected: Reference<Boolean>): NetMessage? {
@@ -172,7 +176,7 @@ class Net(private val initiator: NetInitiator) {
             Ternary.POSITIVE -> Unit // proceed
         }
 
-        val decrypted = synchronized(lock) { crypto.decrypt(coders!!, buffer) }
+        val decrypted = rwLock.writeLocked { crypto.decrypt(coders!!, buffer) }
         assert(decrypted != null)
 
         disconnected.referenced = false
@@ -188,7 +192,7 @@ class Net(private val initiator: NetInitiator) {
         val packed = message.pack()
         assert(packed.size == packedSize)
 
-        val encrypted = synchronized(lock) { crypto.encrypt(coders!!, packed) }
+        val encrypted = rwLock.writeLocked { crypto.encrypt(coders!!, packed) }
         assert(encrypted != null)
 
         val encryptedSize = crypto.encryptedSize(packedSize)
@@ -211,7 +215,7 @@ class Net(private val initiator: NetInitiator) {
 
     fun listen() {
         while (running && connected) {
-//            log("listen")
+            log("listen")
             if (tryReadMessage() == Ternary.NEGATIVE) break
         }
         log("disconnected") // disconnected - logging in is required to reconnect // TODO: handle disconnection
@@ -234,6 +238,8 @@ class Net(private val initiator: NetInitiator) {
 
     private fun processMessage(message: NetMessage) {
         assert(running && connected && !destroyed)
+
+        log(message)
 
         if (message.from == FROM_SERVER) {
             processMessageFromServer(message)
@@ -332,7 +338,6 @@ class Net(private val initiator: NetInitiator) {
         assert(running && connected && authenticated && !destroyed && fetchingMessages && message.body != null)
         val last = message.index == message.count - 1
 
-//        log("next message fetched $message")
         initiator.onNextMessageFetched(message.from, message.timestamp, message.body, last)
         if (last) fetchingMessages = false
     }
@@ -340,7 +345,6 @@ class Net(private val initiator: NetInitiator) {
     private fun onEmptyMessagesFetchReplyReceived(message: NetMessage) {
         assert(running && connected && authenticated && !destroyed && message.body != null && message.count == 1)
         initiator.onNextMessageFetched(message.body!!.sliceArray(1 + 8 until 1 + 8 + 4).int, message.timestamp, null, true)
-//        log("empty messages fetch reply $message " + message.body!!.sliceArray(1 + 8 until 1 + 8 + 4).int)
         fetchingMessages = false
     }
 
@@ -363,7 +367,7 @@ class Net(private val initiator: NetInitiator) {
         return credentials
     }
 
-    fun disconnect() = synchronized(lock) { // ...and reset, after this the module should be recreated
+    fun disconnect() = rwLock.writeLocked { // ...and reset, after this the module should be recreated
         assert(running && connected && !destroyed)
         socket!!.close()
         socket = null
@@ -564,7 +568,7 @@ class Net(private val initiator: NetInitiator) {
     fun onDestroy() {
         log("close")
         assert(!running)
-        synchronized(lock) {
+        rwLock.writeLocked {
             socket?.close()
             socket = null
         }

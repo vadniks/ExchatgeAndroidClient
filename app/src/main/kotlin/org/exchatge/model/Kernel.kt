@@ -23,6 +23,9 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.provider.Settings.Secure
 import androidx.annotation.VisibleForTesting
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.launch
 import org.exchatge.model.database.Conversation
 import org.exchatge.model.database.Database
 import org.exchatge.model.database.Message
@@ -38,6 +41,8 @@ import org.exchatge.presenter.PresenterImpl
 import org.exchatge.presenter.PresenterInitiator
 import java.util.Collections
 import java.util.LinkedList
+import java.util.Queue
+import java.util.concurrent.locks.ReentrantReadWriteLock
 
 class Kernel(val context: Context) {
     val crypto = Crypto()
@@ -47,11 +52,11 @@ class Kernel(val context: Context) {
     private val encryptionKey: ByteArray
     private val wasLoggedIn get() = sharedPrefs.getString(CREDENTIALS, null) != null
     private val users = ArrayList<UserInfo>()
-    private val lock = this
+    private val rwLock = ReentrantReadWriteLock()
     @Volatile var database = null as Database?; private set
     private val maxUnencryptedMessageBodySize get() = MAX_MESSAGE_BODY_SIZE - crypto.encryptedSize(0) // strange bug occurs without get() - runtime value becomes zero regardless of assigned value
     @Volatile private var registrationPending = false
-    private val userIdsToFetchMessagesFrom = LinkedList<Int>()
+    private val userIdsToFetchMessagesFrom = LinkedList<Int>() as Queue<Int>
     @Volatile private var missingMessagesFetchers = 0
 
     // TODO: add settings to ui to adjust options which will be stored as sharedPreferences
@@ -104,7 +109,7 @@ class Kernel(val context: Context) {
         if (credentials == null) remove(CREDENTIALS) else putString(CREDENTIALS, encryptCredentials(credentials))
     }.commit() // TODO: fill with mess before drop
 
-    private fun findUser(id: Int) = synchronized(lock) {
+    private fun findUser(id: Int) = rwLock.readLocked {
         val index = Collections.binarySearch(users as List<Any>, id) { user, xId ->
             user as UserInfo
             xId as Int // bypass type safety for a moment to do a little hack, porting this from low level C code after all
@@ -286,7 +291,7 @@ class Kernel(val context: Context) {
         override fun onNextUserFetched(user: UserInfo, last: Boolean) = runAsync { // TODO: test with large amount of users
             val conversationExists = database!!.conversationDao.exists(user.id) // TODO: instead of getting users one by one, get all users in a bundle, this would eliminate thread race problem
 
-            synchronized(lock) {
+            rwLock.writeLocked {
                 if (user.id == 0) { // first
                     assert(!last)
                     users.clear()
@@ -296,7 +301,7 @@ class Kernel(val context: Context) {
                     net!!.ignoreUsualMessages = true
                 }
 
-                users.add(user)
+                users.add(user) // TODO: maybe add sort()
                 log("aaa", user)
 
                 if (conversationExists)
@@ -306,7 +311,7 @@ class Kernel(val context: Context) {
             presenter.onNextUserFetched(user, conversationExists, last)
             if (!last) return@runAsync
 
-            val nextIdToFetchMessagesFrom = synchronized(lock) { userIdsToFetchMessagesFrom.poll() }
+            val nextIdToFetchMessagesFrom = rwLock.writeLocked { userIdsToFetchMessagesFrom.poll() }
             if (nextIdToFetchMessagesFrom == null) {
                 net!!.ignoreUsualMessages = false
                 presenter.onMessagesFetched(true)
@@ -315,7 +320,7 @@ class Kernel(val context: Context) {
         }
 
         override fun onConversationSetUpInviteReceived(fromId: Int) = runAsync {
-            synchronized(lock) { log(users) } // TODO: replace arrayList with vector
+            rwLock.readLocked { log(users) } // TODO: replace arrayList with vector
             presenter.showConversationSetUpDialog(false, fromId, String(findUser(fromId)!!.name))
         }
 
@@ -343,11 +348,11 @@ class Kernel(val context: Context) {
             missingMessagesFetchers--
             assert(missingMessagesFetchers >= 0)
 
-            val nextIdToFetchMessagesFrom = synchronized(lock) { userIdsToFetchMessagesFrom.poll() }
+            val nextIdToFetchMessagesFrom = rwLock.writeLocked { userIdsToFetchMessagesFrom.poll() }
             if (nextIdToFetchMessagesFrom != null)
                 runAsync { fetchMissingMessagesFromUser(nextIdToFetchMessagesFrom) }
 
-            assert(missingMessagesFetchers == synchronized(lock) { userIdsToFetchMessagesFrom.size })
+            assert(missingMessagesFetchers == rwLock.readLocked { userIdsToFetchMessagesFrom.size })
             if (missingMessagesFetchers > 0) return@runAsync
 
             userIdsToFetchMessagesFrom.clear()
