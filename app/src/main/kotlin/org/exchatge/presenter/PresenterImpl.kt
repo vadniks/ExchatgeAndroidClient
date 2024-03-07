@@ -37,7 +37,6 @@ import org.exchatge.view.ConversationSetupDialogParameters
 import org.exchatge.view.User
 import org.exchatge.view.View
 import org.exchatge.view.pages.Pages
-import java.util.concurrent.locks.ReadWriteLock
 import java.util.concurrent.locks.ReentrantReadWriteLock
 import kotlin.reflect.KProperty
 
@@ -45,22 +44,22 @@ class PresenterImpl(private val initiator: PresenterInitiator): Presenter {
     @Volatile override var view: View? = null; private set
     val activityRunning get() = view != null
     private val rwLock = ReentrantReadWriteLock()
-    override var currentPage by SynchronizedMutableState(Pages.LOG_IN_REGISTER, this)
-    override var controlsEnabled by SynchronizedMutableState(true, this)
-    override var loading by SynchronizedMutableState(false, this)
+    override var currentPage by SynchronizedMutableState(Pages.LOG_IN_REGISTER)
+    override var controlsEnabled by SynchronizedMutableState(true)
+    override var loading by SynchronizedMutableState(false)
     override var username by mutableStateOf("") // TODO: synchronize ui string fields too?
     override var password by mutableStateOf("")
-    private val users = SynchronizedMutableStateList<User>(this) as MutableList<User>
+    private val users = SynchronizedMutableStateList<User>() as MutableList<User>
     val credentials get() = username to password
-    override var currentUser by SynchronizedMutableState("", this)
-    override var admin by SynchronizedMutableState(false, this)
+    override var currentUser by SynchronizedMutableState("")
+    override var admin by SynchronizedMutableState(false)
     override var broadcastMessage by mutableStateOf("")
     override val maxBroadcastMessageSize = initiator.maxBroadcastMessageSize - 1
-    override var opponentUsername by SynchronizedMutableState("", this)
+    override var opponentUsername by SynchronizedMutableState("")
     override var currentConversationMessage by mutableStateOf("")
-    override var conversationSetupDialogParameters by SynchronizedMutableState<ConversationSetupDialogParameters?>(null, this)
-    override var showAdministrativeActions by SynchronizedMutableState(false, this)
-    private val messages = SynchronizedMutableStateList<ConversationMessage>(this)
+    override var conversationSetupDialogParameters by SynchronizedMutableState<ConversationSetupDialogParameters?>(null)
+    override var showAdministrativeActions by SynchronizedMutableState(false)
+    private val messages = SynchronizedMutableStateList<ConversationMessage>()
     @Volatile private var opponentId = 0
     override val maxMessageTextSize get() = initiator.maxMessagePlainPayloadSize - 1
 
