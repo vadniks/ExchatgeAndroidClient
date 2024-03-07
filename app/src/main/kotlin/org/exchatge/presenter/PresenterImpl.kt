@@ -27,19 +27,24 @@ import androidx.compose.runtime.setValue
 import org.exchatge.R
 import org.exchatge.model.kernel
 import org.exchatge.model.net.UserInfo
+import org.exchatge.model.readLocked
 import org.exchatge.model.runAsync
 import org.exchatge.model.unit
+import org.exchatge.model.writeLocked
 import org.exchatge.view.Activity
 import org.exchatge.view.ConversationMessage
 import org.exchatge.view.ConversationSetupDialogParameters
 import org.exchatge.view.User
 import org.exchatge.view.View
 import org.exchatge.view.pages.Pages
+import java.util.concurrent.locks.ReadWriteLock
+import java.util.concurrent.locks.ReentrantReadWriteLock
 import kotlin.reflect.KProperty
 
 class PresenterImpl(private val initiator: PresenterInitiator): Presenter {
     @Volatile override var view: View? = null; private set
     val activityRunning get() = view != null
+    private val rwLock = ReentrantReadWriteLock()
     override var currentPage by SynchronizedMutableState(Pages.LOG_IN_REGISTER, this)
     override var controlsEnabled by SynchronizedMutableState(true, this)
     override var loading by SynchronizedMutableState(false, this)
@@ -184,11 +189,11 @@ class PresenterImpl(private val initiator: PresenterInitiator): Presenter {
         broadcastMessage = ""
     }
 
-    override fun usersForEach(action: (User) -> Unit) = synchronized(this) { for (i in users) action(i) }
+    override fun usersForEach(action: (User) -> Unit) = rwLock.readLocked { for (i in users) action(i) }
 
     override fun conversation(id: Int, remove: Boolean) = initiator.onConversationRequested(id, remove)
 
-    override fun messagesForEach(action: (ConversationMessage) -> Unit) = synchronized(this) { for (i in messages) action(i) }
+    override fun messagesForEach(action: (ConversationMessage) -> Unit) = rwLock.readLocked { for (i in messages) action(i) }
 
     override fun returnFromPage() = handleOnBackPressed()
 
@@ -257,52 +262,52 @@ class PresenterImpl(private val initiator: PresenterInitiator): Presenter {
 
     fun onBroadcastReceived(text: String) = if (activityRunning) view!!.snackbar(text) else Unit
 
-    private class SynchronizedMutableState<T>(initial: T, private val lock: Any) {
+    private inner class SynchronizedMutableState<T>(initial: T) {
         private val delegate = mutableStateOf(initial)
-        operator fun getValue(thisRef: Any?, property: KProperty<*>): T = synchronized(lock) { delegate.getValue(thisRef, property) }
-        operator fun setValue(thisRef: Any?, property: KProperty<*>, value: T) = synchronized(lock) { delegate.setValue(thisRef, property, value) }
+        operator fun getValue(thisRef: Any?, property: KProperty<*>): T = rwLock.readLocked { delegate.getValue(thisRef, property) }
+        operator fun setValue(thisRef: Any?, property: KProperty<*>, value: T) = rwLock.writeLocked { delegate.setValue(thisRef, property, value) }
     }
 
-    private class SynchronizedMutableStateList<T>(private val lock: Any): MutableList<T> {
+    private inner class SynchronizedMutableStateList<T>: MutableList<T> {
         private val delegate = mutableStateListOf<T>()
-        override val size = synchronized(lock) { delegate.size }
-        override fun clear() = synchronized(lock) { delegate.clear() }
-        override fun addAll(elements: Collection<T>) = synchronized(lock) { delegate.addAll(elements) }
-        override fun addAll(index: Int, elements: Collection<T>) = synchronized(lock) { delegate.addAll(index, elements) }
-        override fun add(index: Int, element: T) = synchronized(lock) { delegate.add(index, element) }
-        override fun add(element: T) = synchronized(lock) { delegate.add(element) }
-        override fun get(index: Int) = synchronized(lock) { delegate[index] }
-        override fun isEmpty() = synchronized(lock) { delegate.isEmpty() }
+        override val size = rwLock.readLocked { delegate.size }
+        override fun clear() = rwLock.writeLocked { delegate.clear() }
+        override fun addAll(elements: Collection<T>) = rwLock.writeLocked { delegate.addAll(elements) }
+        override fun addAll(index: Int, elements: Collection<T>) = rwLock.writeLocked { delegate.addAll(index, elements) }
+        override fun add(index: Int, element: T) = rwLock.writeLocked { delegate.add(index, element) }
+        override fun add(element: T) = rwLock.writeLocked { delegate.add(element) }
+        override fun get(index: Int) = rwLock.readLocked { delegate[index] }
+        override fun isEmpty() = rwLock.readLocked { delegate.isEmpty() }
         override fun iterator() = object : MutableIterator<T> {
             private val delegate2 = delegate.iterator()
-            override fun hasNext() = synchronized(lock) { delegate2.hasNext() }
-            override fun next() = synchronized(lock) { delegate2.next() }
-            override fun remove() = synchronized(lock) { delegate2.remove() }
+            override fun hasNext() = rwLock.readLocked { delegate2.hasNext() }
+            override fun next() = rwLock.readLocked { delegate2.next() }
+            override fun remove() = rwLock.writeLocked { delegate2.remove() }
         }
         private inner class ListIteratorWrapper(index: Int) : MutableListIterator<T> {
             private val delegate2 = if (index >= 0) delegate.listIterator(index) else delegate.listIterator()
-            override fun add(element: T) = synchronized(lock) { delegate2.add(element) }
-            override fun hasNext() = synchronized(lock) { delegate2.hasNext() }
-            override fun hasPrevious() = synchronized(lock) { delegate2.hasPrevious() }
-            override fun next() = synchronized(lock) { delegate2.next() }
-            override fun nextIndex() = synchronized(lock) { delegate2.nextIndex() }
-            override fun previous() = synchronized(lock) { delegate2.previous() }
-            override fun previousIndex() = synchronized(lock) { delegate2.previousIndex() }
-            override fun remove() = synchronized(lock) { delegate2.remove() }
-            override fun set(element: T) = synchronized(lock) { delegate2.set(element) }
+            override fun add(element: T) = rwLock.writeLocked { delegate2.add(element) }
+            override fun hasNext() = rwLock.readLocked { delegate2.hasNext() }
+            override fun hasPrevious() = rwLock.readLocked { delegate2.hasPrevious() }
+            override fun next() = rwLock.readLocked { delegate2.next() }
+            override fun nextIndex() = rwLock.readLocked { delegate2.nextIndex() }
+            override fun previous() = rwLock.readLocked { delegate2.previous() }
+            override fun previousIndex() = rwLock.readLocked { delegate2.previousIndex() }
+            override fun remove() = rwLock.writeLocked { delegate2.remove() }
+            override fun set(element: T) = rwLock.writeLocked { delegate2.set(element) }
         }
         override fun listIterator() = ListIteratorWrapper(-1)
         override fun listIterator(index: Int) = ListIteratorWrapper(index)
-        override fun removeAt(index: Int) = synchronized(lock) { delegate.removeAt(index) }
-        override fun subList(fromIndex: Int, toIndex: Int) = synchronized(lock) { delegate.subList(fromIndex, toIndex) }
-        override fun set(index: Int, element: T) = synchronized(lock) { delegate.set(index, element) }
-        override fun retainAll(elements: Collection<T>) = synchronized(lock) { delegate.retainAll(elements) }
-        override fun removeAll(elements: Collection<T>) = synchronized(lock) { delegate.removeAll(elements) }
-        override fun remove(element: T) = synchronized(lock) { delegate.remove(element) }
-        override fun lastIndexOf(element: T) = synchronized(lock) { delegate.lastIndexOf(element) }
-        override fun indexOf(element: T) = synchronized(lock) { delegate.indexOf(element) }
-        override fun containsAll(elements: Collection<T>) = synchronized(lock) { delegate.containsAll(elements) }
-        override fun contains(element: T) = synchronized(lock) { delegate.contains(element) }
+        override fun removeAt(index: Int) = rwLock.writeLocked { delegate.removeAt(index) }
+        override fun subList(fromIndex: Int, toIndex: Int) = rwLock.readLocked { delegate.subList(fromIndex, toIndex) }
+        override fun set(index: Int, element: T) = rwLock.writeLocked { delegate.set(index, element) }
+        override fun retainAll(elements: Collection<T>) = rwLock.writeLocked { delegate.retainAll(elements) }
+        override fun removeAll(elements: Collection<T>) = rwLock.writeLocked { delegate.removeAll(elements) }
+        override fun remove(element: T) = rwLock.writeLocked { delegate.remove(element) }
+        override fun lastIndexOf(element: T) = rwLock.readLocked { delegate.lastIndexOf(element) }
+        override fun indexOf(element: T) = rwLock.readLocked { delegate.indexOf(element) }
+        override fun containsAll(elements: Collection<T>) = rwLock.readLocked { delegate.containsAll(elements) }
+        override fun contains(element: T) = rwLock.readLocked { delegate.contains(element) }
     }
 
     companion object {
