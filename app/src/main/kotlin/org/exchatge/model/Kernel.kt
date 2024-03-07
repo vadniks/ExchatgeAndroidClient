@@ -192,8 +192,10 @@ class Kernel(val context: Context) {
                 presenter.removeConversation(false)
         }
 
-        override fun onConversationRequested(id: Int, remove: Boolean) = runAsync {
+        override fun onConversationRequested(id: Int, remove: Boolean) { log("xxx 1"); runAsync {
+            log("xxx 2")
             val conversationExists = database!!.conversationDao.exists(id)
+            log("xxx 3")
 
             if (remove) {
                 removeConversation(id, conversationExists)
@@ -212,7 +214,7 @@ class Kernel(val context: Context) {
                 presenter.showConversationSetUpDialog(true, id, username)
             else
                 presenter.notifyUserOpponentIsOffline()
-        }
+        } }
 
         override fun sendMessage(to: Int, text: String, millis: Long) = runAsync {
             val bytes = text.toByteArray()
@@ -333,8 +335,6 @@ class Kernel(val context: Context) {
             val message = crypto.removePadding(padded)!!
 
             database!!.messagesDao.add(Message(timestamp, from, from, message))
-            val user = findUser(from)
-            presenter.onMessageReceived(timestamp, if (user!!.id == net!!.userId) null else String(user.name), String(message))
         }
 
         override fun onBroadcastReceived(body: ByteArray) = presenter.onBroadcastReceived(String(body))

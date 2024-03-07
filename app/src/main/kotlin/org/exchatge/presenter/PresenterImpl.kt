@@ -146,9 +146,6 @@ class PresenterImpl(private val initiator: PresenterInitiator): Presenter {
         setUiLock(false)
     }
 
-    fun onMessageReceived(timestamp: Long, from: String?, text: String) =
-        messages.add(0, ConversationMessage(timestamp, from, text))
-
     fun onErrorReceived() {
         if (!activityRunning) return
     }
