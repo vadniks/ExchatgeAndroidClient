@@ -100,6 +100,7 @@ class Net(private val initiator: NetInitiator) {
             return
         }
 
+        log("111")
         initiator.onConnectResult(true)
     }
 

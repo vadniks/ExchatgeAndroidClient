@@ -242,6 +242,7 @@ class Kernel(val context: Context) {
         override val crypto get() = this@Kernel.crypto
 
         override fun onConnectResult(successful: Boolean) = runAsync {
+            log("222")
             if (successful) {
                 val (username, password) = credentials() ?: presenter.credentials
 

@@ -39,8 +39,24 @@ fun runInMain(action: () -> Unit) = Dispatchers.Main.dispatch(EmptyCoroutineCont
 fun runAsync(action: () -> Unit) = backgroundDispatcher.dispatch(EmptyCoroutineContext) { action() }
 fun runAsync(delay: Long = 0, action: () -> Unit) = backgroundDispatcher.dispatch(EmptyCoroutineContext) { Thread.sleep(delay); action() }
 infix fun Int.untilSize(size: Int): IntRange { assert(size >= 0); return this until this + size } // TODO: replace all those
-fun <T> ReadWriteLock.readLocked(action: () -> T): T { readLock().lock(); val r = action(); readLock().unlock(); return r }
-fun <T> ReadWriteLock.writeLocked(action: () -> T): T { writeLock().lock(); val r = action(); writeLock().unlock(); return r }
+
+fun <T> ReadWriteLock.readLocked(action: () -> T): T {
+    try {
+        readLock().lock()
+        return action()
+    } finally {
+        readLock().unlock()
+    }
+}
+
+fun <T> ReadWriteLock.writeLocked(action: () -> T): T {
+    try {
+        writeLock().lock()
+        return action()
+    } finally {
+        writeLock().unlock()
+    }
+}
 
 class Reference<T>(var referenced: T)
 enum class Ternary(val value: Boolean?) { POSITIVE(true), NEUTRAL(null), NEGATIVE(false) }
