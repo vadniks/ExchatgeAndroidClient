@@ -216,7 +216,6 @@ class Net(private val initiator: NetInitiator) {
 
     fun listen() {
         while (running && connected) {
-            log("listen")
             if (tryReadMessage() == Ternary.NEGATIVE) break
         }
         log("disconnected") // disconnected - logging in is required to reconnect // TODO: handle disconnection

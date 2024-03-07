@@ -161,6 +161,14 @@ private fun UserInfo(
             modifier = Modifier.fillMaxWidth(.60f)
         )
     },
+    supportingContent = {
+        Text(
+            text = stringResource(R.string.idEqualsTo) + ' ' + user.id.toString(),
+            fontSize = 12.sp,
+            fontStyle = FontStyle.Italic,
+            modifier = Modifier.fillMaxWidth(.60f)
+        )
+    },
     trailingContent = {
         Row(horizontalArrangement = Arrangement.Center) {
             IconButton(
@@ -168,7 +176,7 @@ private fun UserInfo(
                 enabled = pagesShared.controlsEnabled
             ) {
                 Icon(
-                    imageVector = if (user.conversationExists) Icons.Filled.Edit else Icons.Filled.Add,
+                    imageVector = if (user.conversationExists) Icons.Filled.Send else Icons.Filled.Add,
                     contentDescription = stringResource(if (user.conversationExists) R.string.continueConversation else R.string.startConversation)
                 )
             }

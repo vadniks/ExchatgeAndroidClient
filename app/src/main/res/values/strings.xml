@@ -65,4 +65,5 @@
     <string name="timestampFormat">HH:mm:ss MMM-dd-yyyy</string>
     <string name="registrationSucceeded">Registration succeeded</string>
     <string name="registrationFailed">Registration failed</string>
+    <string name="idEqualsTo">Id =</string>
 </resources>
