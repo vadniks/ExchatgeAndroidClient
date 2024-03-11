@@ -21,3 +21,4 @@ This is an android port of the [desktop client for linux systems](https://github
 ![C](screenshots/c.png "C")
 ![D](screenshots/d.png "D")
 ![E](screenshots/e.png "E")
+![G](screenshots/g.png "G")
