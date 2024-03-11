@@ -27,8 +27,6 @@
     <application
         android:name=".model.App"
         android:allowBackup="true"
-        android:dataExtractionRules="@xml/data_extraction_rules"
-        android:fullBackupContent="@xml/backup_rules"
         android:icon="@drawable/exchatge_icon"
         android:label="@string/appName"
         android:roundIcon="@drawable/exchatge_icon"

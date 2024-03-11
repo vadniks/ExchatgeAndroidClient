@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="appName">Exchatge</string>
+    <string name="username">Имя пользователя</string>
+    <string name="password">Пароль</string>
+    <string name="logIn">Войти</string>
+    <string name="register">Регистрация</string>
+    <string name="logOut">Выход</string>
+    <string name="administrate">Администрировать</string>
+    <string name="onlineOrNot">Онлайн или нет</string>
+    <string name="online">Онлайн</string>
+    <string name="offline">Оффлайн</string>
+    <string name="startConversation">Начать беседу</string>
+    <string name="continueConversation">Продолжить беседу</string>
+    <string name="deleteConversation">Удалить беседу</string>
+    <string name="sendConversationSetupRequestTo">Отправить приглашение создания беседы</string>
+    <string name="conversationSetupRequestReceivedFrom">Получено приглашение создания беседы от</string>
+    <string name="id">Номер</string>
+    <string name="proceed">Продолжить</string>
+    <string name="cancel">Отмена</string>
+    <string name="back">Назад</string>
+    <string name="you">Вы</string>
+    <string name="message">Сообщение</string>
+    <string name="send">Отправить</string>
+    <string name="file">Файл</string>
+    <string name="broadcastMessage">Широковещательная рассылка</string>
+    <string name="shutdownServer">Отключить сервер</string>
+    <string name="broadcastMessageHint">Все пользователи, которые сейчас подключены получат это сообщение, дополнительное шифрование произведено не будет</string>
+    <string name="fileExchange">Обмен файлом</string>
+    <string name="fileExchangeRequestedByUser">Обмен файлом запрошен пользователем</string>
+    <string name="withSizeOf">размером</string>
+    <string name="bytes">байт</string>
+    <string name="error">Ошибка</string>
+    <string name="incorrectCredentialsLength">Неправильная длина учетных данных</string>
+    <string name="failedToConnect">Не удалось подключиться</string>
+    <string name="loggedInSuccessfully">Вход удался</string>
+    <string name="failedToLogIn">Вход не удался</string>
+    <string name="disconnected">Соединение закрыто</string>
+    <string name="update">Обновить</string>
+    <string name="conversationSetup">Создание беседы</string>
+    <string name="succeeded">удалось</string>
+    <string name="failed">не удалось</string>
+    <string name="opponentIsOffline">Оппонент отключен</string>
+    <string name="conversationDoesntExist">Беседа не существует</string>
+    <string name="conversationWasDeleted">Беседа была удалена</string>
+    <string name="timestampFormat">HH:mm:ss MMM-dd-yyyy</string>
+    <string name="registrationSucceeded">Ругистрация удалась</string>
+    <string name="registrationFailed">Регистрация не удалась</string>
+    <string name="idEqualsTo">Номер =</string>
+    <string name="appSlogan">Exchatge - защищенный текстовый обменик в реальном времени</string>
+</resources>
