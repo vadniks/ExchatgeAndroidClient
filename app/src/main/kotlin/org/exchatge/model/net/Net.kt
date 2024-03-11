@@ -457,18 +457,26 @@ class Net(private val initiator: NetInitiator) {
             return null
         }
 
+        val encryptedStreamHeaderSize = crypto.singleEncryptedSize(Crypto.HEADER_SIZE)
+
         if (
             run { message = conversationSetupMessages.waitAndPop(); message } == null
             || message!!.flag != FLAG_EXCHANGE_HEADERS
-            || message!!.size != Crypto.HEADER_SIZE
+            || message!!.size != encryptedStreamHeaderSize
             || message!!.body == null
         ) {
             finishSettingUpConversation()
             return null
         }
 
-        val akaServerStreamHeader = ByteArray(Crypto.HEADER_SIZE)
-        System.arraycopy(message?.body!!, 0, akaServerStreamHeader, 0, Crypto.HEADER_SIZE)
+        val akaEncryptedServerStreamHeader = ByteArray(encryptedStreamHeaderSize)
+        System.arraycopy(message?.body!!, 0, akaEncryptedServerStreamHeader, 0, encryptedStreamHeaderSize)
+
+        val akaServerStreamHeader = crypto.decryptSingle(crypto.serverKey(keys), akaEncryptedServerStreamHeader)
+        if (akaServerStreamHeader == null) {
+            finishSettingUpConversation()
+            return null
+        }
 
         val coders = crypto.makeCoders()
         val akaClientStreamHeader = crypto.initializeCoders(coders, keys, akaServerStreamHeader)
@@ -478,7 +486,7 @@ class Net(private val initiator: NetInitiator) {
             return null
         }
 
-        val result = send(FLAG_EXCHANGE_HEADERS_DONE, akaClientStreamHeader, id)
+        val result = send(FLAG_EXCHANGE_HEADERS_DONE, crypto.encryptSingle(crypto.clientKey(keys), akaClientStreamHeader)!!, id)
         finishSettingUpConversation()
         return if (result) coders else null
     }
@@ -535,26 +543,30 @@ class Net(private val initiator: NetInitiator) {
             return null
         }
 
-        if (!send(FLAG_EXCHANGE_HEADERS, akaServerStreamHeader, fromId)) {
+        if (!send(FLAG_EXCHANGE_HEADERS, crypto.encryptSingle(crypto.serverKey(keys), akaServerStreamHeader)!!, fromId)) {
             finishSettingUpConversation()
             return null
         }
 
+        val encryptedStreamHeaderSize = crypto.singleEncryptedSize(Crypto.HEADER_SIZE)
+
         if (
             run { message = conversationSetupMessages.waitAndPop(); message } == null
             || message!!.flag != FLAG_EXCHANGE_HEADERS_DONE
-            || message!!.size != Crypto.HEADER_SIZE
+            || message!!.size != encryptedStreamHeaderSize
             || message!!.body == null
         ) {
             finishSettingUpConversation()
             return null
         }
 
-        val akaClientStreamHeader = ByteArray(Crypto.HEADER_SIZE)
-        System.arraycopy(message?.body!!, 0, akaClientStreamHeader, 0, Crypto.HEADER_SIZE)
+        val akaEncryptedClientStreamHeader = ByteArray(encryptedStreamHeaderSize)
+        System.arraycopy(message?.body!!, 0, akaEncryptedClientStreamHeader, 0, encryptedStreamHeaderSize)
         finishSettingUpConversation()
 
-        return if (!crypto.createDecoderAsServer(keys, coders, akaClientStreamHeader)) null else coders
+        return if (
+            !crypto.createDecoderAsServer(keys, coders, crypto.decryptSingle(crypto.clientKey(keys), akaEncryptedClientStreamHeader)!!)
+        ) null else coders
     }
 
     fun onDestroy() {
