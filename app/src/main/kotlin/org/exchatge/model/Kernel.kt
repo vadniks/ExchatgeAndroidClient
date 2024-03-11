@@ -252,7 +252,6 @@ class Kernel(val context: Context) {
         override val crypto get() = this@Kernel.crypto
 
         override fun onConnectResult(successful: Boolean) = runAsync {
-            log("222")
             if (successful) {
                 val (username, password) = credentials() ?: presenter.credentials
 
@@ -300,7 +299,7 @@ class Kernel(val context: Context) {
         }
 
         override fun onNextUserFetched(user: UserInfo, last: Boolean) = runAsync { // TODO: test with large amount of users
-            val conversationExists = database!!.conversationDao.exists(user.id) // TODO: instead of getting users one by one, get all users in a bundle, this would eliminate thread race problem
+            val conversationExists = database!!.conversationDao.exists(user.id)
 
             rwLock.writeLocked {
                 if (user.id == 0) { // first
@@ -312,8 +311,7 @@ class Kernel(val context: Context) {
                     net!!.ignoreUsualMessages = true
                 }
 
-                users.add(user) // TODO: maybe add sort()
-                log("aaa", user)
+                users.add(user)
 
                 if (conversationExists)
                     userIdsToFetchMessagesFrom.add(user.id)
@@ -331,7 +329,6 @@ class Kernel(val context: Context) {
         }
 
         override fun onConversationSetUpInviteReceived(fromId: Int) = runAsync {
-            rwLock.readLocked { log(users) } // TODO: replace arrayList with vector
             presenter.showConversationSetUpDialog(false, fromId, String(findUser(fromId)!!.name))
         }
 
