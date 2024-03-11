@@ -123,20 +123,14 @@ class Net(private val initiator: NetInitiator) {
         val keys = crypto.exchangeKeys(serverPublicKey) ?: return false
         if (!write(crypto.clientPublicKey(keys))) return false
 
-        val signedServerCoderHeader = ByteArray(Crypto.SIGNATURE_SIZE + Crypto.HEADER_SIZE)
-        if (!read(signedServerCoderHeader)) return false
+        val encryptedServerCoderHeader = ByteArray(crypto.singleEncryptedSize(Crypto.HEADER_SIZE))
+        if (!read(encryptedServerCoderHeader)) return false
 
-        val serverCoderHeader = signedServerCoderHeader.sliceArray(Crypto.SIGNATURE_SIZE until signedServerCoderHeader.size)
-
-        assert(crypto.checkServerSignedBytes(
-            signedServerCoderHeader.sliceArray(0 until Crypto.SIGNATURE_SIZE),
-            serverCoderHeader,
-            serverSignPublicKey
-        ))
+        val serverCoderHeader = crypto.decryptSingle(crypto.serverKey(keys), encryptedServerCoderHeader) ?: return false
 
         coders = crypto.makeCoders()
         val clientCoderHeader = crypto.initializeCoders(coders!!, keys, serverCoderHeader) ?: return false
-        return write(clientCoderHeader)
+        return write(crypto.encryptSingle(crypto.clientKey(keys), clientCoderHeader) ?: return false)
     }
 
     private fun read(buffer: ByteArray) =

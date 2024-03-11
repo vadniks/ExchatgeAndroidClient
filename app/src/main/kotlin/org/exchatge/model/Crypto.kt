@@ -338,10 +338,8 @@ class Crypto {
         return adjusted
     }
 
-    @VisibleForTesting(otherwise = VisibleForTesting.NONE)
     fun clientKey(keys: Keys) = (keys as KeysImpl).clientKey
 
-    @VisibleForTesting(otherwise = VisibleForTesting.NONE)
     fun serverKey(keys: Keys) = (keys as KeysImpl).serverKey
 
     @VisibleForTesting(otherwise = VisibleForTesting.NONE)
