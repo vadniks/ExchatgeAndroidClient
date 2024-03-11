@@ -340,6 +340,7 @@ class Kernel(val context: Context) {
             val message = crypto.removePadding(padded)!!
 
             database!!.messagesDao.add(Message(timestamp, from, from, message))
+            presenter.onMessageReceived(from, timestamp, String(message))
         }
 
         override fun onBroadcastReceived(body: ByteArray) = presenter.onBroadcastReceived(String(body))

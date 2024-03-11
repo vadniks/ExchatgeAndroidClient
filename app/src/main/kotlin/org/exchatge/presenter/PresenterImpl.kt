@@ -137,9 +137,6 @@ class PresenterImpl(private val initiator: PresenterInitiator): Presenter {
             admin = initiator.admin(userInfo.id)
         } else
             users.add(User(userInfo.id, String(userInfo.name), userInfo.connected, conversationExists))
-
-//        if (!last) return
-//        setUiLock(false)
     }
 
     fun onMessagesFetched(empty: Boolean) {
@@ -209,6 +206,11 @@ class PresenterImpl(private val initiator: PresenterInitiator): Presenter {
         ) { initiator.onConversationSetupDialogAction(it, requestedByHost, opponentId) })
 
     fun hideConversationSetupDialog() = this::conversationSetupDialogParameters.set(null)
+
+    fun onMessageReceived(from: Int, timestamp: Long, text: String) {
+        if (from == opponentId)
+            messages.add(0, ConversationMessage(timestamp, opponentUsername, text))
+    }
 
     fun onSettingUpConversation(result: Boolean? = null) {
         if (!activityRunning) return
