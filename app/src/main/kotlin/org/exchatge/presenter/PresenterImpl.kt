@@ -86,6 +86,7 @@ class PresenterImpl(private val initiator: PresenterInitiator): Presenter {
                 setUiLock(true)
                 initiator.scheduleLogOut()
             }
+            Pages.SETTINGS -> currentPage = Pages.LOG_IN_REGISTER
             Pages.LOG_IN_REGISTER -> view!!.finish()
         }
     }
@@ -159,6 +160,8 @@ class PresenterImpl(private val initiator: PresenterInitiator): Presenter {
         setUiLock(true)
         initiator.scheduleRegister()
     }
+
+    override fun settings() = this::currentPage.set(Pages.SETTINGS)
 
     fun onRegisterResult(successful: Boolean) {
         if (!activityRunning) return

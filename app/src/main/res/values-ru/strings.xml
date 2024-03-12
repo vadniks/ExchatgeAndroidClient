@@ -48,4 +48,5 @@
     <string name="registrationFailed">Регистрация не удалась</string>
     <string name="idEqualsTo">Номер =</string>
     <string name="appSlogan">Exchatge - защищенный текстовый обменик в реальном времени</string>
+    <string name="settings">Настройки</string>
 </resources>

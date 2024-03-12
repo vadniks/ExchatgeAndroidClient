@@ -20,6 +20,7 @@ package org.exchatge.view.pages
 
 enum class Pages {
     LOG_IN_REGISTER,
+    SETTINGS,
     USERS_LIST,
-    CONVERSATION // TODO: add settings page
+    CONVERSATION
 }

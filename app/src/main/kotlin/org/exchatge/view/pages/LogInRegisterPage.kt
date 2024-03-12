@@ -21,6 +21,7 @@ package org.exchatge.view.pages
 import android.content.res.Configuration
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -28,9 +29,14 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -71,7 +77,7 @@ fun LogInRegisterPage(pagesShared: PagesShared) = Scaffold(
             modifier = Modifier.fillMaxWidth(0.75f),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
-        ) {
+        ) xColumn@ {
             Image(
                 painter = painterResource(R.drawable.exchatge_icon),
                 contentDescription = stringResource(R.string.appName),
@@ -116,13 +122,26 @@ fun LogInRegisterPage(pagesShared: PagesShared) = Scaffold(
                     Text(stringResource(R.string.register))
                 }
             }
-            Spacer(Modifier.height((LocalConfiguration.current.screenHeightDp * .2f).dp))
-            Text(
-                stringResource(R.string.appSlogan),
-                textAlign = TextAlign.Center,
-                color = MaterialTheme.colorScheme.secondary,
-                fontSize = 14.sp
-            )
+            if (LocalConfiguration.current.orientation != Configuration.ORIENTATION_PORTRAIT) return@xColumn
+            Box(modifier = Modifier.offset(y = LocalConfiguration.current.screenHeightDp.let { (it * .1f).dp })) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        stringResource(R.string.appSlogan),
+                        textAlign = TextAlign.Center,
+                        color = MaterialTheme.colorScheme.secondary,
+                        fontSize = 14.sp
+                    )
+                    IconButton(
+                        onClick = pagesShared::settings,
+                        enabled = pagesShared.controlsEnabled
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Settings,
+                            contentDescription = stringResource(R.string.settings)
+                        )
+                    }
+                }
+            }
         }
     }
 }

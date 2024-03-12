@@ -50,6 +50,7 @@ interface Presenter {
     fun onDestroy()
     fun logIn()
     fun register()
+    fun settings()
     fun updateUsersList()
     fun usersForEach(action: (User) -> Unit)
     fun administrate(done: Boolean)
@@ -99,6 +100,7 @@ object PresenterStub : Presenter { // stub to make @Preview work; can be used to
     override fun onDestroy() {}
     override fun logIn() {}
     override fun register() {}
+    override fun settings() {}
     override fun updateUsersList() {}
     override fun usersForEach(action: (User) -> Unit) {}
     override fun administrate(done: Boolean) {}

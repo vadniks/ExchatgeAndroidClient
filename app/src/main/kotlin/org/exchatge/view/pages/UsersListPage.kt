@@ -138,7 +138,6 @@ fun UsersListPage(pagesShared: PagesShared) = Scaffold(
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun UserInfo(
     pagesShared: PagesShared,

@@ -41,6 +41,7 @@ import org.exchatge.view.pages.LogInRegisterPage
 import org.exchatge.view.pages.Pages
 import org.exchatge.view.pages.UsersListPage
 import org.exchatge.model.assert // TODO: move assert and runIn* from model to root package
+import org.exchatge.view.pages.SettingsPage
 
 class Activity : ComponentActivity(), View {
     private lateinit var presenter: Presenter
@@ -102,6 +103,7 @@ fun Content(
     ) {
         when (presenter.currentPage) {
             Pages.LOG_IN_REGISTER -> LogInRegisterPage(pagesShared)
+            Pages.SETTINGS -> SettingsPage(pagesShared)
             Pages.USERS_LIST -> UsersListPage(pagesShared)
             Pages.CONVERSATION -> ConversationPage(pagesShared)
         }
