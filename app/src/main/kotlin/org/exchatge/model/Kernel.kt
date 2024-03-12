@@ -130,6 +130,12 @@ class Kernel(val context: Context) {
         if (index >= 0) users[index] else null
     }
 
+    private fun loadOptions() = NetInitiator.Options(
+        sharedPrefs.getString(HOST, null) ?: DEFAULT_HOST,
+        sharedPrefs.getInt(PORT, DEFAULT_PORT),
+        crypto.hexDecode(sharedPrefs.getString(SSKP, null) ?: crypto.hexEncode(DEFAULT_SSKP.toByteArray()))!!
+    )
+
     private inner class PresenterInitiatorImpl : PresenterInitiator {
         @Volatile private var triedLogIn = false
         override val currentUserId get() = net!!.userId
@@ -240,6 +246,22 @@ class Kernel(val context: Context) {
 
         override fun username(id: Int) = findUser(id)?.name?.let { String(it) }
 
+        @SuppressLint("ApplySharedPref")
+        override fun saveOptions(host: String, port: Int, sskp: ByteArray) = sharedPrefs.edit().apply {
+            putString(HOST, host)
+            putInt(PORT, port)
+            putString(SSKP, crypto.hexEncode(sskp))
+        }.commit().unit
+
+        override fun loadOptions() = this@Kernel.loadOptions().let {
+            var sskp = ""
+            for (i in it.sskp) {
+                sskp += i.toString()
+                sskp += ' '
+            }
+            PresenterInitiator.Options(it.host, it.port, sskp)
+        }
+
         override fun onActivityResume() =
             if (!wasLoggedIn || triedLogIn || net != null) false
             else { scheduleLogIn(); true }
@@ -250,6 +272,8 @@ class Kernel(val context: Context) {
     private inner class NetInitiatorImpl : NetInitiator {
         override val context get() = this@Kernel.context
         override val crypto get() = this@Kernel.crypto
+
+        override fun loadOptions(): NetInitiator.Options = this@Kernel.loadOptions()
 
         override fun onConnectResult(successful: Boolean) = runAsync {
             if (successful) {
@@ -373,5 +397,12 @@ class Kernel(val context: Context) {
         private var initialized = false
 
         private const val CREDENTIALS = "credentials"
+        private const val HOST = "host"
+        private const val PORT = "port"
+        private const val SSKP = "sskp"
+
+        private const val DEFAULT_HOST = "192.168.1.57"
+        private const val DEFAULT_PORT = 8080
+        private const val DEFAULT_SSKP = "255 23 21 243 148 177 186 0 73 34 173 130 234 251 83 130 138 54 215 5 170 139 175 148 71 215 74 172 27 225 26 249"
     }
 }

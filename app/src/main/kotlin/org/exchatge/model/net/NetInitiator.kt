@@ -25,6 +25,7 @@ interface NetInitiator {
     val context: Context
     val crypto: Crypto
 
+    fun loadOptions(): Options
     fun onConnectResult(successful: Boolean)
     fun onNetDestroy()
     fun onLogInResult(successful: Boolean)
@@ -34,4 +35,7 @@ interface NetInitiator {
     fun onMessageReceived(timestamp: Long, from: Int, body: ByteArray)
     fun onBroadcastReceived(body: ByteArray)
     fun onNextMessageFetched(from: Int, timestamp: Long, body: ByteArray?, last: Boolean)
+
+    @Suppress("ArrayInDataClass")
+    data class Options(val host: String, val port: Int, val sskp: ByteArray)
 }

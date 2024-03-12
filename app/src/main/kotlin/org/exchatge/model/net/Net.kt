@@ -34,21 +34,13 @@ import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.locks.ReadWriteLock
 import java.util.concurrent.locks.ReentrantReadWriteLock
 
-private const val SERVER_ADDRESS = "192.168.1.57" // TODO: debug only
-
-private val serverSignPublicKey = byteArrayOf( // TODO: debug only
-    255.toByte(), 23, 21, 243.toByte(), 148.toByte(), 177.toByte(), 186.toByte(), 0,
-    73, 34, 173.toByte(), 130.toByte(), 234.toByte(), 251.toByte(), 83, 130.toByte(),
-    138.toByte(), 54, 215.toByte(), 5, 170.toByte(), 139.toByte(), 175.toByte(), 148.toByte(),
-    71, 215.toByte(), 74, 172.toByte(), 27, 225.toByte(), 26, 249.toByte()
-)
-
 class Net(private val initiator: NetInitiator) {
     val running get() = NetService.running
     @Volatile private var socket: Socket? = null
     private val rwLock = ReentrantReadWriteLock()
     val connected get() = rwLock.readLocked { socket != null && !socket!!.isClosed && socket!!.isConnected }
     private val crypto get() = initiator.crypto
+    private val options: NetInitiator.Options
     private val encryptedMessageMaxSize = crypto.encryptedSize(MAX_MESSAGE_SIZE)
     private var coders: Crypto.Coders? = null
     @Volatile private var authenticated = false // volatile: reads and writes to this field are atomic and writes are always made visible to other threads - just an atomic flag
@@ -67,6 +59,7 @@ class Net(private val initiator: NetInitiator) {
 
     init {
         log("net init")
+        options = initiator.loadOptions()
         if (!NetService.running)
             initiator.context.startService(Intent(initiator.context, NetService::class.java))!! // TODO: start the service only if the user has logged in
     }
@@ -78,7 +71,7 @@ class Net(private val initiator: NetInitiator) {
 
         rwLock.writeLocked {
             socket =
-                try { Socket().apply { connect(InetSocketAddress(SERVER_ADDRESS, 8080), SOCKET_TIMEOUT) } }
+                try { Socket().apply { connect(InetSocketAddress(options.host, options.port), SOCKET_TIMEOUT) } }
                 catch (_: Exception) { null } // unable to connect
         }
 
@@ -114,7 +107,7 @@ class Net(private val initiator: NetInitiator) {
         assert(crypto.checkServerSignedBytes(
             signedServerPublicKey.sliceArray(0 until Crypto.SIGNATURE_SIZE),
             serverPublicKey,
-            serverSignPublicKey
+            options.sskp
         ))
 
         if (serverPublicKey contentEquals ByteArray(Crypto.KEY_SIZE) { 0 }) return false // denial of service
@@ -263,7 +256,7 @@ class Net(private val initiator: NetInitiator) {
         assert(crypto.checkServerSignedBytes(
             message.token.sliceArray(0 until Crypto.SIGNATURE_SIZE),
             tokenUnsignedValue,
-            serverSignPublicKey
+            options.sskp
         ))
 
         when (message.flag) {

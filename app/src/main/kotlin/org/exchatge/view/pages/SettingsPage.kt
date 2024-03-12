@@ -18,20 +18,26 @@
 
 package org.exchatge.view.pages
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import org.exchatge.R
 import org.exchatge.view.PagesShared
 
@@ -58,7 +64,44 @@ fun SettingsPage(pagesShared: PagesShared) = Scaffold(
         )
     }
 ) { paddingValues ->
-    Column(Modifier.padding(top = paddingValues.calculateTopPadding())) {
-        
+    Column(
+        Modifier.padding(top = paddingValues.calculateTopPadding()).fillMaxSize(),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        val padding = Modifier.padding(5.dp)
+        TextField(
+            value = pagesShared.host,
+            onValueChange = { pagesShared.host = it },
+            enabled = pagesShared.controlsEnabled,
+            modifier = padding,
+            label = {
+                Text(stringResource(R.string.host))
+            }
+        )
+        TextField(
+            value = pagesShared.port.toString(),
+            onValueChange = { pagesShared.port = it.toIntOrNull() ?: return@TextField },
+            enabled = pagesShared.controlsEnabled,
+            modifier = padding,
+            label = {
+                Text(stringResource(R.string.port))
+            }
+        )
+        TextField(
+            value = pagesShared.sskp,
+            onValueChange = { pagesShared.sskp = it },
+            enabled = pagesShared.controlsEnabled,
+            modifier = padding,
+            label = {
+                Text(stringResource(R.string.sskp))
+            }
+        )
+        Button(
+            onClick = pagesShared::applySettings,
+            enabled = pagesShared.controlsEnabled
+        ) {
+            Text(stringResource(R.string.apply))
+        }
     }
 }

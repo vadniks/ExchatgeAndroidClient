@@ -21,6 +21,7 @@ package org.exchatge.presenter
 import android.os.Bundle
 import androidx.activity.OnBackPressedCallback
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -49,6 +50,9 @@ class PresenterImpl(private val initiator: PresenterInitiator): Presenter {
     override var loading by SynchronizedMutableState(false)
     override var username by mutableStateOf("") // TODO: synchronize ui string fields too?
     override var password by mutableStateOf("")
+    override var host by mutableStateOf("")
+    override var port by mutableIntStateOf(8080)
+    override var sskp by mutableStateOf("")
     private val users = SynchronizedMutableStateList<User>() as MutableList<User>
     val credentials get() = username to password
     override var currentUser by SynchronizedMutableState("")
@@ -161,7 +165,41 @@ class PresenterImpl(private val initiator: PresenterInitiator): Presenter {
         initiator.scheduleRegister()
     }
 
-    override fun settings() = this::currentPage.set(Pages.SETTINGS)
+    override fun settings() {
+        setUiLock(true)
+        initiator.loadOptions().let {
+            host = it.host
+            port = it.port
+            sskp = it.sskp
+        }
+        currentPage = Pages.SETTINGS
+        setUiLock(false)
+    }
+
+    override fun applySettings() = runAsync {
+        fun parseSskp(): ByteArray? {
+            val splitted = host.split(' ')
+            var matches = splitted.isNotEmpty()
+
+            val bytes = ByteArray(splitted.size)
+            var j = 0
+
+            for (i in splitted) {
+                matches = matches && i.toIntOrNull().let { it != null && it in 0..255 }
+                if (matches) bytes[j++] = i.toInt().toByte()
+                else return null
+            }
+            return bytes
+        }
+
+        val sskp = parseSskp()
+        if (sskp == null) {
+            view?.snackbar(view?.string(R.string.wrongFormatting) ?: return@runAsync)
+            return@runAsync
+        }
+
+        initiator.saveOptions(host, port, sskp)
+    }
 
     fun onRegisterResult(successful: Boolean) {
         if (!activityRunning) return

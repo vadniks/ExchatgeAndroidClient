@@ -35,6 +35,9 @@ interface Presenter {
     val loading: Boolean
     var username: String
     var password: String
+    var host: String
+    var port: Int
+    var sskp: String
     val currentUser: String
     val admin: Boolean
     var broadcastMessage: String
@@ -51,6 +54,7 @@ interface Presenter {
     fun logIn()
     fun register()
     fun settings()
+    fun applySettings()
     fun updateUsersList()
     fun usersForEach(action: (User) -> Unit)
     fun administrate(done: Boolean)
@@ -78,6 +82,7 @@ private class StubPropertyDelegate<T : Any>(private val klass: KClass<T>) {
 
 object PresenterStub : Presenter { // stub to make @Preview work; can be used to adjust the preview (set values to see how things change)
     private val stringStub = StubPropertyDelegate(String::class)
+    private val intStub = StubPropertyDelegate(Int::class)
 
     override val view = ViewStub
     override val currentPage get() = Pages.LOG_IN_REGISTER
@@ -85,6 +90,9 @@ object PresenterStub : Presenter { // stub to make @Preview work; can be used to
     override val loading = true
     override var username by stringStub
     override var password by stringStub
+    override var host by stringStub
+    override var port by intStub
+    override var sskp by stringStub
     override val currentUser = ""
     override val admin = false
     override var broadcastMessage by stringStub
@@ -101,6 +109,7 @@ object PresenterStub : Presenter { // stub to make @Preview work; can be used to
     override fun logIn() {}
     override fun register() {}
     override fun settings() {}
+    override fun applySettings() {}
     override fun updateUsersList() {}
     override fun usersForEach(action: (User) -> Unit) {}
     override fun administrate(done: Boolean) {}
