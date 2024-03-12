@@ -87,7 +87,7 @@ class Net(private val initiator: NetInitiator) {
             initiator.onConnectResult(false)
             return
         }
-        rwLock.writeLocked { socket!!.soTimeout = 500 } // delay between socket read tries (while (open) { delay(500); tryRead() }) // TODO: extract constant
+        rwLock.writeLocked { socket!!.soTimeout = 10 } // TODO: extract constant
 
         val ready = initiateSecuredConnection()
         log("ready = $ready") // if (!ready) // error while connecting
@@ -100,7 +100,6 @@ class Net(private val initiator: NetInitiator) {
             return
         }
 
-        log("111")
         initiator.onConnectResult(true)
     }
 
@@ -211,6 +210,7 @@ class Net(private val initiator: NetInitiator) {
     fun listen() {
         while (running && connected) {
             if (tryReadMessage() == Ternary.NEGATIVE) break
+            Thread.sleep(500)
         }
         log("disconnected") // disconnected - logging in is required to reconnect // TODO: handle disconnection
         // then the execution goes to onDestroy
