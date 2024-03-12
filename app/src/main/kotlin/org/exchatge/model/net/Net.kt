@@ -78,7 +78,7 @@ class Net(private val initiator: NetInitiator) {
 
         rwLock.writeLocked {
             socket =
-                try { Socket().apply { connect(InetSocketAddress(SERVER_ADDRESS, 8080), /*TODO: extract constant*/1000 * 60 * 60) } }
+                try { Socket().apply { connect(InetSocketAddress(SERVER_ADDRESS, 8080), SOCKET_TIMEOUT) } }
                 catch (_: Exception) { null } // unable to connect
         }
 
@@ -87,7 +87,7 @@ class Net(private val initiator: NetInitiator) {
             initiator.onConnectResult(false)
             return
         }
-        rwLock.writeLocked { socket!!.soTimeout = 10 } // TODO: extract constant
+        rwLock.writeLocked { socket!!.soTimeout = SO_TIMEOUT } // the lower the value, the faster the execution will be
 
         val ready = initiateSecuredConnection()
         log("ready = $ready") // if (!ready) // error while connecting
@@ -210,7 +210,7 @@ class Net(private val initiator: NetInitiator) {
     fun listen() {
         while (running && connected) {
             if (tryReadMessage() == Ternary.NEGATIVE) break
-            Thread.sleep(500)
+            Thread.sleep(READ_TIMEOUT.toLong())
         }
         log("disconnected") // disconnected - logging in is required to reconnect // TODO: handle disconnection
         // then the execution goes to onDestroy
@@ -581,7 +581,7 @@ class Net(private val initiator: NetInitiator) {
     }
 
     private companion object {
-        private const val TIMEOUT = 15000
+        private const val TIMEOUT = 15000 // TODO: decrease timeout here and in desktop client
 
         private const val FROM_ANONYMOUS = 0xffffffff.toInt()
         private const val FROM_SERVER = 0x7fffffff
@@ -607,5 +607,9 @@ class Net(private val initiator: NetInitiator) {
 
         private const val INVITE_ASK = 1
         private const val INVITE_DENY = 2
+
+        private const val SOCKET_TIMEOUT = 1000 * 60 * 60
+        private const val SO_TIMEOUT = 10
+        private const val READ_TIMEOUT = 500
     }
 }
