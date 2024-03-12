@@ -27,6 +27,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import org.exchatge.R
 import org.exchatge.model.kernel
+import org.exchatge.model.log
 import org.exchatge.model.net.UserInfo
 import org.exchatge.model.readLocked
 import org.exchatge.model.runAsync
@@ -178,7 +179,7 @@ class PresenterImpl(private val initiator: PresenterInitiator): Presenter {
 
     override fun applySettings() = runAsync {
         fun parseSskp(): ByteArray? {
-            val splitted = host.split(' ')
+            val splitted = sskp.split(' ')
             var matches = splitted.isNotEmpty()
 
             val bytes = ByteArray(splitted.size)
@@ -198,7 +199,7 @@ class PresenterImpl(private val initiator: PresenterInitiator): Presenter {
             return@runAsync
         }
 
-        initiator.saveOptions(host, port, sskp)
+        initiator.saveOptions(host, port, this.sskp)
     }
 
     fun onRegisterResult(successful: Boolean) {

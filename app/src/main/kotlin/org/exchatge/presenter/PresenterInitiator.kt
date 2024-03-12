@@ -39,7 +39,7 @@ interface PresenterInitiator {
     fun sendMessage(to: Int, text: String, millis: Long)
     fun loadSavedMessages(conversation: Int): List<Message>
     fun username(id: Int): String?
-    fun saveOptions(host: String, port: Int, sskp: ByteArray)
+    fun saveOptions(host: String, port: Int, sskp: String)
     fun loadOptions(): Options
     fun onActivityResume(): Boolean
     fun onActivityDestroy()

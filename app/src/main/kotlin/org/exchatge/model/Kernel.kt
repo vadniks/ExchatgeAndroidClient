@@ -133,7 +133,12 @@ class Kernel(val context: Context) {
     private fun loadOptions() = NetInitiator.Options(
         sharedPrefs.getString(HOST, null) ?: DEFAULT_HOST,
         sharedPrefs.getInt(PORT, DEFAULT_PORT),
-        crypto.hexDecode(sharedPrefs.getString(SSKP, null) ?: crypto.hexEncode(DEFAULT_SSKP.toByteArray()))!!
+        (sharedPrefs.getString(SSKP, null) ?: DEFAULT_SSKP).split(' ').let {
+            val bytes = ByteArray(it.size)
+            for ((j, i) in it.withIndex())
+                bytes[j] = i.toInt().toByte()
+            bytes
+        }
     )
 
     private inner class PresenterInitiatorImpl : PresenterInitiator {
@@ -247,18 +252,19 @@ class Kernel(val context: Context) {
         override fun username(id: Int) = findUser(id)?.name?.let { String(it) }
 
         @SuppressLint("ApplySharedPref")
-        override fun saveOptions(host: String, port: Int, sskp: ByteArray) = sharedPrefs.edit().apply {
+        override fun saveOptions(host: String, port: Int, sskp: String) = sharedPrefs.edit().apply {
             putString(HOST, host)
             putInt(PORT, port)
-            putString(SSKP, crypto.hexEncode(sskp))
+            putString(SSKP, sskp)
         }.commit().unit
 
         override fun loadOptions() = this@Kernel.loadOptions().let {
             var sskp = ""
             for (i in it.sskp) {
-                sskp += i.toString()
+                sskp += i.toInt().let { j -> if (j < 0) 256 + j else j }.toString()
                 sskp += ' '
             }
+            sskp = sskp.trimEnd()
             PresenterInitiator.Options(it.host, it.port, sskp)
         }
 
