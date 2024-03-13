@@ -18,6 +18,7 @@
 
 package org.exchatge.presenter
 
+import org.exchatge.model.Options
 import org.exchatge.model.database.Message
 
 interface PresenterInitiator {
@@ -43,6 +44,4 @@ interface PresenterInitiator {
     fun loadOptions(): Options
     fun onActivityResume(): Boolean
     fun onActivityDestroy()
-
-    data class Options(val host: String, val port: Int, val sskp: String)
 }

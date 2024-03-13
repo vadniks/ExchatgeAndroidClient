@@ -20,6 +20,7 @@ package org.exchatge.model.net
 
 import android.content.Intent
 import org.exchatge.model.Crypto
+import org.exchatge.model.Options
 import org.exchatge.model.Reference
 import org.exchatge.model.Ternary
 import org.exchatge.model.assert
@@ -31,7 +32,6 @@ import java.net.Socket
 import java.net.SocketTimeoutException
 import java.util.Queue
 import java.util.concurrent.ConcurrentLinkedQueue
-import java.util.concurrent.locks.ReadWriteLock
 import java.util.concurrent.locks.ReentrantReadWriteLock
 
 class Net(private val initiator: NetInitiator) {
@@ -40,7 +40,8 @@ class Net(private val initiator: NetInitiator) {
     private val rwLock = ReentrantReadWriteLock()
     val connected get() = rwLock.readLocked { socket != null && !socket!!.isClosed && socket!!.isConnected }
     private val crypto get() = initiator.crypto
-    private val options: NetInitiator.Options
+    private val options: Options
+    private val sskp: ByteArray
     private val encryptedMessageMaxSize = crypto.encryptedSize(MAX_MESSAGE_SIZE)
     private var coders: Crypto.Coders? = null
     @Volatile private var authenticated = false // volatile: reads and writes to this field are atomic and writes are always made visible to other threads - just an atomic flag
@@ -60,6 +61,14 @@ class Net(private val initiator: NetInitiator) {
     init {
         log("net init")
         options = initiator.loadOptions()
+
+        sskp = options.sskp.split(' ').let {
+            val bytes = ByteArray(it.size)
+            for ((j, i) in it.withIndex())
+                bytes[j] = i.toInt().toByte()
+            bytes
+        }
+
         if (!NetService.running)
             initiator.context.startService(Intent(initiator.context, NetService::class.java))!! // TODO: start the service only if the user has logged in
     }
@@ -107,7 +116,7 @@ class Net(private val initiator: NetInitiator) {
         assert(crypto.checkServerSignedBytes(
             signedServerPublicKey.sliceArray(0 until Crypto.SIGNATURE_SIZE),
             serverPublicKey,
-            options.sskp
+            sskp
         ))
 
         if (serverPublicKey contentEquals ByteArray(Crypto.KEY_SIZE) { 0 }) return false // denial of service
@@ -256,7 +265,7 @@ class Net(private val initiator: NetInitiator) {
         assert(crypto.checkServerSignedBytes(
             message.token.sliceArray(0 until Crypto.SIGNATURE_SIZE),
             tokenUnsignedValue,
-            options.sskp
+            sskp
         ))
 
         when (message.flag) {

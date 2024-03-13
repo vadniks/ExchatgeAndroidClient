@@ -46,3 +46,4 @@ fun <T> ReadWriteLock.writeLocked(action: () -> T): T = try { writeLock().lock()
 class Reference<T>(var referenced: T)
 enum class Ternary(val value: Boolean?) { POSITIVE(true), NEUTRAL(null), NEGATIVE(false) }
 val Boolean?.ternary get() = when (this) { true -> Ternary.POSITIVE; null -> Ternary.NEUTRAL; false -> Ternary.NEGATIVE }
+data class Options(val host: String, val port: Int, val sskp: String)

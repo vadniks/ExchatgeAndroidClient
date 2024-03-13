@@ -177,30 +177,7 @@ class PresenterImpl(private val initiator: PresenterInitiator): Presenter {
         setUiLock(false)
     }
 
-    override fun applySettings() = runAsync {
-        fun parseSskp(): ByteArray? {
-            val splitted = sskp.split(' ')
-            var matches = splitted.isNotEmpty()
-
-            val bytes = ByteArray(splitted.size)
-            var j = 0
-
-            for (i in splitted) {
-                matches = matches && i.toIntOrNull().let { it != null && it in 0..255 }
-                if (matches) bytes[j++] = i.toInt().toByte()
-                else return null
-            }
-            return bytes
-        }
-
-        val sskp = parseSskp()
-        if (sskp == null) {
-            view?.snackbar(view?.string(R.string.wrongFormatting) ?: return@runAsync)
-            return@runAsync
-        }
-
-        initiator.saveOptions(host, port, this.sskp)
-    }
+    override fun applySettings() = runAsync { initiator.saveOptions(host, port, sskp) }
 
     fun onRegisterResult(successful: Boolean) {
         if (!activityRunning) return

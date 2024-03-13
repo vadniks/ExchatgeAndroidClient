@@ -23,9 +23,6 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.provider.Settings.Secure
 import androidx.annotation.VisibleForTesting
-import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.asCoroutineDispatcher
-import kotlinx.coroutines.launch
 import org.exchatge.model.database.Conversation
 import org.exchatge.model.database.Database
 import org.exchatge.model.database.Message
@@ -58,6 +55,7 @@ class Kernel(val context: Context) {
     @Volatile private var registrationPending = false
     private val userIdsToFetchMessagesFrom = LinkedList<Int>() as Queue<Int>
     @Volatile private var missingMessagesFetchers = 0
+    private val options = loadOptions()
 
     // TODO: add settings to ui to adjust options which will be stored as sharedPreferences
 
@@ -130,16 +128,13 @@ class Kernel(val context: Context) {
         if (index >= 0) users[index] else null
     }
 
-    private fun loadOptions() = NetInitiator.Options(
-        sharedPrefs.getString(HOST, null) ?: DEFAULT_HOST,
-        sharedPrefs.getInt(PORT, DEFAULT_PORT),
-        (sharedPrefs.getString(SSKP, null) ?: DEFAULT_SSKP).split(' ').let {
-            val bytes = ByteArray(it.size)
-            for ((j, i) in it.withIndex())
-                bytes[j] = i.toInt().toByte()
-            bytes
-        }
-    )
+    private fun loadOptions() = sharedPrefs.run {
+        Options(
+            getString(HOST, null) ?: DEFAULT_HOST,
+            getInt(PORT, DEFAULT_PORT),
+            (getString(SSKP, null) ?: DEFAULT_SSKP)
+        )
+    }
 
     private inner class PresenterInitiatorImpl : PresenterInitiator {
         @Volatile private var triedLogIn = false
@@ -258,15 +253,7 @@ class Kernel(val context: Context) {
             putString(SSKP, sskp)
         }.commit().unit
 
-        override fun loadOptions() = this@Kernel.loadOptions().let {
-            var sskp = ""
-            for (i in it.sskp) {
-                sskp += i.toInt().let { j -> if (j < 0) 256 + j else j }.toString()
-                sskp += ' '
-            }
-            sskp = sskp.trimEnd()
-            PresenterInitiator.Options(it.host, it.port, sskp)
-        }
+        override fun loadOptions() = options.let { Options(it.host, it.port, it.sskp) }
 
         override fun onActivityResume() =
             if (!wasLoggedIn || triedLogIn || net != null) false
@@ -279,7 +266,7 @@ class Kernel(val context: Context) {
         override val context get() = this@Kernel.context
         override val crypto get() = this@Kernel.crypto
 
-        override fun loadOptions(): NetInitiator.Options = this@Kernel.loadOptions()
+        override fun loadOptions(): Options = options
 
         override fun onConnectResult(successful: Boolean) = runAsync {
             if (successful) {
