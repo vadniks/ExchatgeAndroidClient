@@ -21,6 +21,7 @@ package org.exchatge.model
 import android.content.Context
 import android.os.Looper
 import android.util.Log
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import java.util.concurrent.locks.ReadWriteLock
@@ -32,18 +33,69 @@ import kotlin.coroutines.EmptyCoroutineContext
 private val backgroundDispatcher = Dispatchers.IO.limitedParallelism(1)
 
 fun assert(condition: Boolean) { if (!condition) throw IllegalStateException() }
-fun assertNotMainThread() = assert(Looper.getMainLooper().thread !== Thread.currentThread())
-fun log(vararg messages: Any?) = Log.d(null, messages.let { var s = ""; for (i in it) s += "$i "; s }).unit
-val Context.kernel get() = (applicationContext as App).kernel
-fun runInMain(action: () -> Unit) = Dispatchers.Main.dispatch(EmptyCoroutineContext) { action() }
-fun runAsync(action: () -> Unit) = backgroundDispatcher.dispatch(EmptyCoroutineContext) { action() }
-fun runAsync(delay: Long = 0, action: () -> Unit) = backgroundDispatcher.dispatch(EmptyCoroutineContext) { Thread.sleep(delay); action() }
-infix fun Int.untilSize(size: Int): IntRange { assert(size >= 0); return this until this + size } // TODO: replace all those
 
-fun <T> ReadWriteLock.readLocked(action: () -> T): T = try { readLock().lock(); action() } finally { readLock().unlock() }
-fun <T> ReadWriteLock.writeLocked(action: () -> T): T = try { writeLock().lock(); action() } finally { writeLock().unlock() }
+fun assertNotMainThread() = assert(Looper.getMainLooper().thread !== Thread.currentThread())
+
+fun log(vararg messages: Any?) {
+    var string = ""
+
+    for ((j, i) in messages.withIndex()) {
+        string += i
+        if (j < messages.size - 1)
+            string += ' '
+    }
+
+    Log.d(null, string)
+}
+
+val Context.kernel get() = (applicationContext as App).kernel
+
+fun runInMain(action: () -> Unit) = Dispatchers.Main.dispatch(EmptyCoroutineContext) { action() }
+
+fun runAsync(action: () -> Unit) = backgroundDispatcher.dispatch(EmptyCoroutineContext) { action() }
+
+fun runAsync(delay: Long, action: () -> Unit) = backgroundDispatcher.dispatch(EmptyCoroutineContext) {
+    Thread.sleep(delay)
+    action()
+}
+
+fun <T> runDeferredAsync(thread: Threads, delay: Long = 0, action: () -> T): CompletableDeferred<T> {
+    val deferred = CompletableDeferred<T>(null)
+    (if (thread == Threads.Background) backgroundDispatcher else Dispatchers.Main)
+        .dispatch(EmptyCoroutineContext) {
+            if (delay > 0) Thread.sleep(delay)
+            deferred.complete(action())
+        }
+    return deferred
+}
+
+infix fun Int.untilSize(size: Int): IntRange { // TODO: replace all those
+    assert(size >= 0)
+    return this until this + size
+}
+
+fun <T> ReadWriteLock.readLocked(action: () -> T): T =
+    try {
+        readLock().lock()
+        action()
+    } finally {
+        readLock().unlock()
+    }
+
+fun <T> ReadWriteLock.writeLocked(action: () -> T): T =
+    try {
+        writeLock().lock()
+        action()
+    } finally {
+        writeLock().unlock()
+    }
 
 class Reference<T>(var referenced: T)
+
 enum class Ternary(val value: Boolean?) { POSITIVE(true), NEUTRAL(null), NEGATIVE(false) }
+
 val Boolean?.ternary get() = when (this) { true -> Ternary.POSITIVE; null -> Ternary.NEUTRAL; false -> Ternary.NEGATIVE }
+
 data class Options(val host: String, val port: Int, val sskp: String)
+
+enum class Threads { Main, Background }
