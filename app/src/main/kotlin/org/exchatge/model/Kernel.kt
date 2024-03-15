@@ -254,6 +254,7 @@ class Kernel(val context: Context) {
 
             val checksum = calculateFileChecksum(inputStream)
             inputStream.close()
+            if (checksum == null) return false
 
             inputStream = inputStreamOpener() ?: return false
             log("sf", checksum.contentToString(), inputStream.readBytes().contentToString())
