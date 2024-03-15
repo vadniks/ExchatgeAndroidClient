@@ -234,7 +234,7 @@ class PresenterImpl(private val initiator: PresenterInitiator): Presenter {
         }
     }
 
-    fun onFileSendResult(successful: Boolean) {
+    fun onFileSendResult(successful: Boolean?) {
         setUiLock(false)
         view?.snackbar(successful.toString()) // TODO: string
     }

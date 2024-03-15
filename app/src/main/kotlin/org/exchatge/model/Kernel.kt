@@ -236,20 +236,22 @@ class Kernel(val context: Context) {
         }
 
         override fun onFileChosen(intent: Intent, opponentId: Int) = runAsync {
-            var result = false
-            run block@ {
-                val resolver = context.contentResolver
-                val size = resolver.let {
-                    val descriptor = it.openFileDescriptor(intent.data ?: return@block , "r") ?: return@block
-                    descriptor.statSize.also { descriptor.close() }
-                }
-
-                result = sendFile(
-                    opponentId,
-                    intent.getStringExtra(Intent.EXTRA_TITLE) ?: System.currentTimeMillis().toString(),
-                    size
-                ) { resolver.openInputStream(intent.data ?: return@sendFile null) }
+            if (findUser(opponentId)?.connected != true) {
+                presenter.onFileSendResult(null)
+                return@runAsync
             }
+
+            val resolver = context.contentResolver
+            val size = resolver.let {
+                val descriptor = it.openFileDescriptor(intent.data ?: return@runAsync , "r") ?: return@runAsync
+                descriptor.statSize.also { descriptor.close() }
+            }
+
+            val result = sendFile(
+                opponentId,
+                intent.getStringExtra(Intent.EXTRA_TITLE) ?: System.currentTimeMillis().toString(),
+                size
+            ) { resolver.openInputStream(intent.data ?: return@sendFile null) }
 
             log("ofc", result)
             presenter.onFileSendResult(result)
