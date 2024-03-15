@@ -18,6 +18,7 @@
 
 package org.exchatge.presenter
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.OnBackPressedCallback
 import androidx.compose.runtime.getValue
@@ -209,7 +210,11 @@ class PresenterImpl(private val initiator: PresenterInitiator): Presenter {
 
     override fun returnFromPage() = handleOnBackPressed()
 
-    override fun fileChoose() {}
+    override fun fileChoose() = view?.startActivityForResult(Intent.createChooser(Intent().apply {
+        action = Intent.ACTION_GET_CONTENT
+        addCategory(Intent.CATEGORY_OPENABLE)
+        type = "*/*"
+    }, view?.string(R.string.selectFile) ?: "")) ?: Unit
 
     override fun sendMessage() = System.currentTimeMillis().let {
         if (currentConversationMessage.isEmpty()) return@let
@@ -217,6 +222,13 @@ class PresenterImpl(private val initiator: PresenterInitiator): Presenter {
         messages.add(0, ConversationMessage(it, null, currentConversationMessage))
         initiator.sendMessage(opponentId, currentConversationMessage, it)
         currentConversationMessage = ""
+    }
+
+    override fun onActivityResult(intent: Intent?, resultCode: Int) {
+        log("oar", intent, resultCode)
+        if (intent == null || !activityRunning || resultCode != android.app.Activity.RESULT_OK) return
+        val result = initiator.onFileChosen(intent)
+        log("oar", result)
     }
 
     fun showConversationSetUpDialog(requestedByHost: Boolean, opponentId: Int, opponentName: String) =

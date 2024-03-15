@@ -18,6 +18,7 @@
 
 package org.exchatge.view
 
+import android.content.Intent
 import androidx.activity.OnBackPressedCallback
 
 interface View {
@@ -27,6 +28,7 @@ interface View {
     fun snackbar(text: String)
     fun string(id: Int): String
     fun launchInLifecycleScope(action: suspend () -> Unit)
+    fun startActivityForResult(intent: Intent)
 }
 
 object ViewStub : View { // stub to make @Preview work
@@ -36,4 +38,5 @@ object ViewStub : View { // stub to make @Preview work
     override fun snackbar(text: String) {}
     override fun string(id: Int) = ""
     override fun launchInLifecycleScope(action: suspend () -> Unit) {}
+    override fun startActivityForResult(intent: Intent) {}
 }

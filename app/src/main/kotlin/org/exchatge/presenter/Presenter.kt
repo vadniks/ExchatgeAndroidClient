@@ -18,6 +18,7 @@
 
 package org.exchatge.presenter
 
+import android.content.Intent
 import android.os.Bundle
 import org.exchatge.view.ConversationMessage
 import org.exchatge.view.ConversationSetupDialogParameters
@@ -65,6 +66,7 @@ interface Presenter {
     fun returnFromPage()
     fun fileChoose()
     fun sendMessage()
+    fun onActivityResult(intent: Intent?, resultCode: Int)
 }
 
 private class StubPropertyDelegate<T : Any>(private val klass: KClass<T>) {
@@ -120,4 +122,5 @@ object PresenterStub : Presenter { // stub to make @Preview work; can be used to
     override fun returnFromPage() {}
     override fun fileChoose() {}
     override fun sendMessage() {}
+    override fun onActivityResult(intent: Intent?, resultCode: Int) {}
 }

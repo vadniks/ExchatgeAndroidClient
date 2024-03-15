@@ -20,6 +20,7 @@ package org.exchatge.model
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.Intent
 import android.content.SharedPreferences
 import android.provider.Settings.Secure
 import androidx.annotation.VisibleForTesting
@@ -36,6 +37,8 @@ import org.exchatge.model.net.byte
 import org.exchatge.model.net.bytes
 import org.exchatge.presenter.PresenterImpl
 import org.exchatge.presenter.PresenterInitiator
+import java.io.FileDescriptor
+import java.io.InputStream
 import java.util.Collections
 import java.util.LinkedList
 import java.util.Queue
@@ -228,6 +231,29 @@ class Kernel(val context: Context) {
                 presenter.showConversationSetUpDialog(true, id, username)
             else
                 presenter.notifyUserOpponentIsOffline()
+        }
+
+        override fun onFileChosen(intent: Intent): Boolean {
+            var result = false
+            run block@ {
+                val resolver = context.contentResolver
+                val size = resolver.let {
+                    val descriptor = it.openFileDescriptor(intent.data ?: return@block , "r") ?: return@block
+                    descriptor.statSize.also { descriptor.close() }
+                }
+                val inputStream = resolver.openInputStream(intent.data ?: return@block) ?: return@block
+                result = sendFile(inputStream, size)
+                inputStream.close()
+            }
+
+            log("ofc", result)
+            return result
+        }
+
+        private fun sendFile(inputStream: InputStream, size: Long): Boolean {
+            log("sf", size, String(inputStream.readBytes()))
+            if (size > 1024 * 1024 * 20) return false
+            return true
         }
 
         override fun sendMessage(to: Int, text: String, millis: Long) = runAsync {

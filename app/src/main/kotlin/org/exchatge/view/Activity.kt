@@ -18,10 +18,13 @@
 
 package org.exchatge.view
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.setContent
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
@@ -47,11 +50,17 @@ class Activity : ComponentActivity(), View {
     private lateinit var presenter: Presenter
     @Volatile private var running = false
     private lateinit var showSnackbarImpl: suspend (String) -> Unit
+    private lateinit var activityResultLauncher: ActivityResultLauncher<Intent>
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         running = true
         presenter = PresenterImpl.instance(this, savedInstanceState)
+
+        activityResultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+            presenter.onActivityResult(it.data, it.resultCode)
+        }
+
         setContent { Content(presenter) }
     }
 
@@ -68,6 +77,8 @@ class Activity : ComponentActivity(), View {
     override fun string(id: Int) = resources.getString(id)
 
     override fun launchInLifecycleScope(action: suspend () -> Unit) { lifecycleScope.launch { action() } }
+
+    override fun startActivityForResult(intent: Intent) = activityResultLauncher.launch(intent)
 
     override fun onResume() {
         super.onResume()

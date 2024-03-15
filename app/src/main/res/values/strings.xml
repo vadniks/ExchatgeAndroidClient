@@ -73,4 +73,5 @@
     <string name="sskp">Server sign public key</string>
     <string name="apply">Apply</string>
     <string name="wrongFormatting">Wrong formatting</string>
+    <string name="selectFile">Select file</string>
 </resources>

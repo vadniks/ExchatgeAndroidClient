@@ -18,6 +18,7 @@
 
 package org.exchatge.presenter
 
+import android.content.Intent
 import org.exchatge.model.Options
 import org.exchatge.model.database.Message
 
@@ -37,6 +38,7 @@ interface PresenterInitiator {
     fun shutdownServer()
     fun sendBroadcast(text: String)
     fun onConversationRequested(id: Int, remove: Boolean)
+    fun onFileChosen(intent: Intent): Boolean
     fun sendMessage(to: Int, text: String, millis: Long)
     fun loadSavedMessages(conversation: Int): List<Message>
     fun username(id: Int): String?

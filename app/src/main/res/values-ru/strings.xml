@@ -54,4 +54,5 @@
     <string name="sskp">Публичный ключ подписи сервера</string>
     <string name="apply">Применить</string>
     <string name="wrongFormatting">Неправильное форматирование</string>
+    <string name="selectFile">Выберите файл</string>
 </resources>
