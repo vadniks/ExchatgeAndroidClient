@@ -227,8 +227,18 @@ class PresenterImpl(private val initiator: PresenterInitiator): Presenter {
     override fun onActivityResult(intent: Intent?, resultCode: Int) {
         log("oar", intent, resultCode)
         if (intent == null || !activityRunning || resultCode != android.app.Activity.RESULT_OK) return
-        val result = initiator.onFileChosen(intent)
-        log("oar", result)
+
+        when (intent.action) {
+            Intent.ACTION_GET_CONTENT -> {
+                setUiLock(true)
+                initiator.onFileChosen(intent)
+            }
+        }
+    }
+
+    fun onFileSendResult(successful: Boolean) {
+        setUiLock(false)
+        view?.snackbar(successful.toString()) // TODO: string
     }
 
     fun showConversationSetUpDialog(requestedByHost: Boolean, opponentId: Int, opponentName: String) =

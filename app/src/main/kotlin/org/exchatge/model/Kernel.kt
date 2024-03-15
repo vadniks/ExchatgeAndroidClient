@@ -233,7 +233,7 @@ class Kernel(val context: Context) {
                 presenter.notifyUserOpponentIsOffline()
         }
 
-        override fun onFileChosen(intent: Intent): Boolean {
+        override fun onFileChosen(intent: Intent) = runAsync {
             var result = false
             run block@ {
                 val resolver = context.contentResolver
@@ -241,19 +241,42 @@ class Kernel(val context: Context) {
                     val descriptor = it.openFileDescriptor(intent.data ?: return@block , "r") ?: return@block
                     descriptor.statSize.also { descriptor.close() }
                 }
-                val inputStream = resolver.openInputStream(intent.data ?: return@block) ?: return@block
-                result = sendFile(inputStream, size)
-                inputStream.close()
+                result = sendFile(size) { resolver.openInputStream(intent.data ?: return@sendFile null) }
             }
 
             log("ofc", result)
-            return result
+            presenter.onFileSendResult(result)
         }
 
-        private fun sendFile(inputStream: InputStream, size: Long): Boolean {
-            log("sf", size, String(inputStream.readBytes()))
+        private fun sendFile(size: Long, inputStreamOpener: () -> InputStream?): Boolean {
             if (size > 1024 * 1024 * 20) return false
+            var inputStream = inputStreamOpener() ?: return false
+
+            val checksum = calculateFileChecksum(inputStream)
+            inputStream.close()
+
+            inputStream = inputStreamOpener() ?: return false
+            log("sf", checksum.contentToString(), inputStream.readBytes().contentToString())
+            inputStream.close()
+
             return true
+        }
+
+        private fun calculateFileChecksum(inputStream: InputStream): ByteArray? {
+            val bufferSize = maxUnencryptedMessageBodySize
+            val buffer = ByteArray(bufferSize)
+
+            val state = crypto.hashMultipart(null, null)
+            var read = false
+            var count: Int
+
+            while (inputStream.read(buffer).also { count = it } > 0) {
+                read = true
+                crypto.hashMultipart(state, buffer.sliceArray(0 until count))
+                for (i in buffer.indices) buffer[i] = 0
+            }
+
+            return if (!read) null else crypto.hashMultipart(state, null)
         }
 
         override fun sendMessage(to: Int, text: String, millis: Long) = runAsync {
