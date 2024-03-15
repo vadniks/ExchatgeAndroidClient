@@ -38,7 +38,7 @@ interface PresenterInitiator {
     fun shutdownServer()
     fun sendBroadcast(text: String)
     fun onConversationRequested(id: Int, remove: Boolean)
-    fun onFileChosen(intent: Intent)
+    fun onFileChosen(intent: Intent, opponentId: Int)
     fun sendMessage(to: Int, text: String, millis: Long)
     fun loadSavedMessages(conversation: Int): List<Message>
     fun username(id: Int): String?

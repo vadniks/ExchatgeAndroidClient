@@ -59,6 +59,7 @@ class Kernel(val context: Context) {
     private val userIdsToFetchMessagesFrom = LinkedList<Int>() as Queue<Int>
     @Volatile private var missingMessagesFetchers = 0
     private val options = loadOptions()
+    private var fileInputStream: InputStream? = null
 
     // TODO: add settings to ui to adjust options which will be stored as sharedPreferences
 
@@ -144,6 +145,7 @@ class Kernel(val context: Context) {
         override val currentUserId get() = net!!.userId
         override val maxMessagePlainPayloadSize get() = (maxUnencryptedMessageBodySize / Crypto.PADDING_BLOCK_SIZE) * Crypto.PADDING_BLOCK_SIZE
         override val maxBroadcastMessageSize get() = 64
+        private val maxFileSize = 1024 * 1024 * 20
 
         override fun onActivityCreate() {}
 
@@ -233,7 +235,7 @@ class Kernel(val context: Context) {
                 presenter.notifyUserOpponentIsOffline()
         }
 
-        override fun onFileChosen(intent: Intent) = runAsync {
+        override fun onFileChosen(intent: Intent, opponentId: Int) = runAsync {
             var result = false
             run block@ {
                 val resolver = context.contentResolver
@@ -241,26 +243,33 @@ class Kernel(val context: Context) {
                     val descriptor = it.openFileDescriptor(intent.data ?: return@block , "r") ?: return@block
                     descriptor.statSize.also { descriptor.close() }
                 }
-                result = sendFile(size) { resolver.openInputStream(intent.data ?: return@sendFile null) }
+
+                result = sendFile(
+                    opponentId,
+                    intent.getStringExtra(Intent.EXTRA_TITLE) ?: System.currentTimeMillis().toString(),
+                    size
+                ) { resolver.openInputStream(intent.data ?: return@sendFile null) }
             }
 
             log("ofc", result)
             presenter.onFileSendResult(result)
         }
 
-        private fun sendFile(size: Long, inputStreamOpener: () -> InputStream?): Boolean {
-            if (size > 1024 * 1024 * 20) return false
-            var inputStream = inputStreamOpener() ?: return false
+        private fun sendFile(opponentId: Int, filename: String, size: Long, inputStreamOpener: () -> InputStream?): Boolean {
+            log("sf", filename)
 
-            val checksum = calculateFileChecksum(inputStream)
-            inputStream.close()
+            if (size > maxFileSize) return false
+            fileInputStream = inputStreamOpener() ?: return false
+
+            val checksum = calculateFileChecksum(fileInputStream!!)
+            fileInputStream!!.close()
             if (checksum == null) return false
 
-            inputStream = inputStreamOpener() ?: return false
-            log("sf", checksum.contentToString(), inputStream.readBytes().contentToString())
-            inputStream.close()
+            fileInputStream = inputStreamOpener() ?: return false
+            val result = false //net!!.exchangeFile(opponentId, size.toInt(), checksum, filename)
+            fileInputStream!!.close()
 
-            return true
+            return result
         }
 
         private fun calculateFileChecksum(inputStream: InputStream): ByteArray? {

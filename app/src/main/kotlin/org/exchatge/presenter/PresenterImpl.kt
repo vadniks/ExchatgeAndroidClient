@@ -225,14 +225,12 @@ class PresenterImpl(private val initiator: PresenterInitiator): Presenter {
     }
 
     override fun onActivityResult(intent: Intent?, resultCode: Int) {
-        log("oar", intent, resultCode)
+        log("oar", intent?.data, resultCode)
         if (intent == null || !activityRunning || resultCode != android.app.Activity.RESULT_OK) return
 
-        when (intent.action) {
-            Intent.ACTION_GET_CONTENT -> {
-                setUiLock(true)
-                initiator.onFileChosen(intent)
-            }
+        if (intent.data != null) {
+            setUiLock(true)
+            initiator.onFileChosen(intent, opponentId)
         }
     }
 
