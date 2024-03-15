@@ -433,6 +433,10 @@ class Kernel(val context: Context) {
             net!!.ignoreUsualMessages = false
             presenter.onMessagesFetched(false)
         }
+
+        override fun nextFileChunkSupplier(index: Int, buffer: ByteArray): Int {
+            return 0
+        }
     }
 
     private companion object {

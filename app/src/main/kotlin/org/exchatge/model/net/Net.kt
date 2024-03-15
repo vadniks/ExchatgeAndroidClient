@@ -57,6 +57,8 @@ class Net(private val initiator: NetInitiator) {
     private val conversationSetupMessages = ConcurrentLinkedQueue<NetMessage>()
     @Volatile private var inviteProcessingStartMillis = 0L
     @Volatile var ignoreUsualMessages = false
+    private val fileExchangeMessages = ConcurrentLinkedQueue<NetMessage>()
+    private val fileExchangeRequestInitialSize = 4 + Crypto.HASH_SIZE + 4 + MAX_FILENAME_SIZE // 160
 
     init {
         log("net init")
@@ -571,6 +573,57 @@ class Net(private val initiator: NetInitiator) {
         ) null else coders
     }
 
+    private fun finishFileExchange() {
+        fileExchangeMessages.clear()
+        exchangingFile = false
+    }
+
+    fun exchangeFile(to: Int, fileSize: Int, hash: ByteArray, fileName: String): Boolean {
+        assert(running && connected && authenticated && !destroyed && !settingUpConversation && !exchangingFile)
+        assert(fileSize > 0 && fileName.length <= MAX_FILENAME_SIZE)
+
+        exchangingFile = true
+        fileExchangeMessages.clear()
+
+        val body = ByteArray(fileExchangeRequestInitialSize)
+
+        System.arraycopy(fileSize.bytes, 0, body, 0, 4)
+        System.arraycopy(hash, 0, body, 4, Crypto.HASH_SIZE)
+        System.arraycopy(fileName.length.bytes, 0, body, 4 + Crypto.HASH_SIZE, 4)
+        System.arraycopy(fileName.toByteArray(), 0, body, 4 + Crypto.HASH_SIZE + 4, fileName.length)
+
+        if (!send(FLAG_FILE_ASK, body, to)) {
+            finishFileExchange()
+            return false
+        }
+
+        var message: NetMessage?
+        if (
+            run { message = fileExchangeMessages.waitAndPop(); message } == null
+            || message!!.flag != FLAG_FILE_ASK
+            || message!!.size != 4
+            || message!!.body == null
+            || message!!.body!!.sliceArray(0 until 4).int != fileSize
+        ) {
+            finishFileExchange()
+            return false
+        }
+
+        var index = 0
+        var bytesWritten: Int
+        while (initiator.nextFileChunkSupplier(index++, body).also { bytesWritten = it } > 0) {
+            assert(bytesWritten <= MAX_MESSAGE_BODY_SIZE)
+
+            if (!send(FLAG_FILE, body.sliceArray(0 until bytesWritten), to)) {
+                finishFileExchange()
+                return false
+            }
+        }
+
+        finishFileExchange()
+        return true
+    }
+
     fun onDestroy() {
         log("close")
         assert(!running)
@@ -613,5 +666,7 @@ class Net(private val initiator: NetInitiator) {
         private const val SOCKET_TIMEOUT = 1000 * 60 * 60
         private const val SO_TIMEOUT = 10
         private const val READ_TIMEOUT = 500
+
+        private const val MAX_FILENAME_SIZE = 120
     }
 }
