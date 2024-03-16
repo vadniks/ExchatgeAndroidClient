@@ -29,6 +29,7 @@ import org.exchatge.model.database.Database
 import org.exchatge.model.database.Message
 import org.exchatge.model.net.MAX_MESSAGE_BODY_SIZE
 import org.exchatge.model.net.Net
+import org.exchatge.model.net.Net.Companion.MAX_FILENAME_SIZE
 import org.exchatge.model.net.NetInitiator
 import org.exchatge.model.net.UNHASHED_PASSWORD_SIZE
 import org.exchatge.model.net.USERNAME_SIZE
@@ -269,7 +270,7 @@ class Kernel(val context: Context) {
         private fun sendFile(opponentId: Int, filename: String, size: Long, inputStreamOpener: () -> InputStream?): Boolean {
             log("sf", size, filename.length, filename)
 
-            if (size > maxFileSize) return false
+            if (size > maxFileSize || filename.length > MAX_FILENAME_SIZE) return false
             fileInputStream = inputStreamOpener() ?: return false
 
             val checksum = calculateFileChecksum(fileInputStream!!)

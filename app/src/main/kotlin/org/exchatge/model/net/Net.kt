@@ -704,7 +704,7 @@ class Net(private val initiator: NetInitiator) {
         initiator.onNetDestroy()
     }
 
-    private companion object {
+    companion object {
         private const val TIMEOUT = 15000 // TODO: decrease timeout here and in desktop client
 
         private const val FROM_ANONYMOUS = 0xffffffff.toInt()
@@ -736,6 +736,6 @@ class Net(private val initiator: NetInitiator) {
         private const val SO_TIMEOUT = 10
         private const val READ_TIMEOUT = 500
 
-        private const val MAX_FILENAME_SIZE = 120
+        const val MAX_FILENAME_SIZE = 120
     }
 }
