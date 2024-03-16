@@ -375,7 +375,7 @@ class Net(private val initiator: NetInitiator) {
         val filenameSize = message.body.sliceArray(4 + Crypto.HASH_SIZE until 4 + Crypto.HASH_SIZE + 4).int
         val filename = message.body.sliceArray(4 + Crypto.HASH_SIZE + 4 until 4 + Crypto.HASH_SIZE + 4 + filenameSize)
 
-        // initiator.onFileExchangeInviteReceived(...) // TODO
+         initiator.onFileExchangeInviteReceived(message.from, fileSize, hash, filename)
     }
 
     private fun makeCredentials(username: String, password: String): ByteArray {
@@ -644,6 +644,49 @@ class Net(private val initiator: NetInitiator) {
                 finishFileExchange()
                 return false
             }
+        }
+
+        finishFileExchange()
+        return true
+    }
+
+    fun replyToFileExchangeInvite(from: Int, fileSize: Int, accept: Boolean): Boolean {
+        assert(running && connected && authenticated && !destroyed && !settingUpConversation && exchangingFile)
+        fileExchangeMessages.clear()
+
+        if (inviteProcessingTimeoutExceeded()) {
+            finishFileExchange()
+            return false
+        }
+
+        val xFileSize = if (accept) fileSize else 0
+        if (!send(FLAG_FILE_ASK, xFileSize.bytes, from)) {
+            finishFileExchange()
+            return false
+        }
+
+        if (!accept) {
+            finishFileExchange()
+            return false
+        }
+
+        var message: NetMessage?
+        var index = 0
+
+        var lastReceivedChunkMillis = System.currentTimeMillis()
+        while (fileExchangeMessages.waitAndPop().also { message = it } != null) {
+            if (System.currentTimeMillis() - lastReceivedChunkMillis >= TIMEOUT) break
+
+            if (message!!.flag == FLAG_FILE && message!!.size > 0 && message!!.body != null)
+                lastReceivedChunkMillis = System.currentTimeMillis()
+            else {
+                message = null
+                continue
+            }
+
+            assert(message!!.size <= MAX_MESSAGE_BODY_SIZE)
+            initiator.nextFileChunkReceiver(from, index++, message!!.size, message!!.body!!)
+            message = null
         }
 
         finishFileExchange()

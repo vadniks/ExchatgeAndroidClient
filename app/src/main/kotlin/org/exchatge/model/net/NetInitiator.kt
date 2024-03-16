@@ -37,4 +37,6 @@ interface NetInitiator {
     fun onBroadcastReceived(body: ByteArray)
     fun onNextMessageFetched(from: Int, timestamp: Long, body: ByteArray?, last: Boolean)
     fun nextFileChunkSupplier(index: Int, buffer: ByteArray): Int
+    fun onFileExchangeInviteReceived(from: Int, fileSize: Int, hash: ByteArray, filename: ByteArray)
+    fun nextFileChunkReceiver(from: Int, index: Int, receivedBytesCount: Int, buffer: ByteArray)
 }

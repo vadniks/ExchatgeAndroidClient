@@ -472,6 +472,14 @@ class Kernel(val context: Context) {
             assert(index > 0)
             return 0
         }
+
+        override fun onFileExchangeInviteReceived(from: Int, fileSize: Int, hash: ByteArray, filename: ByteArray) {
+
+        }
+
+        override fun nextFileChunkReceiver(from: Int, index: Int, receivedBytesCount: Int, buffer: ByteArray) {
+
+        }
     }
 
     private companion object {
