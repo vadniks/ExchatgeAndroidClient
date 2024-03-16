@@ -339,8 +339,14 @@ class Kernel(val context: Context) {
                 return@runAsync
             }
 
-            fileOutputStream = FileOutputStream(File(dir, fileName))
+            val file = File(dir, fileName)
+            fileOutputStream = FileOutputStream(file)
             val result = net!!.replyToFileExchangeInvite(opponentId, fileSize, accepted)
+
+            fileOutputStream!!.close()
+            fileOutputStream = null
+            if (!result) file.delete()
+
             presenter.onFileExchangeDone(result)
         }
 
