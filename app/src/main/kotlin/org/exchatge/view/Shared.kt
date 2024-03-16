@@ -98,45 +98,47 @@ fun ConversationSetupDialog(parameters: ConversationSetupDialogParameters) = Pop
 }
 
 @Composable
-fun FileExchangeDialog(parameters: FileExchangeDialogParameters) = AlertDialog(
-    onDismissRequest = { parameters.onAction(false) },
-    confirmButton = {
-        Text(
-            stringResource(R.string.proceed),
-            modifier = Modifier.clickable { parameters.onAction(true) }
-        )
-    },
-    dismissButton = {
-        Text(
-            stringResource(R.string.cancel),
-            modifier = Modifier.clickable { parameters.onAction(false) }
-        )
-    },
-    title = {
-        Text(stringResource(R.string.fileExchange))
-    },
-    text = {
-        Text(
-            text = buildAnnotatedString {
-                append(stringResource(R.string.fileExchangeRequestedByUser))
-                append(' ')
-                withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append(parameters.opponentName) }
-                append(" (")
-                append(stringResource(R.string.id))
-                append(' ')
-                withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append(parameters.opponentId.toString()) }
-                append(") ")
-                append(stringResource(R.string.file).lowercase())
-                append(' ')
-                withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append(parameters.fileName) }
-                append(' ')
-                append(stringResource(R.string.withSizeOf))
-                append(' ')
-                withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append(parameters.fileSize.toString()) }
-                append(' ')
-                append(stringResource(R.string.bytes))
-            },
-            textAlign = TextAlign.Justify
-        )
-    },
-)
+fun FileExchangeDialog(parameters: FileExchangeDialogParameters) = PopupOverlay {
+    AlertDialog(
+        onDismissRequest = { parameters.onAction(false) },
+        confirmButton = {
+            Text(
+                stringResource(R.string.proceed),
+                modifier = Modifier.clickable { parameters.onAction(true) }
+            )
+        },
+        dismissButton = {
+            Text(
+                stringResource(R.string.cancel),
+                modifier = Modifier.clickable { parameters.onAction(false) }
+            )
+        },
+        title = {
+            Text(stringResource(R.string.fileExchange))
+        },
+        text = {
+            Text(
+                text = buildAnnotatedString {
+                    append(stringResource(R.string.fileExchangeRequestedByUser))
+                    append(' ')
+                    withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append(parameters.opponentName) }
+                    append(" (")
+                    append(stringResource(R.string.id))
+                    append(' ')
+                    withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append(parameters.opponentId.toString()) }
+                    append(") ")
+                    append(stringResource(R.string.file).lowercase())
+                    append(' ')
+                    withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append(parameters.fileName) }
+                    append(' ')
+                    append(stringResource(R.string.withSizeOf))
+                    append(' ')
+                    withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append(parameters.fileSize.toString()) }
+                    append(' ')
+                    append(stringResource(R.string.bytes))
+                },
+                textAlign = TextAlign.Justify
+            )
+        },
+    )
+}
