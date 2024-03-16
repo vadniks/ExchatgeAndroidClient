@@ -44,6 +44,6 @@ interface PresenterInitiator {
     fun username(id: Int): String?
     fun saveOptions(host: String, port: Int, sskp: String)
     fun loadOptions(): Options
-    fun onActivityResume(): Boolean
+    fun tryScheduleAutoLogIn(): Boolean
     fun onActivityDestroy()
 }

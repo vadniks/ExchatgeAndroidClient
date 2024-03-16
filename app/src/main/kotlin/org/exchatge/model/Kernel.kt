@@ -320,7 +320,7 @@ class Kernel(val context: Context) {
 
         override fun loadOptions() = options.let { Options(it.host, it.port, it.sskp) }
 
-        override fun onActivityResume() =
+        override fun tryScheduleAutoLogIn() =
             if (!wasLoggedIn || triedLogIn || net != null) false
             else { scheduleLogIn(); true }
 

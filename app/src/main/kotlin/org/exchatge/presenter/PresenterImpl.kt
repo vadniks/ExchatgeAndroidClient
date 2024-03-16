@@ -82,6 +82,11 @@ class PresenterImpl(private val initiator: PresenterInitiator): Presenter {
 
         initiator.onActivityCreate()
         setUiLock(true)
+
+        runAsync(500) {
+            if (!initiator.tryScheduleAutoLogIn())
+                setUiLock(false)
+        }
     }
 
     private fun handleOnBackPressed() {
@@ -102,7 +107,7 @@ class PresenterImpl(private val initiator: PresenterInitiator): Presenter {
         loading = lock
     }
 
-    override fun onResume() = setUiLock(initiator.onActivityResume())
+    override fun onResume() {}
 
     override fun onDestroy() {
         view = null
