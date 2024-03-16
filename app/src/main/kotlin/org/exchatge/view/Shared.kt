@@ -116,9 +116,27 @@ fun FileExchangeDialog(parameters: FileExchangeDialogParameters) = AlertDialog(
         Text(stringResource(R.string.fileExchange))
     },
     text = {
-        Text("""
-            ${stringResource(R.string.fileExchangeRequestedByUser)} ${parameters.opponentName} (${stringResource(R.string.id)} ${parameters.opponentId})
-            ${stringResource(R.string.file).lowercase()} ${parameters.fileName} ${stringResource(R.string.withSizeOf)} ${parameters.fileSize} ${stringResource(R.string.bytes)}
-        """.trimIndent())
+        Text(
+            text = buildAnnotatedString {
+                append(stringResource(R.string.fileExchangeRequestedByUser))
+                append(' ')
+                withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append(parameters.opponentName) }
+                append(" (")
+                append(stringResource(R.string.id))
+                append(' ')
+                withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append(parameters.opponentId.toString()) }
+                append(") ")
+                append(stringResource(R.string.file).lowercase())
+                append(' ')
+                withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append(parameters.fileName) }
+                append(' ')
+                append(stringResource(R.string.withSizeOf))
+                append(' ')
+                withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append(parameters.fileSize.toString()) }
+                append(' ')
+                append(stringResource(R.string.bytes))
+            },
+            textAlign = TextAlign.Justify
+        )
     },
 )
