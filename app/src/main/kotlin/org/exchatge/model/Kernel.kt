@@ -60,6 +60,8 @@ class Kernel(val context: Context) {
     @Volatile private var missingMessagesFetchers = 0
     private val options = loadOptions()
     private var fileInputStream: InputStream? = null
+    @Volatile private var toUserId = 0
+    @Volatile private var fileBytesCounter = 0
 
     // TODO: add settings to ui to adjust options which will be stored as sharedPreferences
 
@@ -268,7 +270,10 @@ class Kernel(val context: Context) {
             if (checksum == null) return false
 
             fileInputStream = inputStreamOpener() ?: return false
-            val result = false //net!!.exchangeFile(opponentId, size.toInt(), checksum, filename)
+            toUserId = opponentId
+
+            val result = false
+            net!!.exchangeFile(opponentId, size.toInt(), checksum, filename)
             fileInputStream!!.close()
 
             return result
@@ -446,6 +451,26 @@ class Kernel(val context: Context) {
         }
 
         override fun nextFileChunkSupplier(index: Int, buffer: ByteArray): Int {
+            assert(fileInputStream != null)
+
+            val targetSize = maxUnencryptedMessageBodySize
+            val unencryptedBuffer = ByteArray(targetSize)
+            val actualSize = fileInputStream!!.read(unencryptedBuffer)
+
+            if (actualSize > 0) {
+                val coders = crypto.recreateCoders(database!!.conversationDao.getCoders(toUserId)!!)
+                val encryptedSize = crypto.encryptedSize(actualSize)
+                assert(encryptedSize <= MAX_MESSAGE_BODY_SIZE)
+
+                val encryptedChunk = crypto.encrypt(coders, unencryptedBuffer.sliceArray(0 until actualSize))!!
+                System.arraycopy(encryptedChunk, 0, buffer, 0, encryptedSize)
+
+                if (index == 0) assert(fileBytesCounter == 0)
+                fileBytesCounter += actualSize
+                return encryptedSize
+            }
+
+            assert(index > 0)
             return 0
         }
     }
