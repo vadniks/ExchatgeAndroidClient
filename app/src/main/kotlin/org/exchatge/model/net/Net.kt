@@ -251,8 +251,14 @@ class Net(private val initiator: NetInitiator) {
                 else
                     conversationSetupMessages.add(message)
             }
-            FLAG_FILE_ASK -> {}
-            FLAG_FILE -> {}
+            FLAG_FILE_ASK, FLAG_FILE -> {
+                if (message.flag == FLAG_FILE_ASK && message.size != fileExchangeRequestInitialSize) {
+                    assert(message.size > 0 && message.body != null)
+                    processFileExchangeRequestMessage(message)
+                    return
+                }
+                fileExchangeMessages.add(message)
+            }
             FLAG_PROCEED -> {
                 assert(message.body != null)
                 if (!fetchingUsers && !fetchingMessages && !ignoreUsualMessages)
@@ -352,6 +358,24 @@ class Net(private val initiator: NetInitiator) {
         inviteProcessingStartMillis = System.currentTimeMillis()
 
         initiator.onConversationSetUpInviteReceived(message.from)
+    }
+
+    private fun processFileExchangeRequestMessage(message: NetMessage) {
+        assert(running && connected && authenticated && !destroyed)
+        assert(message.body != null && message.flag == FLAG_FILE_ASK && message.size == fileExchangeRequestInitialSize)
+
+        if (settingUpConversation || exchangingFile) return
+        exchangingFile = true
+        inviteProcessingStartMillis = System.currentTimeMillis()
+
+        val fileSize = message.body!!.sliceArray(0 until 4).int
+        assert(fileSize > 0)
+
+        val hash = message.body.sliceArray(4 until 4 + Crypto.HASH_SIZE)
+        val filenameSize = message.body.sliceArray(4 + Crypto.HASH_SIZE until 4 + Crypto.HASH_SIZE + 4).int
+        val filename = message.body.sliceArray(4 + Crypto.HASH_SIZE + 4 until 4 + Crypto.HASH_SIZE + 4 + filenameSize)
+
+        // initiator.onFileExchangeInviteReceived(...) // TODO
     }
 
     private fun makeCredentials(username: String, password: String): ByteArray {
