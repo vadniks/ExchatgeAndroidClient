@@ -55,4 +55,6 @@
     <string name="apply">Применить</string>
     <string name="wrongFormatting">Неправильное форматирование</string>
     <string name="selectFile">Выберите файл</string>
+    <string name="fileExchangeSucceeded">Обмен файлом успешено завершен</string>
+    <string name="fileExchangeFailed">Обмен файлом не удался</string>
 </resources>

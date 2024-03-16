@@ -74,4 +74,6 @@
     <string name="apply">Apply</string>
     <string name="wrongFormatting">Wrong formatting</string>
     <string name="selectFile">Select file</string>
+    <string name="fileExchangeSucceeded">File exchange succeeded</string>
+    <string name="fileExchangeFailed">File exchange failed</string>
 </resources>

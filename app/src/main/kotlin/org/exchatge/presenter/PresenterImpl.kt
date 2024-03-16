@@ -236,7 +236,13 @@ class PresenterImpl(private val initiator: PresenterInitiator): Presenter {
 
     fun onFileSendResult(successful: Boolean?) {
         setUiLock(false)
-        view?.snackbar(successful.toString()) // TODO: string
+        view?.snackbar(
+            when (successful) {
+                null -> view?.string(R.string.opponentIsOffline)
+                true -> view?.string(R.string.fileExchangeSucceeded)
+                false -> view?.string(R.string.fileExchangeFailed)
+            } ?: return
+        )
     }
 
     fun showConversationSetUpDialog(requestedByHost: Boolean, opponentId: Int, opponentName: String) =
