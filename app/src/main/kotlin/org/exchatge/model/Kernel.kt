@@ -37,8 +37,11 @@ import org.exchatge.model.net.byte
 import org.exchatge.model.net.bytes
 import org.exchatge.presenter.PresenterImpl
 import org.exchatge.presenter.PresenterInitiator
+import java.io.File
 import java.io.FileDescriptor
+import java.io.FileOutputStream
 import java.io.InputStream
+import java.io.OutputStream
 import java.util.Collections
 import java.util.LinkedList
 import java.util.Queue
@@ -62,6 +65,8 @@ class Kernel(val context: Context) {
     private var fileInputStream: InputStream? = null
     @Volatile private var toUserId = 0
     @Volatile private var fileBytesCounter = 0
+    private var fileOutputStream: OutputStream? = null
+    private var fileHashState: ByteArray? = null
 
     // TODO: add settings to ui to adjust options which will be stored as sharedPreferences
 
@@ -238,6 +243,8 @@ class Kernel(val context: Context) {
         }
 
         override fun onFileChosen(intent: Intent, opponentId: Int) = runAsync {
+            fileBytesCounter = 0
+
             if (findUser(opponentId)?.connected != true) {
                 presenter.onFileSendResult(null)
                 return@runAsync
@@ -324,6 +331,19 @@ class Kernel(val context: Context) {
             if (!wasLoggedIn || triedLogIn || net != null) false
             else { scheduleLogIn(); true }
 
+        override fun onFileExchangeDialogAction(accepted: Boolean, opponentId: Int, fileSize: Int, fileName: String) = runAsync {
+            val dir = context.getExternalFilesDir(null)
+            if (dir == null) {
+                net!!.replyToFileExchangeInvite(opponentId, fileSize, false)
+                presenter.onFileExchangeDone(false)
+                return@runAsync
+            }
+
+            fileOutputStream = FileOutputStream(File(dir, fileName))
+            val result = net!!.replyToFileExchangeInvite(opponentId, fileSize, accepted)
+            presenter.onFileExchangeDone(result)
+        }
+
         override fun onActivityDestroy() {}
     }
 
@@ -353,6 +373,11 @@ class Kernel(val context: Context) {
             log("ond db close")
             net = null
             runAsync(action = presenter::onDisconnected)
+
+            fileInputStream?.close()
+            fileInputStream = null
+            fileOutputStream?.close()
+            fileOutputStream = null
         }
 
         override fun onLogInResult(successful: Boolean) = runAsync {
@@ -473,12 +498,36 @@ class Kernel(val context: Context) {
             return 0
         }
 
-        override fun onFileExchangeInviteReceived(from: Int, fileSize: Int, hash: ByteArray, filename: ByteArray) {
+        override fun onFileExchangeInviteReceived(from: Int, fileSize: Int, hash: ByteArray, filename: ByteArray) = runAsync {
+            val user = findUser(from)
+            if (user == null) {
+                net!!.replyToFileExchangeInvite(from, fileSize, false)
+                return@runAsync
+            }
 
+            fileBytesCounter = 0
+            presenter.onFileExchangeInviteReceived(String(user.name), user.id, fileSize, String(filename))
         }
 
         override fun nextFileChunkReceiver(from: Int, index: Int, receivedBytesCount: Int, buffer: ByteArray) {
+            assert(fileOutputStream != null)
 
+            val decryptedSize = receivedBytesCount - crypto.encryptedSize(0)
+            assert(decryptedSize in 1..maxUnencryptedMessageBodySize)
+
+            val coders = crypto.recreateCoders(database!!.conversationDao.getCoders(from)!!)
+
+            val decrypted = crypto.decrypt(coders, buffer)!!
+            fileOutputStream!!.write(decrypted)
+
+            if (index == 0) {
+                assert(fileHashState == null)
+                fileHashState = crypto.hashMultipart(null, null)
+            }
+            crypto.hashMultipart(fileHashState!!, decrypted)
+
+            if (index == 0) assert(fileBytesCounter == 0)
+            fileBytesCounter += decryptedSize
         }
     }
 

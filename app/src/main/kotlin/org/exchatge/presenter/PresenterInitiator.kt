@@ -45,5 +45,6 @@ interface PresenterInitiator {
     fun saveOptions(host: String, port: Int, sskp: String)
     fun loadOptions(): Options
     fun tryScheduleAutoLogIn(): Boolean
+    fun onFileExchangeDialogAction(accepted: Boolean, opponentId: Int, fileSize: Int, fileName: String)
     fun onActivityDestroy()
 }

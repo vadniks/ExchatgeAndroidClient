@@ -119,5 +119,6 @@ fun Content(
             Pages.CONVERSATION -> ConversationPage(pagesShared)
         }
         pagesShared.conversationSetupDialogParameters.let { if (it != null) ConversationSetupDialog(it) }
+        pagesShared.fileExchangeDialogParameters.let { if (it != null) FileExchangeDialog(it) }
     }
 }

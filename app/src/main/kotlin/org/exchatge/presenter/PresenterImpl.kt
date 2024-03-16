@@ -37,6 +37,7 @@ import org.exchatge.model.writeLocked
 import org.exchatge.view.Activity
 import org.exchatge.view.ConversationMessage
 import org.exchatge.view.ConversationSetupDialogParameters
+import org.exchatge.view.FileExchangeDialogParameters
 import org.exchatge.view.User
 import org.exchatge.view.View
 import org.exchatge.view.pages.Pages
@@ -68,6 +69,7 @@ class PresenterImpl(private val initiator: PresenterInitiator): Presenter {
     private val messages = SynchronizedMutableStateList<ConversationMessage>()
     @Volatile private var opponentId = 0
     override val maxMessageTextSize get() = initiator.maxMessagePlainPayloadSize - 1
+    override var fileExchangeDialogParameters by SynchronizedMutableState<FileExchangeDialogParameters?>(null)
 
     init {
         assert(!initialized)
@@ -316,6 +318,20 @@ class PresenterImpl(private val initiator: PresenterInitiator): Presenter {
     }
 
     fun onBroadcastReceived(text: String) = if (activityRunning) view!!.snackbar(text) else Unit
+
+    fun onFileExchangeInviteReceived(from: String, id: Int, fileSize: Int, fileName: String) =
+        this::fileExchangeDialogParameters.set(FileExchangeDialogParameters(
+            from, id, fileSize, fileName
+        ) {
+            setUiLock(true)
+            fileExchangeDialogParameters = null
+            initiator.onFileExchangeDialogAction(it, id, fileSize, fileName)
+        })
+
+    fun onFileExchangeDone(successful: Boolean) {
+        setUiLock(false)
+        view?.snackbar(view?.string(if (successful) R.string.fileExchangeSucceeded else R.string.fileExchangeFailed) ?: return)
+    }
 
     private inner class SynchronizedMutableState<T>(initial: T) {
         private val delegate = mutableStateOf(initial)

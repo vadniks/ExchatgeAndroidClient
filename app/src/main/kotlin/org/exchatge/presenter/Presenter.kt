@@ -22,6 +22,7 @@ import android.content.Intent
 import android.os.Bundle
 import org.exchatge.view.ConversationMessage
 import org.exchatge.view.ConversationSetupDialogParameters
+import org.exchatge.view.FileExchangeDialogParameters
 import org.exchatge.view.User
 import org.exchatge.view.View
 import org.exchatge.view.ViewStub
@@ -48,6 +49,7 @@ interface Presenter {
     val conversationSetupDialogParameters: ConversationSetupDialogParameters?
     val showAdministrativeActions: Boolean
     val maxMessageTextSize: Int
+    val fileExchangeDialogParameters: FileExchangeDialogParameters?
 
     fun onCreate(view: View, savedInstanceState: Bundle?) // TODO: handle config changes and process kill (save activity's state)
     fun onResume()
@@ -104,6 +106,7 @@ object PresenterStub : Presenter { // stub to make @Preview work; can be used to
     override val conversationSetupDialogParameters: ConversationSetupDialogParameters? = null
     override val showAdministrativeActions = false
     override val maxMessageTextSize = 0
+    override val fileExchangeDialogParameters: FileExchangeDialogParameters? = null
 
     override fun onCreate(view: View, savedInstanceState: Bundle?) {}
     override fun onResume() {}

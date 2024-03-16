@@ -52,6 +52,14 @@ data class ConversationSetupDialogParameters(
     val onAction: (Boolean) -> Unit // proceed - true, dismiss - false
 )
 
+data class FileExchangeDialogParameters(
+    val opponentName: String,
+    val opponentId: Int,
+    val fileSize: Int,
+    val fileName: String,
+    val onAction: (Boolean) -> Unit
+)
+
 @Composable
 fun ConversationSetupDialog(parameters: ConversationSetupDialogParameters) = PopupOverlay { // TODO: move in separate file (Dialogs.kt)
     AlertDialog(
@@ -90,26 +98,27 @@ fun ConversationSetupDialog(parameters: ConversationSetupDialogParameters) = Pop
 }
 
 @Composable
-fun FileExchangeDialog(
-    opponentId: Int,
-    opponentName: String,
-    fileName: String,
-    fileSize: Int
-) = AlertDialog(
-    onDismissRequest = {},
+fun FileExchangeDialog(parameters: FileExchangeDialogParameters) = AlertDialog(
+    onDismissRequest = { parameters.onAction(false) },
     confirmButton = {
-        Text(stringResource(R.string.proceed))
+        Text(
+            stringResource(R.string.proceed),
+            modifier = Modifier.clickable { parameters.onAction(true) }
+        )
     },
     dismissButton = {
-        Text(stringResource(R.string.cancel))
+        Text(
+            stringResource(R.string.cancel),
+            modifier = Modifier.clickable { parameters.onAction(false) }
+        )
     },
     title = {
         Text(stringResource(R.string.fileExchange))
     },
     text = {
         Text("""
-            ${stringResource(R.string.fileExchangeRequestedByUser)} $opponentName (${stringResource(R.string.id)} $opponentId)
-            ${stringResource(R.string.file).lowercase()} $fileName ${stringResource(R.string.withSizeOf)} $fileSize ${stringResource(R.string.bytes)}
+            ${stringResource(R.string.fileExchangeRequestedByUser)} ${parameters.opponentName} (${stringResource(R.string.id)} ${parameters.opponentId})
+            ${stringResource(R.string.file).lowercase()} ${parameters.fileName} ${stringResource(R.string.withSizeOf)} ${parameters.fileSize} ${stringResource(R.string.bytes)}
         """.trimIndent())
     },
 )
