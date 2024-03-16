@@ -602,9 +602,9 @@ class Net(private val initiator: NetInitiator) {
         exchangingFile = false
     }
 
-    fun exchangeFile(to: Int, fileSize: Int, hash: ByteArray, fileName: String): Boolean {
+    fun exchangeFile(to: Int, fileSize: Int, hash: ByteArray, fileName: ByteArray): Boolean {
         assert(running && connected && authenticated && !destroyed && !settingUpConversation && !exchangingFile)
-        assert(fileSize > 0 && fileName.length <= MAX_FILENAME_SIZE)
+        assert(fileSize > 0 && fileName.size <= MAX_FILENAME_SIZE)
 
         exchangingFile = true
         fileExchangeMessages.clear()
@@ -613,8 +613,10 @@ class Net(private val initiator: NetInitiator) {
 
         System.arraycopy(fileSize.bytes, 0, body, 0, 4)
         System.arraycopy(hash, 0, body, 4, Crypto.HASH_SIZE)
-        System.arraycopy(fileName.length.bytes, 0, body, 4 + Crypto.HASH_SIZE, 4)
-        System.arraycopy(fileName.toByteArray(), 0, body, 4 + Crypto.HASH_SIZE + 4, fileName.length)
+        System.arraycopy(fileName.size.bytes, 0, body, 4 + Crypto.HASH_SIZE, 4)
+        System.arraycopy(fileName, 0, body, 4 + Crypto.HASH_SIZE + 4, fileName.size)
+
+        log("ef", body.contentToString())
 
         if (!send(FLAG_FILE_ASK, body, to)) {
             finishFileExchange()

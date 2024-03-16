@@ -260,7 +260,7 @@ class Kernel(val context: Context) {
         }
 
         private fun sendFile(opponentId: Int, filename: String, size: Long, inputStreamOpener: () -> InputStream?): Boolean {
-            log("sf", filename)
+            log("sf", size, filename.length, filename)
 
             if (size > maxFileSize) return false
             fileInputStream = inputStreamOpener() ?: return false
@@ -272,8 +272,7 @@ class Kernel(val context: Context) {
             fileInputStream = inputStreamOpener() ?: return false
             toUserId = opponentId
 
-            val result = false
-            net!!.exchangeFile(opponentId, size.toInt(), checksum, filename)
+            val result = net!!.exchangeFile(opponentId, size.toInt(), checksum, filename.toByteArray())
             fileInputStream!!.close()
 
             return result
