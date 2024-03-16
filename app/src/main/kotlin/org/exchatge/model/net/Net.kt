@@ -251,14 +251,14 @@ class Net(private val initiator: NetInitiator) {
                 else
                     conversationSetupMessages.add(message)
             }
-            FLAG_FILE_ASK, FLAG_FILE -> {
-                if (message.flag == FLAG_FILE_ASK && message.size != fileExchangeRequestInitialSize) {
+            FLAG_FILE_ASK -> {
+                if (message.size == fileExchangeRequestInitialSize) {
                     assert(message.size > 0 && message.body != null)
                     processFileExchangeRequestMessage(message)
-                    return
-                }
-                fileExchangeMessages.add(message)
+                } else
+                    fileExchangeMessages.add(message)
             }
+            FLAG_FILE -> fileExchangeMessages.add(message)
             FLAG_PROCEED -> {
                 assert(message.body != null)
                 if (!fetchingUsers && !fetchingMessages && !ignoreUsualMessages)
